@@ -422,11 +422,24 @@
         <!-- Renderizado via JS -->
       </div>
 
+      <!-- ALERTA: BLOQUEIO PARA QUEM AINDA NÃO VOTOU -->
+      <div id="chat-locked-warning" class="hidden bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl text-center space-y-2">
+        <p class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
+          🔒 Acesso ao Chat Bloqueado
+        </p>
+        <p class="text-[11px] text-slate-300">
+          Você precisa registrar seu voto na <b>Urna Eletrônica</b> antes de participar do debate ao vivo.
+        </p>
+        <button onclick="switchTab('urna')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs px-4 py-2 rounded-xl transition shadow-lg">
+          Ir para a Urna Votar 🗳️
+        </button>
+      </div>
+
       <!-- Alerta de Erro de Apelido Duplicado -->
       <div id="nickname-error" class="hidden bg-rose-500/10 border border-rose-500/30 p-2.5 rounded-xl text-center text-rose-400 text-xs font-medium"></div>
 
       <!-- Configuração de Apelido -->
-      <div id="nickname-setup-box" class="bg-slate-900 border border-emerald-500/40 p-3 rounded-xl space-y-2">
+      <div id="nickname-setup-box" class="hidden bg-slate-900 border border-emerald-500/40 p-3 rounded-xl space-y-2">
         <p class="text-xs font-bold text-emerald-400">Escolha seu Apelido para o Chat:</p>
         <div class="flex gap-2">
           <input type="text" id="chat-nickname-input" placeholder="Digite seu apelido..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-500">
@@ -853,21 +866,32 @@
         document.getElementById('sec-chat').classList.remove('hidden');
         document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition flex items-center gap-1";
         
+        const hasVoted = verifiedVoter && votedCPFs[verifiedVoter.cleanDoc];
         const nickname = verifiedVoter ? voterNicknames[verifiedVoter.cleanDoc] : null;
+        
         document.getElementById('chat-user-badge').textContent = nickname ? `${nickname} (${verifiedVoter.uf})` : (verifiedVoter ? verifiedVoter.name.split(' ')[0] : "Visitante");
         
+        const lockWarning = document.getElementById('chat-locked-warning');
         const nicknameBox = document.getElementById('nickname-setup-box');
         const inputContainer = document.getElementById('chat-input-container');
         const nickErrBox = document.getElementById('nickname-error');
 
         nickErrBox.classList.add('hidden');
 
-        if (!nickname) {
-          nicknameBox.classList.remove('hidden');
+        // REGRA DE BLOQUEIO DO CHAT: Apenas quem já votou tem permissão
+        if (!hasVoted) {
+          lockWarning.classList.remove('hidden');
+          nicknameBox.classList.add('hidden');
           inputContainer.classList.add('hidden');
         } else {
-          nicknameBox.classList.add('hidden');
-          inputContainer.classList.remove('hidden');
+          lockWarning.classList.add('hidden');
+          if (!nickname) {
+            nicknameBox.classList.remove('hidden');
+            inputContainer.classList.add('hidden');
+          } else {
+            nicknameBox.classList.add('hidden');
+            inputContainer.classList.remove('hidden');
+          }
         }
 
         renderChat();
@@ -881,7 +905,13 @@
       
       errBox.classList.add('hidden');
 
-      if (!nickname || !verifiedVoter) return;
+      if (!verifiedVoter || !votedCPFs[verifiedVoter.cleanDoc]) {
+        errBox.textContent = "⚠️ Você precisa votar antes de configurar um apelido.";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      if (!nickname) return;
 
       const normalizedNewNick = nickname.toLowerCase();
       const existingEntries = Object.entries(voterNicknames);
