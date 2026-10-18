@@ -1549,7 +1549,13 @@
 
     function renderChat() {
       const chatBox = document.getElementById('chat-messages');
-      chatBox.innerHTML = chatMessages.map(m => `
+      chatBox.innerHTML = chatMessages.map(m => {
+        const isVote13 = m.voteLabel && m.voteLabel.includes('13');
+        const badgeStyle = isVote13
+          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+
+        return `
         <div class="flex flex-col ${m.isSystem ? 'items-center text-center' : 'items-start'}">
           ${m.isSystem ? `
             <div class="bg-slate-950 border border-slate-800 text-slate-400 px-3 py-1.5 rounded-xl text-[11px]">
@@ -1560,14 +1566,15 @@
               <div class="flex items-center gap-1.5 flex-wrap">
                 <span class="font-bold text-emerald-400">${m.nickname}</span>
                 <span class="text-[9px] bg-slate-900 px-1.5 py-0.5 rounded text-slate-300 font-mono border border-slate-800">${m.uf}</span>
-                <span class="text-[9px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded font-mono font-bold">${m.voteLabel}</span>
+                <span class="text-[9px] ${badgeStyle} px-1.5 py-0.5 rounded font-mono font-bold">${m.voteLabel}</span>
                 <span class="text-[9px] text-slate-500 ml-auto">${m.time}</span>
               </div>
               <p class="text-slate-200 text-xs">${m.text}</p>
             </div>
           `}
         </div>
-      `).join('');
+      `;
+      }).join('');
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
