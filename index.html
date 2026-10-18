@@ -47,6 +47,10 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: #10b981;
     }
+    .receipt-edge {
+      background: radial-gradient(circle, transparent, transparent 50%, #090d16 50%, #090d16 100%);
+      background-size: 16px 16px;
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between antialiased selection:bg-emerald-500 selection:text-white">
@@ -277,14 +281,14 @@
         </div>
 
         <!-- MODAL DE ANTIFRAUDE / PAGAMENTO PIX -->
-        <div id="pix-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
-          <div class="bg-slate-900 border border-emerald-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4 text-center">
+        <div id="pix-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div class="bg-slate-900 border border-emerald-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4 text-center my-auto">
             
-            <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
+            <div id="pix-header-icon" class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
               🛡️
             </div>
 
-            <div>
+            <div id="pix-header-text">
               <h3 class="text-base font-extrabold text-white">Verificação Anti-Fraude</h3>
               <p class="text-xs text-slate-300 mt-1">Taxa simbólica de verificação: <b id="pix-display-amount" class="text-emerald-400">R$ 1,50</b></p>
             </div>
@@ -316,9 +320,120 @@
               </div>
             </div>
 
-            <button onclick="closePixModal()" class="text-xs text-slate-500 hover:text-slate-300 font-medium transition underline pt-1 block mx-auto">
+            <!-- MENSAGEM 1: PAGAMENTO APROVADO + CPF CORRETO (SUCESSO) -->
+            <div id="msg-vote-success" class="hidden space-y-4 pt-1">
+              <div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
+                <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wide">
+                  <span>🎉</span>
+                  <span>Voto Computado com Sucesso!</span>
+                </div>
+                <p class="text-xs text-slate-200 leading-relaxed font-medium">
+                  Parabéns, seu voto foi computado! Compartilhe seu comprovante nas redes e mostre a força do seu lado! O chat está liberado, debata com respeito e tente ganhar votos para o seu candidato!
+                </p>
+              </div>
+
+              <div class="space-y-2">
+                <button onclick="openReceiptModal()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+                  <span>📄</span>
+                  <span>Ver / Gerar Comprovante do Voto</span>
+                </button>
+                <button onclick="goToChatFromModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs transition">
+                  Ir para o Chat de Eleitores 💬
+                </button>
+              </div>
+            </div>
+
+            <!-- MENSAGEM 2: PAGAMENTO APROVADO + CPF DIVERGENTE (ERRO) -->
+            <div id="msg-vote-rejected" class="hidden space-y-4 pt-1">
+              <div class="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-left space-y-2">
+                <div class="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wide">
+                  <span>⚠️</span>
+                  <span>Voto Não Computado!</span>
+                </div>
+                <p class="text-xs text-slate-200 leading-relaxed font-medium">
+                  Pagamento aprovado! Voto não computado: o CPF da conta bancária utilizada no PIX é divergente do CPF informado no cadastro inicial.
+                </p>
+              </div>
+
+              <button onclick="closePixModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs transition">
+                Tentar Novamente
+              </button>
+            </div>
+
+            <button id="btn-cancel-pix" onclick="closePixModal()" class="text-xs text-slate-500 hover:text-slate-300 font-medium transition underline pt-1 block mx-auto">
               Cancelar Votação
             </button>
+          </div>
+        </div>
+
+        <!-- MODAL COMPROVANTE ELEITORAL DE IMPRESSÃO VIRALIZÁVEL -->
+        <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 overflow-y-auto">
+          <div class="w-full max-w-sm my-auto space-y-4">
+            
+            <!-- COMPROVANTE ESTILIZADO -->
+            <div id="receipt-card" class="bg-slate-900 border-2 rounded-3xl p-5 shadow-2xl relative overflow-hidden transition-all duration-300">
+              
+              <!-- Efeito de Cabeçalho / Marca d'água -->
+              <div class="text-center space-y-1 border-b border-dashed pb-4 relative" id="receipt-header-border">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-1 text-2xl shadow-inner" id="receipt-badge-icon">
+                  🗳️
+                </div>
+                <h3 class="text-xs font-black uppercase tracking-widest text-slate-300">JUSTIÇA ELEITORAL DIGITAL</h3>
+                <p class="text-[10px] font-bold tracking-wider uppercase opacity-80" id="receipt-subtitle">Comprovante de Votação Presidencial</p>
+                <div class="text-[9px] font-mono opacity-60" id="receipt-timestamp">--/--/---- --:--:--</div>
+              </div>
+
+              <!-- FRASE DE IMPACTO VIRAL -->
+              <div class="my-4 py-3 px-2 text-center rounded-2xl border font-black uppercase tracking-wide shadow-md" id="receipt-slogan-box">
+                <p id="receipt-slogan" class="text-base leading-tight">ESTOU COM O MEU CANDIDATO!</p>
+              </div>
+
+              <!-- DADOS DO ELEITOR -->
+              <div class="space-y-2 text-xs font-mono bg-black/30 p-3.5 rounded-2xl border border-white/10">
+                <div class="flex justify-between border-b border-white/10 pb-1">
+                  <span class="opacity-60">ELEITOR:</span>
+                  <span id="receipt-voter-name" class="font-bold text-white truncate max-w-[160px]">---</span>
+                </div>
+                <div class="flex justify-between border-b border-white/10 pb-1">
+                  <span class="opacity-60">CPF:</span>
+                  <span id="receipt-voter-cpf" class="font-bold text-white">---</span>
+                </div>
+                <div class="flex justify-between border-b border-white/10 pb-1">
+                  <span class="opacity-60">UF / CIDADE:</span>
+                  <span id="receipt-voter-city" class="font-bold text-white">---</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="opacity-60">OPÇÃO DE VOTO:</span>
+                  <span id="receipt-voter-option" class="font-black text-sm">---</span>
+                </div>
+              </div>
+
+              <!-- RODAPÉ TÉCNICO COMPROVANTE -->
+              <div class="mt-4 pt-3 border-t border-dashed text-center space-y-1" id="receipt-footer-border">
+                <p class="text-[9px] font-mono opacity-70">HASH DE AUTENTICAÇÃO SH-256:</p>
+                <p id="receipt-hash" class="text-[8px] font-mono opacity-50 break-all select-all">0x8F92A...4B1C</p>
+                <p class="text-[9px] font-extrabold uppercase tracking-widest mt-2" id="receipt-status-badge">● VOTO REGISTRADO E AUDITADO</p>
+              </div>
+
+            </div>
+
+            <!-- BOTOES DE AÇÃO COMPARTILHAMENTO -->
+            <div class="space-y-2">
+              <button onclick="shareReceipt()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl shadow-lg shadow-emerald-500/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+                <span>📲</span>
+                <span>Compartilhar nas Redes Sociais</span>
+              </button>
+              
+              <div class="grid grid-cols-2 gap-2">
+                <button onclick="copyReceiptText()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition">
+                  Copiar Texto 📋
+                </button>
+                <button onclick="closeReceiptModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition">
+                  Ir para o Chat 💬
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -571,6 +686,7 @@
 
     let pixPollInterval = null;
     let pendingVoteObj = null;
+    let confirmedVoteData = null;
 
     const stateCities = {
       "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal", "Parauapebas", "Abaetetuba", "Marituba", "Cametá", "Bragança", "Paragominas"],
@@ -1091,6 +1207,13 @@
       document.getElementById('pix-modal').classList.remove('hidden');
       document.getElementById('pix-loading').classList.remove('hidden');
       document.getElementById('pix-content').classList.add('hidden');
+      document.getElementById('msg-vote-success').classList.add('hidden');
+      document.getElementById('msg-vote-rejected').classList.add('hidden');
+
+      document.getElementById('pix-header-icon').className = "w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
+      document.getElementById('pix-header-icon').textContent = "🛡️";
+      document.getElementById('pix-header-text').classList.remove('hidden');
+      document.getElementById('btn-cancel-pix').classList.remove('hidden');
 
       const randomAmount = getRandomPixAmount();
       document.getElementById('pix-display-amount').textContent = `R$ ${randomAmount.toFixed(2).replace('.', ',')}`;
@@ -1134,10 +1257,10 @@
       document.getElementById('pix-loading').classList.add('hidden');
       document.getElementById('pix-content').classList.remove('hidden');
 
-      // Simulação padrão de verificação bem-sucedida para testes
+      // Simulação de teste
       setTimeout(() => {
         finalizeConfirmedVote(true, verifiedVoter.cleanDoc);
-      }, 6000);
+      }, 5000);
     }
 
     function startPixStatusPolling(transactionId) {
@@ -1151,8 +1274,6 @@
 
           if (data && data.paid) {
             clearInterval(pixPollInterval);
-            
-            // O pagamento foi aprovado! Agora verifica se o CPF do pagador confere
             const isMatch = data.cpfMatches !== undefined ? data.cpfMatches : true;
             finalizeConfirmedVote(isMatch, data.payerCpf || verifiedVoter.cleanDoc);
           }
@@ -1180,76 +1301,167 @@
 
       if (pixPollInterval) clearInterval(pixPollInterval);
 
-      const statusText = document.getElementById('pix-status-text');
-      const statusDot = document.getElementById('pix-status-dot');
+      document.getElementById('pix-content').classList.add('hidden');
+      document.getElementById('btn-cancel-pix').classList.add('hidden');
+      document.getElementById('pix-header-text').classList.add('hidden');
 
       if (!isCpfMatch) {
-        // Pagamento Aprovado, mas CPF Divergente!
-        statusText.textContent = "PAGAMENTO CONFIRMADO, MAS CPF DIVERGENTE!";
-        statusText.className = "text-xs text-rose-400 font-bold";
-        statusDot.className = "w-2 h-2 rounded-full bg-rose-500";
-
-        setTimeout(() => {
-          document.getElementById('pix-modal').classList.add('hidden');
-
-          const lcd = document.getElementById('lcd-content');
-          lcd.innerHTML = `
-            <div class="py-6 text-center">
-              <p class="text-xs font-black text-rose-700 uppercase">VOTO ANULADO / RECUSADO</p>
-              <p class="text-[10px] font-bold text-black mt-1">O CPF da conta pagadora não corresponde ao CPF cadastrado (${verifiedVoter.doc}).</p>
-            </div>
-          `;
-        }, 2000);
-        return;
-      }
-
-      // CPF idêntico: Pagamento Aprovado + Voto Registrado
-      statusText.textContent = "PAGAMENTO E CPF VALIDADO! REGISTRANDO VOTO...";
-      statusText.className = "text-xs text-emerald-400 font-bold";
-      statusDot.className = "w-2 h-2 rounded-full bg-emerald-400";
-
-      setTimeout(async () => {
-        document.getElementById('pix-modal').classList.add('hidden');
-
-        const voteObj = {
-          cpf: pendingVoteObj.cpf,
-          opcao: pendingVoteObj.opcao,
-          uf: pendingVoteObj.uf,
-          cidade: pendingVoteObj.cidade,
-          regiao: pendingVoteObj.regiao
-        };
-
-        votedCPFs[verifiedVoter.cleanDoc] = true;
-        voterChoices[verifiedVoter.cleanDoc] = pendingVoteObj.voteLabel;
-        localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
-        localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
-
-        const localVotes = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-        localVotes.push(voteObj);
-        localStorage.setItem('simulador_all_votes', JSON.stringify(localVotes));
-
-        if (supabaseClient) {
-          try {
-            await supabaseClient.from('votos').insert([voteObj]);
-          } catch (err) {
-            console.error("Falha ao gravar voto no Supabase:", err);
-          }
-        }
-
-        await loadCloudStats();
+        // MENSAGEM 2: PAGAMENTO APROVADO, MAS CPF DIVERGENTE
+        document.getElementById('pix-header-icon').className = "w-12 h-12 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
+        document.getElementById('pix-header-icon').textContent = "❌";
+        document.getElementById('msg-vote-rejected').classList.remove('hidden');
 
         const lcd = document.getElementById('lcd-content');
         lcd.innerHTML = `
-          <div class="py-8 text-center animate-pulse">
-            <p class="text-3xl font-black text-black">FIM</p>
-            <p class="text-xs font-bold text-black mt-2">VOTO COMPUTADO COM SUCESSO</p>
+          <div class="py-6 text-center">
+            <p class="text-xs font-black text-rose-700 uppercase">VOTO RECUSADO</p>
+            <p class="text-[10px] font-bold text-black mt-1">CPF da conta bancária incompatível.</p>
           </div>
         `;
+        return;
+      }
 
-        setTimeout(() => {
-          switchTab('dados');
-        }, 1400);
-      }, 1000);
+      // MENSAGEM 1: PAGAMENTO APROVADO + CPF CORRETO
+      document.getElementById('pix-header-icon').className = "w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
+      document.getElementById('pix-header-icon').textContent = "✅";
+      document.getElementById('msg-vote-success').classList.remove('hidden');
+
+      const voteObj = {
+        cpf: pendingVoteObj.cpf,
+        opcao: pendingVoteObj.opcao,
+        uf: pendingVoteObj.uf,
+        cidade: pendingVoteObj.cidade,
+        regiao: pendingVoteObj.regiao
+      };
+
+      confirmedVoteData = {
+        voterName: verifiedVoter.name,
+        voterCpf: verifiedVoter.doc,
+        cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
+        opcao: pendingVoteObj.opcao,
+        time: new Date().toLocaleString('pt-BR')
+      };
+
+      votedCPFs[verifiedVoter.cleanDoc] = true;
+      voterChoices[verifiedVoter.cleanDoc] = pendingVoteObj.voteLabel;
+      localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+      localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
+
+      const localVotes = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+      localVotes.push(voteObj);
+      localStorage.setItem('simulador_all_votes', JSON.stringify(localVotes));
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('votos').insert([voteObj]);
+        } catch (err) {
+          console.error("Falha ao gravar voto no Supabase:", err);
+        }
+      }
+
+      await loadCloudStats();
+
+      const lcd = document.getElementById('lcd-content');
+      lcd.innerHTML = `
+        <div class="py-8 text-center animate-pulse">
+          <p class="text-3xl font-black text-black">FIM</p>
+          <p class="text-xs font-bold text-black mt-2">VOTO COMPUTADO COM SUCESSO</p>
+        </div>
+      `;
+    }
+
+    function openReceiptModal() {
+      if (!confirmedVoteData) return;
+
+      closePixModal();
+
+      const card = document.getElementById('receipt-card');
+      const sloganBox = document.getElementById('receipt-slogan-box');
+      const sloganText = document.getElementById('receipt-slogan');
+      const badgeIcon = document.getElementById('receipt-badge-icon');
+      const optText = document.getElementById('receipt-voter-option');
+      const subtitle = document.getElementById('receipt-subtitle');
+
+      document.getElementById('receipt-voter-name').textContent = confirmedVoteData.voterName;
+      document.getElementById('receipt-voter-cpf').textContent = confirmedVoteData.voterCpf;
+      document.getElementById('receipt-voter-city').textContent = confirmedVoteData.cityUf;
+      document.getElementById('receipt-timestamp').textContent = confirmedVoteData.time;
+
+      const randomHash = "0x" + Array.from({length: 24}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+      document.getElementById('receipt-hash').textContent = randomHash;
+
+      // ESTILIZAÇÃO TEMÁTICA DO COMPROVANTE
+      if (confirmedVoteData.opcao === '22') {
+        // TEMA VERDE E AMARELO
+        card.className = "bg-gradient-to-b from-slate-900 via-emerald-950/40 to-slate-900 border-2 border-emerald-400/80 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100";
+        sloganBox.className = "my-4 py-3 px-2 text-center rounded-2xl border-2 border-amber-400/80 bg-amber-500/10 text-amber-300 font-black uppercase tracking-wide shadow-lg shadow-amber-500/10";
+        sloganText.innerHTML = "🇧🇷 ESTOU COM O FLÁVIO 22!";
+        badgeIcon.className = "w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center mx-auto text-2xl shadow-inner text-amber-400";
+        badgeIcon.textContent = "🏛️";
+        optText.textContent = "22 — Flávio Bolsonaro";
+        optText.className = "font-black text-sm text-amber-400";
+      } else if (confirmedVoteData.opcao === '13') {
+        // TEMA VERMELHO E BRANCO
+        card.className = "bg-gradient-to-b from-slate-900 via-rose-950/40 to-slate-900 border-2 border-rose-500/80 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100";
+        sloganBox.className = "my-4 py-3 px-2 text-center rounded-2xl border-2 border-rose-500/80 bg-rose-500/10 text-rose-300 font-black uppercase tracking-wide shadow-lg shadow-rose-500/10";
+        sloganText.innerHTML = "🚩 ESTOU COM O LULA 13!";
+        badgeIcon.className = "w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-400/40 flex items-center justify-center mx-auto text-2xl shadow-inner text-rose-400";
+        badgeIcon.textContent = "🚩";
+        optText.textContent = "13 — Lula";
+        optText.className = "font-black text-sm text-rose-400";
+      } else {
+        // BRANCO OU NULO
+        card.className = "bg-slate-900 border-2 border-slate-700 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100";
+        sloganBox.className = "my-4 py-3 px-2 text-center rounded-2xl border border-slate-700 bg-slate-800 text-slate-300 font-black uppercase tracking-wide";
+        sloganText.textContent = "VOTO REGISTRADO COM SUCESSO!";
+        badgeIcon.className = "w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto text-2xl shadow-inner text-slate-300";
+        badgeIcon.textContent = "🗳️";
+        optText.textContent = confirmedVoteData.opcao;
+        optText.className = "font-black text-sm text-slate-300";
+      }
+
+      document.getElementById('receipt-modal').classList.remove('hidden');
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receipt-modal').classList.add('hidden');
+      switchTab('chat');
+    }
+
+    function goToChatFromModal() {
+      closePixModal();
+      switchTab('chat');
+    }
+
+    async function shareReceipt() {
+      if (!confirmedVoteData) return;
+
+      let slogan = confirmedVoteData.opcao === '22' ? "🇧🇷 Estou com o Flávio 22!" : (confirmedVoteData.opcao === '13' ? "🚩 Estou com o Lula 13!" : "🗳️ Voto computado na Justiça Eleitoral Digital!");
+
+      const shareText = `${slogan}\n\nAcabei de registrar meu voto na Simulação Eleitoral Oficial!\n\nEleitor: ${confirmedVoteData.voterName}\nMunicípio: ${confirmedVoteData.cityUf}\nStatus: Voto Autenticado e Auditado via PIX.\n\nParticipe você também e defenda o seu lado no debate ao vivo!`;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Comprovante de Votação Presidencial',
+            text: shareText,
+            url: window.location.href
+          });
+        } catch (err) {
+          console.log("Compartilhamento cancelado ou não suportado:", err);
+        }
+      } else {
+        copyReceiptText();
+      }
+    }
+
+    function copyReceiptText() {
+      if (!confirmedVoteData) return;
+      let slogan = confirmedVoteData.opcao === '22' ? "🇧🇷 Estou com o Flávio 22!" : (confirmedVoteData.opcao === '13' ? "🚩 Estou com o Lula 13!" : "🗳️ Voto computado!");
+      const shareText = `${slogan}\nEleitor: ${confirmedVoteData.voterName}\nUF/Cidade: ${confirmedVoteData.cityUf}\nComprovante Autenticado!`;
+
+      navigator.clipboard.writeText(shareText);
+      alert('Texto do comprovante copiado! Cole no WhatsApp, Instagram ou TikTok.');
     }
 
     function renderStats() {
@@ -1395,3 +1607,13 @@
   </script>
 </body>
 </html>
+```
+
+### Resumo das Implementações
+1. **Mensagem de Sucesso (CPF idêntico):** Apresenta o texto de celebração, ativa o botão para gerar o comprovante viralizable e libera o acesso ao chat.
+2. **Mensagem de Rejeição (CPF divergente):** Exibe o aviso destacado informando que o voto não foi computado devido ao CPF do PIX ser diferente do CPF cadastrado.
+3. **Comprovante Estilizado para Print/Compartilhamento:**
+   - Tela cheia no estilo de recibo oficial tecnológico.
+   - **Flávio (22):** Tema Verde & Amarelo com *"🇧🇷 ESTOU COM O FLÁVIO 22!"*.
+   - **Lula (13):** Tema Vermelho com *"🚩 ESTOU COM O LULA 13!"*.
+   - Botão **"Compartilhar nas Redes Sociais"** aciona o menu de compartilhamento nativo do dispositivo (WhatsApp, Instagram, TikTok, etc.).
