@@ -175,8 +175,8 @@
             <div class="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin"></div>
             <div class="text-3xl">👤</div>
           </div>
-          <p class="text-xs text-slate-300 font-semibold">Validando Biometria e Jurisdição...</p>
-          <p class="text-[11px] text-slate-500">Aguarde alguns segundos enquanto liberamos a urna.</p>
+          <p class="text-xs text-slate-300 font-semibold">Validando Biometria e Banco de Dados TSE...</p>
+          <p class="text-[11px] text-slate-500">Aguarde alguns segundos enquanto checamos duplicidade de CPF.</p>
         </div>
 
         <!-- FORMULÁRIO PASSO 3: LIBERADO -->
@@ -314,11 +314,11 @@
         <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
           <div>
             <h2 class="text-base font-extrabold text-white">Apuração Oficial TSE</h2>
-            <p class="text-[11px] text-slate-400">Resultados consolidados em tempo real</p>
+            <p class="text-[11px] text-slate-400">Resultados consolidados em tempo real via Supabase</p>
           </div>
-          <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
-            99.8% Apurado
-          </span>
+          <button onclick="loadCloudStats()" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg hover:bg-emerald-500/20 transition">
+            🔄 Atualizar Dados
+          </button>
         </div>
 
         <!-- CARDS DE ESTATÍSTICA GERAL -->
@@ -455,6 +455,13 @@
   </footer>
 
   <script>
+    // ==========================================
+    // CONFIGURAÇÃO SUPABASE
+    // ==========================================
+    const SUPABASE_URL = "https://SEU_PROJETO.supabase.co"; // Substitua pela sua URL
+    const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_SUPABASE"; // Substitua pela sua chave anon
+    const supabaseClient = window.supabase ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
     // Base de municípios por Estado (UF)
     const stateCities = {
       "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal", "Parauapebas", "Abaetetuba", "Marituba", "Cametá", "Bragança", "Paragominas"],
@@ -492,29 +499,28 @@
     let isBranco = false;
 
     let votedCPFs = JSON.parse(localStorage.getItem('simulador_voted_cpfs') || "{}");
-    let voterChoices = JSON.parse(localStorage.getItem('simulador_voter_choices') || "{}"); // Armazena o voto de cada CPF
-    let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}"); // Apelido escolhido por CPF
+    let voterChoices = JSON.parse(localStorage.getItem('simulador_voter_choices') || "{}");
+    let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}");
 
-    let votes = JSON.parse(localStorage.getItem('simulador_votes') || JSON.stringify({ '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 }));
-    let regionalVotes = JSON.parse(localStorage.getItem('simulador_regional') || JSON.stringify({
+    let votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+    let regionalVotes = {
       'Norte': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
       'Nordeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
       'Sudeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
       'Sul': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
       'Centro-Oeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
       'Exterior': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 }
-    }));
-    let cityVotes = JSON.parse(localStorage.getItem('simulador_city_votes') || "{}");
+    };
+    let cityVotes = {};
 
     let chatMessages = JSON.parse(localStorage.getItem('simulador_chat_msgs') || JSON.stringify([
       { id: 1, sender: "TSE Oficial", uf: "DF", text: "Bem-vindo ao debate eleitoral ao vivo. Mantenha o respeito nas discussões.", time: "Agora", isSystem: true }
     ]));
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       onUFChange();
       populateQueryUFs();
-      renderStats();
-      renderCityResults();
+      await loadCloudStats();
       renderChat();
 
       document.addEventListener('click', (e) => {
@@ -523,6 +529,85 @@
         }
       });
     });
+
+    // Função para buscar dados oficiais da tabela 'votos' no Supabase e evitar voto duplicado globalmente
+    async function checkVoterInDatabase(cleanDoc) {
+      if (!supabaseClient) return false;
+      try {
+        const { data, error } = await supabaseClient
+          .from('votos')
+          .select('cpf, opcao')
+          .eq('cpf', cleanDoc)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Erro ao verificar CPF no Supabase:", error);
+          return false;
+        }
+        return !!data; // Retorna true se já votou
+      } catch (err) {
+        console.error("Falha na conexão com Supabase:", err);
+        return false;
+      }
+    }
+
+    async function loadCloudStats() {
+      if (!supabaseClient) {
+        renderStats();
+        renderCityResults();
+        return;
+      }
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('votos')
+          .select('*');
+
+        if (error) {
+          console.error("Erro ao carregar votos do Supabase:", error);
+          return;
+        }
+
+        // Reseta contadores locais com base no banco
+        votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+        cityVotes = {};
+        Object.keys(regionalVotes).forEach(r => {
+          regionalVotes[r] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+        });
+
+        if (data) {
+          data.forEach(item => {
+            const op = item.opcao; // Ex: "22" ou "BRANCO"
+            if (votes[op] !== undefined) votes[op]++;
+            else votes['NULO']++;
+
+            const reg = item.regiao || 'Norte';
+            if (regionalVotes[reg]) {
+              if (regionalVotes[reg][op] !== undefined) regionalVotes[reg][op]++;
+              else regionalVotes[reg]['NULO']++;
+            }
+
+            const cityKey = `${item.cidade || 'Capital'} - ${item.uf || 'PA'}`;
+            if (!cityVotes[cityKey]) {
+              cityVotes[cityKey] = { uf: item.uf || 'PA', city: item.cidade || 'Capital', '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+            }
+            if (cityVotes[cityKey][op] !== undefined) cityVotes[cityKey][op]++;
+            else cityVotes[cityKey]['NULO']++;
+
+            // Salva no registro local de CPFs já votados para blindar
+            votedCPFs[item.cpf] = true;
+          });
+          localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+        }
+
+        renderStats();
+        renderCityResults();
+      } catch (err) {
+        console.error("Erro geral na sincronização:", err);
+        renderStats();
+        renderCityResults();
+      }
+    }
 
     function formatCPF(input) {
       let v = input.value.replace(/\D/g, '');
@@ -579,7 +664,7 @@
       document.getElementById('city-suggestions-container').classList.add('hidden');
     }
 
-    function submitStep1() {
+    async function submitStep1() {
       const name = document.getElementById('voter-name').value.trim();
       const doc = document.getElementById('voter-doc').value.trim();
       const ufSelect = document.getElementById('voter-uf-select');
@@ -601,35 +686,45 @@
         return;
       }
 
-      const selectedOpt = ufSelect.options[ufSelect.selectedIndex];
-      const uf = ufSelect.value;
-      const region = selectedOpt.getAttribute('data-region') || 'Norte';
-
-      verifiedVoter = { name, doc, cleanDoc, uf, city, region };
-
-      document.getElementById('summary-name').textContent = name;
-      document.getElementById('summary-doc').textContent = doc;
-      document.getElementById('summary-state').textContent = `${city} / ${uf} (${region})`;
-
-      const statusSpan = document.getElementById('summary-vote-status');
-      if (votedCPFs[cleanDoc]) {
-        statusSpan.textContent = "VOTO JÁ REGISTRADO";
-        statusSpan.className = "text-amber-400 font-bold";
-      } else {
-        statusSpan.textContent = "APTO PARA VOTAR";
-        statusSpan.className = "text-emerald-400 font-bold";
-      }
-
+      // Exibe tela de carregamento na biometria
       document.getElementById('auth-step-1').classList.add('hidden');
       document.getElementById('auth-step-2').classList.remove('hidden');
 
+      // Validação de duplicidade na nuvem
+      const alreadyVotedCloud = await checkVoterInDatabase(cleanDoc);
+      const alreadyVotedLocal = votedCPFs[cleanDoc];
+
       setTimeout(() => {
         document.getElementById('auth-step-2').classList.add('hidden');
+        
+        if (alreadyVotedCloud || alreadyVotedLocal) {
+          // Bloqueia se já votou
+          votedCPFs[cleanDoc] = true;
+          localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+
+          errBox.textContent = "⚠️ Este CPF já registrou voto neste pleito presidencial! Votação duplicada não permitida.";
+          errBox.classList.remove('hidden');
+          document.getElementById('auth-step-1').classList.remove('hidden');
+          return;
+        }
+
+        const selectedOpt = ufSelect.options[ufSelect.selectedIndex];
+        const uf = ufSelect.value;
+        const region = selectedOpt.getAttribute('data-region') || 'Norte';
+
+        verifiedVoter = { name, doc, cleanDoc, uf, city, region };
+
+        document.getElementById('summary-name').textContent = name;
+        document.getElementById('summary-doc').textContent = doc;
+        document.getElementById('summary-state').textContent = `${city} / ${uf} (${region})`;
+        document.getElementById('summary-vote-status').textContent = "APTO PARA VOTAR";
+        document.getElementById('summary-vote-status').className = "text-emerald-400 font-bold";
+
         document.getElementById('auth-step-3').classList.remove('hidden');
 
         document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center justify-center";
         document.getElementById('step-dot-3').className = "w-7 h-7 rounded-full bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center";
-      }, 900);
+      }, 1000);
     }
 
     function startVotingSession() {
@@ -658,8 +753,7 @@
       } else if (tab === 'dados') {
         document.getElementById('sec-dados').classList.remove('hidden');
         document.getElementById('btn-tab-dados').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition";
-        renderStats();
-        renderCityResults();
+        loadCloudStats();
       } else if (tab === 'chat') {
         document.getElementById('sec-chat').classList.remove('hidden');
         document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition flex items-center gap-1";
@@ -703,7 +797,6 @@
 
       if (!nickname || !verifiedVoter) return;
 
-      // Verifica se o apelido já está em uso por outro CPF
       const normalizedNewNick = nickname.toLowerCase();
       const existingEntries = Object.entries(voterNicknames);
       
@@ -807,8 +900,8 @@
       }
     }
 
-    function pressConfirma() {
-      if (verifiedVoter && votedCPFs[verifiedVoter.cleanDoc]) {
+    async function pressConfirma() {
+      if (!verifiedVoter || votedCPFs[verifiedVoter.cleanDoc]) {
         return;
       }
 
@@ -829,27 +922,32 @@
         voteLabel = 'votou 13';
       }
 
-      if (verifiedVoter) {
-        votedCPFs[verifiedVoter.cleanDoc] = true;
-        voterChoices[verifiedVoter.cleanDoc] = voteLabel;
-        localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
-        localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
+      // Marca localmente
+      votedCPFs[verifiedVoter.cleanDoc] = true;
+      voterChoices[verifiedVoter.cleanDoc] = voteLabel;
+      localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+      localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
+
+      // Salva no Supabase (Banco de dados oficial)
+      if (supabaseClient) {
+        try {
+          const { error } = await supabaseClient
+            .from('votos')
+            .insert([{
+              cpf: verifiedVoter.cleanDoc,
+              opcao: voteType,
+              uf: verifiedVoter.uf,
+              cidade: verifiedVoter.city,
+              regiao: verifiedVoter.region
+            }]);
+
+          if (error) {
+            console.error("Erro ao inserir voto no Supabase:", error.message);
+          }
+        } catch (err) {
+          console.error("Falha ao gravar voto na nuvem:", err);
+        }
       }
-
-      votes[voteType] = (votes[voteType] || 0) + 1;
-      localStorage.setItem('simulador_votes', JSON.stringify(votes));
-
-      const region = verifiedVoter ? verifiedVoter.region : 'Norte';
-      if (!regionalVotes[region]) regionalVotes[region] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-      regionalVotes[region][voteType] = (regionalVotes[region][voteType] || 0) + 1;
-      localStorage.setItem('simulador_regional', JSON.stringify(regionalVotes));
-
-      const uf = verifiedVoter ? verifiedVoter.uf : 'PA';
-      const city = verifiedVoter ? verifiedVoter.city : 'Belém';
-      const cityKey = `${city} - ${uf}`;
-      if (!cityVotes[cityKey]) cityVotes[cityKey] = { uf, city, '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-      cityVotes[cityKey][voteType] = (cityVotes[cityKey][voteType] || 0) + 1;
-      localStorage.setItem('simulador_city_votes', JSON.stringify(cityVotes));
 
       const lcd = document.getElementById('lcd-content');
       lcd.innerHTML = `
@@ -861,7 +959,7 @@
 
       setTimeout(() => {
         switchTab('dados');
-      }, 1300);
+      }, 1400);
     }
 
     function renderStats() {
