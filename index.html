@@ -77,7 +77,7 @@
     </div>
   </header>
 
-  <main class="max-w-lg mx-auto w-full px-3 py-3 flex-1 flex flex-col justify-center">
+  <main class="max-w-lg mx-auto w-full px-3 py-3 flex-1 flex flex-col justify-center space-y-4">
 
     <!-- STEP 1: ETAPA DE VERIFICAÇÃO / AUTENTICAÇÃO DO ELEITOR -->
     <section id="sec-auth" class="w-full">
@@ -276,9 +276,9 @@
 
         </div>
 
-        <!-- MODAL DE ANTIFRAUDE / PAGAMENTO PIX MODIFICADO COM DETALHAMENTO -->
+        <!-- MODAL DE ANTIFRAUDE / PAGAMENTO PIX -->
         <div id="pix-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
-          <div class="bg-slate-900 border border-emerald-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-3.5 text-center max-h-[90vh] overflow-y-auto custom-scrollbar">
+          <div class="bg-slate-900 border border-emerald-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4 text-center">
             
             <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
               🛡️
@@ -298,7 +298,7 @@
             <!-- Área do QR Code e Copia e Cola -->
             <div id="pix-content" class="hidden space-y-3">
               <div class="bg-white p-3 rounded-xl inline-block shadow-inner mx-auto">
-                <img id="pix-qr-img" src="" alt="QR Code PIX" class="w-40 h-40 mx-auto">
+                <img id="pix-qr-img" src="" alt="QR Code PIX" class="w-44 h-44 mx-auto">
               </div>
 
               <div>
@@ -313,19 +313,6 @@
               <div class="bg-slate-950 border border-slate-800 p-2 rounded-xl flex items-center justify-center gap-2">
                 <div id="pix-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
                 <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
-              </div>
-
-              <!-- EXPLICAÇÃO DETALHADA NO PRÓPRIO MODAL -->
-              <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl text-left text-[11px] space-y-1.5 text-slate-300">
-                <p class="font-bold text-white flex items-center gap-1">
-                  <span>💡</span> Regra de Validação do Voto
-                </p>
-                <p class="text-[10px] text-amber-300 font-semibold leading-relaxed">
-                  ⚠️ Importante: O pagamento PIX será processado normalmente, mas o voto só será contabilizado se o CPF da conta pagadora for idêntico ao CPF cadastrado no início da sessão.
-                </p>
-                <p class="text-[10px] text-slate-400 leading-relaxed">
-                  • <b>Segurança Anti-Robô:</b> Impede que terceiros votem em nome de outros CPFs.
-                </p>
               </div>
             </div>
 
@@ -461,29 +448,6 @@
         </div>
 
       </div>
-
-      <!-- SEÇÃO EXPLICATIVA SOBRE O PIX ANTI-FRAUDE E DESTINAÇÃO BENEFICENTE -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
-        <div class="flex items-center gap-2 text-emerald-400">
-          <span class="text-lg">🤝</span>
-          <h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Transparência & Regras de Segurança</h3>
-        </div>
-        
-        <p class="text-xs text-slate-300 leading-relaxed">
-          Para evitar ataques automatizados, múltiplos votos falsos e bots, a confirmação do voto requer uma taxa simbólica de verificação (entre <b class="text-emerald-400">R$ 1,00</b> e <b class="text-emerald-400">R$ 2,00</b>) via PIX.
-        </p>
-
-        <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2 text-xs">
-          <div class="flex items-start gap-2">
-            <span class="text-emerald-400 font-bold">1.</span>
-            <p class="text-slate-300"><b class="text-white">Validação de Titularidade:</b> O pagamento pode ser concluído normalmente, porém <b>o voto só é contabilizado se o CPF do titular da conta bancária pagadora corresponder exatamente ao CPF informado na conta</b>.</p>
-          </div>
-          <div class="flex items-start gap-2">
-            <span class="text-emerald-400 font-bold">2.</span>
-            <p class="text-slate-300"><b class="text-white">Para onde vai o dinheiro?</b> 100% dos valores arrecadados são repassados integralmente a <b>instituições de caridade e causas sociais parceiras</b>.</p>
-          </div>
-        </div>
-      </div>
     </section>
 
     <!-- STEP 4: CHAT DOS ELEITORES -->
@@ -535,6 +499,59 @@
         <button onclick="sendChatMessage()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-lg shadow-emerald-500/20">
           Enviar 🚀
         </button>
+      </div>
+    </section>
+
+    <!-- SESSÃO DE DÚVIDAS FREQUENTES (FAQ) -->
+    <section id="sec-faq" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+      <div class="flex items-center gap-2 border-b border-slate-800 pb-2">
+        <span class="text-lg">❓</span>
+        <div>
+          <h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Sessão de Dúvidas & Perguntas Frequentes</h3>
+          <p class="text-[10px] text-slate-400">Tudo sobre as regras, segurança e validação do pleito</p>
+        </div>
+      </div>
+
+      <div class="space-y-2.5 text-xs">
+        <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
+          <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+            <span>🛡️ Como funciona a validação anti-fraude?</span>
+            <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+            Para garantir que a apuração retrate votos reais e evitar disparos automatizados por robôs (bots), exigimos a confirmação de uma taxa simbólica via PIX. O sistema bancário realiza a checagem automática do CPF da conta pagadora.
+          </div>
+        </details>
+
+        <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
+          <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+            <span>⚠️ O que acontece se o CPF do PIX for diferente do cadastrado?</span>
+            <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+            Caso alguém tente efetuar a verificação usando um CPF bancário diferente do CPF informado na identificação da urna, o pagamento será processado normalmente, porém <b class="text-rose-400">o voto será anulado e recusado</b>. Portanto, certifique-se de realizar o PIX a partir de sua própria conta.
+          </div>
+        </details>
+
+        <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
+          <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+            <span>🤝 Para onde são destinados os recursos arrecadados?</span>
+            <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+            75% dos valores arrecadados através das taxas simbólicas de verificação são repassados integralmente a instituições de caridade e projetos sociais parceiros, cobrindo também as taxas operacionais de transação do sistema.
+          </div>
+        </details>
+
+        <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
+          <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+            <span>🗳️ Posso votar mais de uma vez?</span>
+            <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+            Não. Cada número de CPF tem direito a apenas 1 (um) voto contabilizado na base de dados centralizada do sistema.
+          </div>
+        </details>
       </div>
     </section>
 
