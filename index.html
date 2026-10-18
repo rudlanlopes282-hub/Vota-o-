@@ -311,20 +311,20 @@
 
               <!-- Status do Pagamento -->
               <div class="bg-slate-950 border border-slate-800 p-2 rounded-xl flex items-center justify-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
+                <div id="pix-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
                 <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
               </div>
 
               <!-- EXPLICAÇÃO DETALHADA NO PRÓPRIO MODAL -->
               <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl text-left text-[11px] space-y-1.5 text-slate-300">
                 <p class="font-bold text-white flex items-center gap-1">
-                  <span>💡</span> Por que essa taxa via PIX?
+                  <span>💡</span> Regra de Validação do Voto
+                </p>
+                <p class="text-[10px] text-amber-300 font-semibold leading-relaxed">
+                  ⚠️ Importante: O pagamento PIX será processado normalmente, mas o voto só será contabilizado se o CPF da conta pagadora for idêntico ao CPF cadastrado no início da sessão.
                 </p>
                 <p class="text-[10px] text-slate-400 leading-relaxed">
-                  • <b>Segurança Anti-Robô:</b> O PIX consulta instantaneamente a titularidade do CPF pagador na rede bancária, impedindo votos automáticos criados por scripts e bots.
-                </p>
-                <p class="text-[10px] text-slate-400 leading-relaxed">
-                  • <b>Destinação Social:</b> 100% dos valores arrecadados são doados para instituições parceiras de caridade e projetos comunitários.
+                  • <b>Segurança Anti-Robô:</b> Impede que terceiros votem em nome de outros CPFs.
                 </p>
               </div>
             </div>
@@ -466,21 +466,21 @@
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
         <div class="flex items-center gap-2 text-emerald-400">
           <span class="text-lg">🤝</span>
-          <h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Transparência & Destinação Beneficente</h3>
+          <h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Transparência & Regras de Segurança</h3>
         </div>
         
         <p class="text-xs text-slate-300 leading-relaxed">
-          Para evitar ataques automatizados, múltiplos votos falsos e bots, a confirmação do voto requer uma taxa simbólica aleatória de verificação (entre <b class="text-emerald-400">R$ 1,00</b> e <b class="text-emerald-400">R$ 2,00</b>) via PIX.
+          Para evitar ataques automatizados, múltiplos votos falsos e bots, a confirmação do voto requer uma taxa simbólica de verificação (entre <b class="text-emerald-400">R$ 1,00</b> e <b class="text-emerald-400">R$ 2,00</b>) via PIX.
         </p>
 
         <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2 text-xs">
           <div class="flex items-start gap-2">
             <span class="text-emerald-400 font-bold">1.</span>
-            <p class="text-slate-300"><b class="text-white">Para onde vai o dinheiro?</b> 100% dos valores arrecadados são repassados integralmente a <b>instituições de caridade e causas sociais parceiras</b>.</p>
+            <p class="text-slate-300"><b class="text-white">Validação de Titularidade:</b> O pagamento pode ser concluído normalmente, porém <b>o voto só é contabilizado se o CPF do titular da conta bancária pagadora corresponder exatamente ao CPF informado na conta</b>.</p>
           </div>
           <div class="flex items-start gap-2">
             <span class="text-emerald-400 font-bold">2.</span>
-            <p class="text-slate-300"><b class="text-white">Por que o PIX?</b> O PIX valida a identidade do pagador em tempo real junto às instituições financeiras, assegurando que cada CPF corresponda a um eleitor real único.</p>
+            <p class="text-slate-300"><b class="text-white">Para onde vai o dinheiro?</b> 100% dos valores arrecadados são repassados integralmente a <b>instituições de caridade e causas sociais parceiras</b>.</p>
           </div>
         </div>
       </div>
@@ -628,14 +628,11 @@
     function validateCPF(cpf) {
       const clean = cpf.replace(/\D/g, '');
       if (clean.length !== 11) return false;
-      
-      // Elimina CPFs com todos os dígitos iguais (ex: 111.111.111-11, 999.999.999-99)
       if (/^(\d)\1{10}$/.test(clean)) return false;
 
       let sum = 0;
       let remainder;
 
-      // Valida 1º dígito verificador
       for (let i = 1; i <= 9; i++) {
         sum += parseInt(clean.substring(i - 1, i)) * (11 - i);
       }
@@ -643,7 +640,6 @@
       if (remainder === 10 || remainder === 11) remainder = 0;
       if (remainder !== parseInt(clean.substring(9, 10))) return false;
 
-      // Valida 2º dígito verificador
       sum = 0;
       for (let i = 1; i <= 10; i++) {
         sum += parseInt(clean.substring(i - 1, i)) * (12 - i);
@@ -790,7 +786,6 @@
 
       const cleanDoc = doc.replace(/\D/g, '');
       
-      // VALIDAÇÃO RIGOROSA DO CPF (APENAS CPFS VERDADEIROS)
       if (!validateCPF(cleanDoc)) {
         errBox.textContent = "⚠️ CPF inválido ou inexistente. Informe um número de CPF verdadeiro.";
         errBox.classList.remove('hidden');
@@ -1046,7 +1041,6 @@
       initiatePixVerification();
     }
 
-    // GERAÇÃO DE VALOR ALEATÓRIO ENTRE R$ 1,00 E R$ 2,00
     function getRandomPixAmount() {
       const min = 1.00;
       const max = 2.00;
@@ -1059,7 +1053,6 @@
       document.getElementById('pix-loading').classList.remove('hidden');
       document.getElementById('pix-content').classList.add('hidden');
 
-      // Valor aleatório entre 1.00 e 2.00
       const randomAmount = getRandomPixAmount();
       document.getElementById('pix-display-amount').textContent = `R$ ${randomAmount.toFixed(2).replace('.', ',')}`;
 
@@ -1102,8 +1095,9 @@
       document.getElementById('pix-loading').classList.add('hidden');
       document.getElementById('pix-content').classList.remove('hidden');
 
+      // Simulação padrão de verificação bem-sucedida para testes
       setTimeout(() => {
-        finalizeConfirmedVote();
+        finalizeConfirmedVote(true, verifiedVoter.cleanDoc);
       }, 6000);
     }
 
@@ -1113,12 +1107,15 @@
 
       pixPollInterval = setInterval(async () => {
         try {
-          const res = await fetch(`/api/gerar-pix?id=${transactionId}`);
+          const res = await fetch(`/api/gerar-pix?id=${transactionId}&voterCpf=${verifiedVoter.cleanDoc}`);
           const data = await res.json();
 
           if (data && data.paid) {
             clearInterval(pixPollInterval);
-            finalizeConfirmedVote();
+            
+            // O pagamento foi aprovado! Agora verifica se o CPF do pagador confere
+            const isMatch = data.cpfMatches !== undefined ? data.cpfMatches : true;
+            finalizeConfirmedVote(isMatch, data.payerCpf || verifiedVoter.cleanDoc);
           }
         } catch (err) {
           console.error("Erro na verificação do PIX:", err);
@@ -1139,13 +1136,38 @@
       pendingVoteObj = null;
     }
 
-    async function finalizeConfirmedVote() {
+    async function finalizeConfirmedVote(isCpfMatch = true, actualPayerCpf = "") {
       if (!pendingVoteObj || !verifiedVoter) return;
 
       if (pixPollInterval) clearInterval(pixPollInterval);
 
-      document.getElementById('pix-status-text').textContent = "PAGAMENTO CONFIRMADO! REGISTRANDO VOTO...";
-      document.getElementById('pix-status-text').className = "text-xs text-emerald-400 font-bold";
+      const statusText = document.getElementById('pix-status-text');
+      const statusDot = document.getElementById('pix-status-dot');
+
+      if (!isCpfMatch) {
+        // Pagamento Aprovado, mas CPF Divergente!
+        statusText.textContent = "PAGAMENTO CONFIRMADO, MAS CPF DIVERGENTE!";
+        statusText.className = "text-xs text-rose-400 font-bold";
+        statusDot.className = "w-2 h-2 rounded-full bg-rose-500";
+
+        setTimeout(() => {
+          document.getElementById('pix-modal').classList.add('hidden');
+
+          const lcd = document.getElementById('lcd-content');
+          lcd.innerHTML = `
+            <div class="py-6 text-center">
+              <p class="text-xs font-black text-rose-700 uppercase">VOTO ANULADO / RECUSADO</p>
+              <p class="text-[10px] font-bold text-black mt-1">O CPF da conta pagadora não corresponde ao CPF cadastrado (${verifiedVoter.doc}).</p>
+            </div>
+          `;
+        }, 2000);
+        return;
+      }
+
+      // CPF idêntico: Pagamento Aprovado + Voto Registrado
+      statusText.textContent = "PAGAMENTO E CPF VALIDADO! REGISTRANDO VOTO...";
+      statusText.className = "text-xs text-emerald-400 font-bold";
+      statusDot.className = "w-2 h-2 rounded-full bg-emerald-400";
 
       setTimeout(async () => {
         document.getElementById('pix-modal').classList.add('hidden');
