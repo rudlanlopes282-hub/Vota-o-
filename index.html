@@ -455,7 +455,7 @@
     // ==========================================
     const SUPABASE_URL = "https://SEU_PROJETO.supabase.co"; 
     const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_SUPABASE"; 
-    const supabaseClient = window.supabase ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+    const supabaseClient = window.supabase && SUPABASE_URL !== "https://SEU_PROJETO.supabase.co" ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
     // Base de municípios por Estado (UF)
     const stateCities = {
@@ -518,6 +518,10 @@
       await loadCloudStats();
       renderChat();
 
+      setInterval(() => {
+        loadCloudStats();
+      }, 30000);
+
       document.addEventListener('click', (e) => {
         if (!e.target.closest('#voter-city-search') && !e.target.closest('#city-suggestions-container')) {
           document.getElementById('city-suggestions-container').classList.add('hidden');
@@ -547,6 +551,33 @@
 
     async function loadCloudStats() {
       if (!supabaseClient) {
+        // Fallback local se o Supabase não estiver configurado/conectado
+        const localVotes = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+        votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+        cityVotes = {};
+        Object.keys(regionalVotes).forEach(r => {
+          regionalVotes[r] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+        });
+
+        localVotes.forEach(item => {
+          const op = item.opcao;
+          if (votes[op] !== undefined) votes[op]++;
+          else votes['NULO']++;
+
+          const reg = item.regiao || 'Norte';
+          if (regionalVotes[reg]) {
+            if (regionalVotes[reg][op] !== undefined) regionalVotes[reg][op]++;
+            else regionalVotes[reg]['NULO']++;
+          }
+
+          const cityKey = `${item.cidade || 'Capital'} - ${item.uf || 'PA'}`;
+          if (!cityVotes[cityKey]) {
+            cityVotes[cityKey] = { uf: item.uf || 'PA', city: item.cidade || 'Capital', '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+          }
+          if (cityVotes[cityKey][op] !== undefined) cityVotes[cityKey][op]++;
+          else cityVotes[cityKey]['NULO']++;
+        });
+
         renderStats();
         renderCityResults();
         return;
@@ -559,6 +590,8 @@
 
         if (error) {
           console.error("Erro ao carregar votos do Supabase:", error);
+          renderStats();
+          renderCityResults();
           return;
         }
 
@@ -678,9 +711,11 @@
         return;
       }
 
-      // Permite entrada sem bloqueios por CPF já registrado
       document.getElementById('auth-step-1').classList.add('hidden');
       document.getElementById('auth-step-2').classList.remove('hidden');
+
+      const alreadyVotedDB = await checkVoterInDatabase(cleanDoc);
+      const isAlreadyVoted = alreadyVotedDB || !!votedCPFs[cleanDoc];
 
       setTimeout(() => {
         document.getElementById('auth-step-2').classList.add('hidden');
@@ -694,8 +729,15 @@
         document.getElementById('summary-name').textContent = name;
         document.getElementById('summary-doc').textContent = doc;
         document.getElementById('summary-state').textContent = `${city} / ${uf} (${region})`;
-        document.getElementById('summary-vote-status').textContent = "APTO PARA VOTAR";
-        document.getElementById('summary-vote-status').className = "text-emerald-400 font-bold";
+
+        const statusEl = document.getElementById('summary-vote-status');
+        if (isAlreadyVoted) {
+          statusEl.textContent = "JÁ VOTOU (Aviso: Voto duplicado será bloqueado na urna)";
+          statusEl.className = "text-amber-400 font-bold";
+        } else {
+          statusEl.textContent = "APTO PARA VOTAR";
+          statusEl.className = "text-emerald-400 font-bold";
+        }
 
         document.getElementById('auth-step-3').classList.remove('hidden');
 
@@ -896,17 +938,23 @@
       localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
       localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
 
+      const voteObj = {
+        cpf: verifiedVoter.cleanDoc,
+        opcao: voteType,
+        uf: verifiedVoter.uf,
+        cidade: verifiedVoter.city,
+        regiao: verifiedVoter.region
+      };
+
+      const localVotes = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+      localVotes.push(voteObj);
+      localStorage.setItem('simulador_all_votes', JSON.stringify(localVotes));
+
       if (supabaseClient) {
         try {
           await supabaseClient
             .from('votos')
-            .insert([{
-              cpf: verifiedVoter.cleanDoc,
-              opcao: voteType,
-              uf: verifiedVoter.uf,
-              cidade: verifiedVoter.city,
-              regiao: verifiedVoter.region
-            }]);
+            .insert([voteObj]);
         } catch (err) {
           console.error("Falha ao gravar voto na nuvem:", err);
         }
