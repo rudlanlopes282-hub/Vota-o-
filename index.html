@@ -66,7 +66,7 @@
           </p>
         </div>
       </div>
-      <div id="nav-tabs" class="hidden flex bg-slate-800 p-1 rounded-lg text-xs font-semibold">
+      <div id="nav-tabs" class="flex bg-slate-800 p-1 rounded-lg text-xs font-semibold">
         <button id="btn-tab-urna" onclick="switchTab('urna')" class="px-3 py-1 rounded-md bg-emerald-500 text-slate-950 transition font-bold">Urna</button>
         <button id="btn-tab-dados" onclick="switchTab('dados')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition">Dados</button>
         <button id="btn-tab-chat" onclick="switchTab('chat')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition flex items-center gap-1">
@@ -101,7 +101,7 @@
           <div id="step-dot-3" class="w-7 h-7 rounded-full bg-slate-800 text-slate-500 font-bold text-xs flex items-center justify-center">3</div>
         </div>
 
-        <!-- Alerta de Erro -->
+        <!-- Alerta de Erro (Apenas para campos em branco) -->
         <div id="auth-error" class="hidden mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl text-center font-medium"></div>
 
         <!-- FORMULÁRIO PASSO 1 -->
@@ -156,7 +156,7 @@
             <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               2. Cidade / Município
             </label>
-            <input type="text" id="voter-city-search" placeholder="Digite sua cidade (ex: Belém, Santa Maria...)" oninput="filterCityOptions()" onfocus="filterCityOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition">
+            <input type="text" id="voter-city-search" placeholder="Digite sua cidade (ex: Belém, Paragominas...)" oninput="filterCityOptions()" onfocus="filterCityOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition">
             
             <div id="city-suggestions-container" class="hidden absolute left-0 right-0 top-full bg-slate-950 border border-emerald-500/40 rounded-xl max-h-48 overflow-y-auto custom-scrollbar p-1 space-y-1 shadow-2xl z-50 mt-1">
             </div>
@@ -176,10 +176,10 @@
             <div class="text-3xl">👤</div>
           </div>
           <p class="text-xs text-slate-300 font-semibold">Validando Biometria e Banco de Dados TSE...</p>
-          <p class="text-[11px] text-slate-500">Aguarde alguns segundos enquanto checamos duplicidade de CPF.</p>
+          <p class="text-[11px] text-slate-500">Aguarde alguns segundos...</p>
         </div>
 
-        <!-- FORMULÁRIO PASSO 3: LIBERADO -->
+        <!-- FORMULÁRIO PASSO 3: LIBERADO SEMPRE -->
         <div id="auth-step-3" class="hidden text-center py-3 space-y-4">
           <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
             ✓
@@ -425,13 +425,8 @@
       <!-- Alerta de Erro de Apelido Duplicado -->
       <div id="nickname-error" class="hidden bg-rose-500/10 border border-rose-500/30 p-2.5 rounded-xl text-center text-rose-400 text-xs font-medium"></div>
 
-      <!-- Alerta de Bloqueio se não votou -->
-      <div id="chat-locked-alert" class="hidden bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl text-center text-rose-400 text-xs font-medium">
-        🔒 O chat é restrito apenas aos eleitores que já concluíram a votação na urna. Vote para participar do debate!
-      </div>
-
-      <!-- Configuração de Apelido (Exibido antes da 1ª mensagem) -->
-      <div id="nickname-setup-box" class="hidden bg-slate-900 border border-emerald-500/40 p-3 rounded-xl space-y-2">
+      <!-- Configuração de Apelido -->
+      <div id="nickname-setup-box" class="bg-slate-900 border border-emerald-500/40 p-3 rounded-xl space-y-2">
         <p class="text-xs font-bold text-emerald-400">Escolha seu Apelido para o Chat:</p>
         <div class="flex gap-2">
           <input type="text" id="chat-nickname-input" placeholder="Digite seu apelido..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-500">
@@ -458,8 +453,8 @@
     // ==========================================
     // CONFIGURAÇÃO SUPABASE
     // ==========================================
-    const SUPABASE_URL = "https://SEU_PROJETO.supabase.co"; // Substitua pela sua URL
-    const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_SUPABASE"; // Substitua pela sua chave anon
+    const SUPABASE_URL = "https://SEU_PROJETO.supabase.co"; 
+    const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_SUPABASE"; 
     const supabaseClient = window.supabase ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
     // Base de municípios por Estado (UF)
@@ -482,7 +477,7 @@
       "PR": ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "Foz do Iguaçu"],
       "PE": ["Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina"],
       "PI": ["Teresina", "Parnaíba", "Picos", "Floriano"],
-      "RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Petrópolis"],
+      "RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Petropolis"],
       "RN": ["Natal", "Mossoró", "Parnamirim", "São Gonçalo do Amarante"],
       "RS": ["Porto Alegre", "Caxias do Sul", "Canoas", "Pelotas", "Santa Maria", "Gravataí"],
       "RO": ["Porto Velho", "Ji-Paraná", "Ariquemes", "Vilhena"],
@@ -530,7 +525,6 @@
       });
     });
 
-    // Função para buscar dados oficiais da tabela 'votos' no Supabase e evitar voto duplicado globalmente
     async function checkVoterInDatabase(cleanDoc) {
       if (!supabaseClient) return false;
       try {
@@ -544,7 +538,7 @@
           console.error("Erro ao verificar CPF no Supabase:", error);
           return false;
         }
-        return !!data; // Retorna true se já votou
+        return !!data;
       } catch (err) {
         console.error("Falha na conexão com Supabase:", err);
         return false;
@@ -568,7 +562,6 @@
           return;
         }
 
-        // Reseta contadores locais com base no banco
         votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
         cityVotes = {};
         Object.keys(regionalVotes).forEach(r => {
@@ -577,7 +570,7 @@
 
         if (data) {
           data.forEach(item => {
-            const op = item.opcao; // Ex: "22" ou "BRANCO"
+            const op = item.opcao;
             if (votes[op] !== undefined) votes[op]++;
             else votes['NULO']++;
 
@@ -594,7 +587,6 @@
             if (cityVotes[cityKey][op] !== undefined) cityVotes[cityKey][op]++;
             else cityVotes[cityKey]['NULO']++;
 
-            // Salva no registro local de CPFs já votados para blindar
             votedCPFs[item.cpf] = true;
           });
           localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
@@ -686,27 +678,12 @@
         return;
       }
 
-      // Exibe tela de carregamento na biometria
+      // Permite entrada sem bloqueios por CPF já registrado
       document.getElementById('auth-step-1').classList.add('hidden');
       document.getElementById('auth-step-2').classList.remove('hidden');
 
-      // Validação de duplicidade na nuvem
-      const alreadyVotedCloud = await checkVoterInDatabase(cleanDoc);
-      const alreadyVotedLocal = votedCPFs[cleanDoc];
-
       setTimeout(() => {
         document.getElementById('auth-step-2').classList.add('hidden');
-        
-        if (alreadyVotedCloud || alreadyVotedLocal) {
-          // Bloqueia se já votou
-          votedCPFs[cleanDoc] = true;
-          localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
-
-          errBox.textContent = "⚠️ Este CPF já registrou voto neste pleito presidencial! Votação duplicada não permitida.";
-          errBox.classList.remove('hidden');
-          document.getElementById('auth-step-1').classList.remove('hidden');
-          return;
-        }
 
         const selectedOpt = ufSelect.options[ufSelect.selectedIndex];
         const uf = ufSelect.value;
@@ -761,27 +738,18 @@
         const nickname = verifiedVoter ? voterNicknames[verifiedVoter.cleanDoc] : null;
         document.getElementById('chat-user-badge').textContent = nickname ? `${nickname} (${verifiedVoter.uf})` : (verifiedVoter ? verifiedVoter.name.split(' ')[0] : "Visitante");
         
-        const hasVoted = verifiedVoter && votedCPFs[verifiedVoter.cleanDoc];
-        const inputContainer = document.getElementById('chat-input-container');
-        const lockedAlert = document.getElementById('chat-locked-alert');
         const nicknameBox = document.getElementById('nickname-setup-box');
+        const inputContainer = document.getElementById('chat-input-container');
         const nickErrBox = document.getElementById('nickname-error');
 
         nickErrBox.classList.add('hidden');
 
-        if (hasVoted) {
-          lockedAlert.classList.add('hidden');
-          if (!nickname) {
-            nicknameBox.classList.remove('hidden');
-            inputContainer.classList.add('hidden');
-          } else {
-            nicknameBox.classList.add('hidden');
-            inputContainer.classList.remove('hidden');
-          }
-        } else {
+        if (!nickname) {
+          nicknameBox.classList.remove('hidden');
           inputContainer.classList.add('hidden');
+        } else {
           nicknameBox.classList.add('hidden');
-          lockedAlert.classList.remove('hidden');
+          inputContainer.classList.remove('hidden');
         }
 
         renderChat();
@@ -824,7 +792,6 @@
 
     function pressKey(n) {
       if (isBranco) return;
-      if (verifiedVoter && votedCPFs[verifiedVoter.cleanDoc]) return;
       if (currentInput.length < 2) {
         currentInput += n;
         renderUrnaScreen();
@@ -832,21 +799,18 @@
     }
 
     function quickSelect(num) {
-      if (verifiedVoter && votedCPFs[verifiedVoter.cleanDoc]) return;
       currentInput = num;
       isBranco = false;
       renderUrnaScreen();
     }
 
     function pressBranco() {
-      if (verifiedVoter && votedCPFs[verifiedVoter.cleanDoc]) return;
       currentInput = "";
       isBranco = true;
       renderUrnaScreen();
     }
 
     function pressCorrige() {
-      if (verifiedVoter && votedCPFs[verifiedVoter.cleanDoc]) return;
       currentInput = "";
       isBranco = false;
       renderUrnaScreen();
@@ -860,15 +824,6 @@
       const specialText = document.getElementById('special-text');
       const candName = document.getElementById('cand-name');
       const candParty = document.getElementById('cand-party');
-
-      if (verifiedVoter && votedCPFs[verifiedVoter.cleanDoc]) {
-        d1.textContent = "X";
-        d2.textContent = "X";
-        info.classList.add('hidden');
-        special.classList.remove('hidden');
-        specialText.textContent = "VOTO JÁ COMPUTADO";
-        return;
-      }
 
       if (isBranco) {
         d1.textContent = "B";
@@ -901,7 +856,21 @@
     }
 
     async function pressConfirma() {
-      if (!verifiedVoter || votedCPFs[verifiedVoter.cleanDoc]) {
+      if (!verifiedVoter) return;
+
+      // Validação de voto duplicado é feita ao PRESSIONAR CONFIRMA na urna
+      const alreadyVotedCloud = await checkVoterInDatabase(verifiedVoter.cleanDoc);
+      if (alreadyVotedCloud || votedCPFs[verifiedVoter.cleanDoc]) {
+        votedCPFs[verifiedVoter.cleanDoc] = true;
+        localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+        
+        const lcd = document.getElementById('lcd-content');
+        lcd.innerHTML = `
+          <div class="py-6 text-center">
+            <p class="text-xs font-black text-rose-700 uppercase">ERRO: VOTO DUPLICADO</p>
+            <p class="text-[10px] font-bold text-black mt-1">Este CPF já registrou voto neste pleito.</p>
+          </div>
+        `;
         return;
       }
 
@@ -922,16 +891,14 @@
         voteLabel = 'votou 13';
       }
 
-      // Marca localmente
       votedCPFs[verifiedVoter.cleanDoc] = true;
       voterChoices[verifiedVoter.cleanDoc] = voteLabel;
       localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
       localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
 
-      // Salva no Supabase (Banco de dados oficial)
       if (supabaseClient) {
         try {
-          const { error } = await supabaseClient
+          await supabaseClient
             .from('votos')
             .insert([{
               cpf: verifiedVoter.cleanDoc,
@@ -940,10 +907,6 @@
               cidade: verifiedVoter.city,
               regiao: verifiedVoter.region
             }]);
-
-          if (error) {
-            console.error("Erro ao inserir voto no Supabase:", error.message);
-          }
         } catch (err) {
           console.error("Falha ao gravar voto na nuvem:", err);
         }
@@ -1070,9 +1033,7 @@
     }
 
     function sendChatMessage() {
-      if (!verifiedVoter || !votedCPFs[verifiedVoter.cleanDoc]) {
-        return;
-      }
+      if (!verifiedVoter) return;
 
       const nickname = voterNicknames[verifiedVoter.cleanDoc];
       if (!nickname) return;
