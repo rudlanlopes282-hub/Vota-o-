@@ -624,6 +624,37 @@
       });
     });
 
+    // ALGORITMO OFICIAL DE VALIDAÇÃO DE CPF VERDADEIRO (MÓDULO 11)
+    function validateCPF(cpf) {
+      const clean = cpf.replace(/\D/g, '');
+      if (clean.length !== 11) return false;
+      
+      // Elimina CPFs com todos os dígitos iguais (ex: 111.111.111-11, 999.999.999-99)
+      if (/^(\d)\1{10}$/.test(clean)) return false;
+
+      let sum = 0;
+      let remainder;
+
+      // Valida 1º dígito verificador
+      for (let i = 1; i <= 9; i++) {
+        sum += parseInt(clean.substring(i - 1, i)) * (11 - i);
+      }
+      remainder = (sum * 10) % 11;
+      if (remainder === 10 || remainder === 11) remainder = 0;
+      if (remainder !== parseInt(clean.substring(9, 10))) return false;
+
+      // Valida 2º dígito verificador
+      sum = 0;
+      for (let i = 1; i <= 10; i++) {
+        sum += parseInt(clean.substring(i - 1, i)) * (12 - i);
+      }
+      remainder = (sum * 10) % 11;
+      if (remainder === 10 || remainder === 11) remainder = 0;
+      if (remainder !== parseInt(clean.substring(10, 11))) return false;
+
+      return true;
+    }
+
     async function checkVoterInDatabase(cleanDoc) {
       if (!supabaseClient) return false;
       try {
@@ -758,8 +789,10 @@
       }
 
       const cleanDoc = doc.replace(/\D/g, '');
-      if (cleanDoc.length < 11) {
-        errBox.textContent = "Digite um CPF válido com 11 dígitos.";
+      
+      // VALIDAÇÃO RIGOROSA DO CPF (APENAS CPFS VERDADEIROS)
+      if (!validateCPF(cleanDoc)) {
+        errBox.textContent = "⚠️ CPF inválido ou inexistente. Informe um número de CPF verdadeiro.";
         errBox.classList.remove('hidden');
         return;
       }
