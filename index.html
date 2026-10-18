@@ -158,7 +158,7 @@
             </label>
             <input type="text" id="voter-city-search" placeholder="Digite sua cidade (ex: Belém, Santa Maria...)" oninput="filterCityOptions()" onfocus="filterCityOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition">
             
-            <div id="city-suggestions-container" class="bg-slate-950 border border-emerald-500/40 rounded-xl max-h-48 overflow-y-auto custom-scrollbar p-1 space-y-1 shadow-2xl mt-1">
+            <div id="city-suggestions-container" class="hidden absolute left-0 right-0 top-full bg-slate-950 border border-emerald-500/40 rounded-xl max-h-48 overflow-y-auto custom-scrollbar p-1 space-y-1 shadow-2xl z-50 mt-1">
             </div>
 
             <input type="hidden" id="selected-city-val" value="">
@@ -193,7 +193,7 @@
             <p class="text-slate-400">ELEITOR: <span id="summary-name" class="text-white font-bold"></span></p>
             <p class="text-slate-400">DOCUMENTO: <span id="summary-doc" class="text-emerald-400 font-bold"></span></p>
             <p class="text-slate-400">MUNICIPIO / UF: <span id="summary-state" class="text-emerald-400 font-bold"></span></p>
-            <p class="text-slate-400">STATUS: <span class="text-emerald-400 font-bold">APTO PARA VOTAR</span></p>
+            <p class="text-slate-400">STATUS: <span id="summary-vote-status" class="text-emerald-400 font-bold">APTO PARA VOTAR</span></p>
           </div>
 
           <button onclick="startVotingSession()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-sm transition active:scale-[0.99]">
@@ -331,359 +331,305 @@
             <p class="text-[10px] font-bold text-emerald-500 uppercase">VOTOS VÁLIDOS</p>
             <p id="stat-validos" class="text-2xl font-black text-emerald-400">0</p>
           </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <p class="text-[10px] font-bold text-slate-500 uppercase">EM BRANCO</p>
-            <p id="stat-branco" class="text-2xl font-black text-slate-300">0</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase">VOTOS BRANCOS</p>
+            <p id="stat-branco" class="text-xl font-black text-slate-200">0</p>
           </div>
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <p class="text-[10px] font-bold text-amber-500 uppercase">VOTOS NULOS</p>
-            <p id="stat-nulo" class="text-2xl font-black text-amber-400">0</p>
+            <p class="text-[10px] font-bold text-rose-500 uppercase">VOTOS NULOS</p>
+            <p id="stat-nulo" class="text-xl font-black text-rose-400">0</p>
           </div>
         </div>
 
-        <!-- BARRAS DE DESEMPENHO DOS CANDIDATOS -->
-        <div class="space-y-3 pt-1">
-          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Resultado Brasil (Nacional)</p>
+        <!-- CANDIDATOS PLACAR -->
+        <div class="space-y-3 pt-2">
           
-          <!-- FLÁVIO BOLSONARO -->
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5">
+          <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2">
             <div class="flex justify-between items-center text-xs">
               <span class="font-bold text-white flex items-center gap-1.5">
-                <span>🏛️</span> Flávio Bolsonaro (22)
+                🏛️ Flávio Bolsonaro (22)
               </span>
-              <span id="pct-22" class="font-black text-emerald-400">0.0%</span>
+              <span id="pct-22" class="font-black text-amber-400 text-sm">0.0%</span>
             </div>
-            <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden">
-              <div id="bar-22" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
+              <div id="bar-22" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
             </div>
-            <p class="text-[10px] text-slate-500 text-right"><span id="cnt-22">0</span> votos</p>
+            <p id="count-22" class="text-[10px] text-slate-400 text-right font-mono">0 votos</p>
           </div>
 
-          <!-- LULA -->
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5">
+          <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2">
             <div class="flex justify-between items-center text-xs">
               <span class="font-bold text-white flex items-center gap-1.5">
-                <span>🚩</span> Lula (13)
+                🚩 Lula (13)
               </span>
-              <span id="pct-13" class="font-black text-emerald-400">0.0%</span>
+              <span id="pct-13" class="font-black text-rose-400 text-sm">0.0%</span>
             </div>
-            <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden">
-              <div id="bar-13" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
+              <div id="bar-13" class="bg-rose-500 h-full transition-all duration-500" style="width: 0%"></div>
             </div>
-            <p class="text-[10px] text-slate-500 text-right"><span id="cnt-13">0</span> votos</p>
+            <p id="count-13" class="text-[10px] text-slate-400 text-right font-mono">0 votos</p>
           </div>
 
         </div>
 
-        <!-- CONSULTA MUNICIPAL ESTILO APP RESULTADOS DO TSE -->
-        <div class="pt-3 border-t border-slate-800 space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-              <span>🏙️</span> Apuração por Cidade / Município
-            </h3>
-            <span class="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">TSE Resultados</span>
-          </div>
-
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-3">
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Estado (UF)</label>
-                <select id="filter-uf" onchange="onFilterUFChange()" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
-                  <option value="PA">Pará (PA)</option>
-                  <option value="SP">São Paulo (SP)</option>
-                  <option value="RJ">Rio de Janeiro (RJ)</option>
-                  <option value="MG">Minas Gerais (MG)</option>
-                  <option value="BA">Bahia (BA)</option>
-                  <option value="PE">Pernambuco (PE)</option>
-                  <option value="CE">Ceará (CE)</option>
-                  <option value="PR">Paraná (PR)</option>
-                  <option value="RS">Rio Grande do Sul (RS)</option>
-                  <option value="SC">Santa Catarina (SC)</option>
-                  <option value="GO">Goiás (GO)</option>
-                  <option value="DF">Distrito Federal (DF)</option>
-                  <option value="MA">Maranhão (MA)</option>
-                  <option value="AM">Amazonas (AM)</option>
-                  <option value="ZZ">Exterior (ZZ)</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Filtrar Cidade</label>
-                <input type="text" id="filter-city-input" placeholder="Ex: Santa Maria, Belém..." oninput="renderCityStats()" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500">
-              </div>
-            </div>
-
-            <!-- RESULTADO DETALHADO DA CIDADE SELECIONADA -->
-            <div id="city-stats-card" class="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-2">
-            </div>
+        <!-- DESEMPENHO POR REGIÃO -->
+        <div class="space-y-2 pt-2">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+            🗺️ Desempenho por Região
+          </h3>
+          <div id="regional-stats-container" class="space-y-2">
+            <!-- Renderizado via JS -->
           </div>
         </div>
 
-        <!-- PAINEL DE APURAÇÃO REGIONAL -->
-        <div class="pt-2 border-t border-slate-800 space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-              <span>🗺️</span> Desempenho Por Região
-            </h3>
-            <span class="text-[10px] text-slate-500 font-mono">6 Regiões</span>
+        <!-- CONSULTA POR MUNICÍPIO -->
+        <div class="space-y-2.5 pt-2 border-t border-slate-800">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+            🏙️ Apuração por Município
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <select id="query-uf-select" onchange="renderCityResults()" class="bg-slate-950 border border-slate-800 text-xs text-white rounded-xl p-2.5 outline-none">
+              <option value="">Todas as UFs</option>
+            </select>
+            <input type="text" id="query-city-filter" placeholder="Filtrar município..." oninput="renderCityResults()" class="bg-slate-950 border border-slate-800 text-xs text-white rounded-xl p-2.5 placeholder-slate-600 outline-none">
           </div>
-
-          <div id="regional-container" class="space-y-2">
+          <div id="city-results-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+            <!-- Renderizado via JS -->
           </div>
         </div>
 
       </div>
     </section>
 
-    <!-- STEP 4: CHAT DE BATE-PAPO ENTRE ELEITORES EM TEMPO REAL -->
+    <!-- STEP 4: CHAT DOS ELEITORES -->
     <section id="sec-chat" class="hidden w-full space-y-3">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col h-[520px] shadow-2xl relative">
-        
-        <!-- CABEÇALHO DO CHAT -->
-        <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-sm">
-              💬
-            </div>
-            <div>
-              <h2 class="text-xs font-extrabold text-white leading-tight">Debate Eleitoral ao Vivo</h2>
-              <p class="text-[10px] text-emerald-400 flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Chat dos Eleitores</span>
-              </p>
-            </div>
-          </div>
-          <span id="chat-user-badge" class="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-1 rounded-lg border border-slate-800">
-            Visitante
-          </span>
-        </div>
-
-        <!-- MENSAGENS -->
-        <div id="chat-messages" class="flex-1 overflow-y-auto custom-scrollbar my-3 space-y-2.5 pr-1">
-          <div class="text-center py-6 text-slate-500 text-xs">
-            Aguardando mensagens do debate...
+      <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm">💬</div>
+          <div>
+            <h3 class="text-xs font-bold text-white">Debate Eleitoral ao Vivo</h3>
+            <p class="text-[10px] text-emerald-400 font-medium">● Chat dos Eleitores</p>
           </div>
         </div>
+        <span id="chat-user-badge" class="text-[10px] font-mono bg-slate-950 border border-slate-800 px-2 py-1 rounded-lg text-slate-300"></span>
+      </div>
 
-        <!-- ENTRADA DE MENSAGEM -->
-        <div class="pt-2 border-t border-slate-800 flex gap-2">
-          <input type="text" id="chat-input" placeholder="Digite seu comentário..." onkeypress="if(event.key==='Enter') sendChatMessage()" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition">
-          <button onclick="sendChatMessage()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition active:scale-95 flex items-center gap-1">
-            <span>Enviar</span>
-            <span>🚀</span>
-          </button>
+      <!-- Caixa de Mensagens -->
+      <div id="chat-messages" class="bg-slate-900 border border-slate-800 p-3 rounded-2xl h-64 overflow-y-auto custom-scrollbar space-y-3 text-xs flex flex-col">
+        <!-- Renderizado via JS -->
+      </div>
+
+      <!-- Alerta de Erro de Apelido Duplicado -->
+      <div id="nickname-error" class="hidden bg-rose-500/10 border border-rose-500/30 p-2.5 rounded-xl text-center text-rose-400 text-xs font-medium"></div>
+
+      <!-- Alerta de Bloqueio se não votou -->
+      <div id="chat-locked-alert" class="hidden bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl text-center text-rose-400 text-xs font-medium">
+        🔒 O chat é restrito apenas aos eleitores que já concluíram a votação na urna. Vote para participar do debate!
+      </div>
+
+      <!-- Configuração de Apelido (Exibido antes da 1ª mensagem) -->
+      <div id="nickname-setup-box" class="hidden bg-slate-900 border border-emerald-500/40 p-3 rounded-xl space-y-2">
+        <p class="text-xs font-bold text-emerald-400">Escolha seu Apelido para o Chat:</p>
+        <div class="flex gap-2">
+          <input type="text" id="chat-nickname-input" placeholder="Digite seu apelido..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-500">
+          <button onclick="saveNickname()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs transition">Salvar</button>
         </div>
+      </div>
 
+      <!-- Enviar Mensagem -->
+      <div id="chat-input-container" class="hidden flex gap-2">
+        <input type="text" id="chat-input" placeholder="Digite seu comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-emerald-500">
+        <button onclick="sendChatMessage()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-lg shadow-emerald-500/20">
+          Enviar 🚀
+        </button>
       </div>
     </section>
 
   </main>
 
-  <footer class="border-t border-slate-900 bg-slate-950 py-3 text-center text-[10px] text-slate-600">
+  <footer class="text-center py-3 text-[10px] text-slate-500 border-t border-slate-900">
     © Justiça Eleitoral Digital — Simulador de Votação Presidencial
   </footer>
 
   <script>
+    // Base de municípios por Estado (UF)
+    const stateCities = {
+      "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal", "Parauapebas", "Abaetetuba", "Marituba", "Cametá", "Bragança", "Paragominas"],
+      "AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira", "Tarauacá"],
+      "AL": ["Maceió", "Arapiraca", "Rio Largo", "Palmeira dos Índios"],
+      "AP": ["Macapá", "Santana", "Laranjal do Jari"],
+      "AM": ["Manaus", "Parintins", "Itacoatiara", "Manacapuru"],
+      "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Itabuna"],
+      "CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral"],
+      "DF": ["Brasília", "Ceilândia", "Taguatinga", "Samambaia"],
+      "ES": ["Vitória", "Vila Velha", "Serra", "Cariacica", "Guarapari"],
+      "GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde"],
+      "MA": ["São Luís", "Imperatriz", "São José de Ribamar", "Timon", "Caxias"],
+      "MT": ["Cuiabá", "Várzea Grande", "Rondonópolis", "Sinop", "Tangará da Serra"],
+      "MS": ["Campo Grande", "Dourados", "Três Lagoas", "Corumbá"],
+      "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros"],
+      "PB": ["João Pessoa", "Campina Grande", "Santa Rita", "Patos"],
+      "PR": ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "Foz do Iguaçu"],
+      "PE": ["Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina"],
+      "PI": ["Teresina", "Parnaíba", "Picos", "Floriano"],
+      "RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Petrópolis"],
+      "RN": ["Natal", "Mossoró", "Parnamirim", "São Gonçalo do Amarante"],
+      "RS": ["Porto Alegre", "Caxias do Sul", "Canoas", "Pelotas", "Santa Maria", "Gravataí"],
+      "RO": ["Porto Velho", "Ji-Paraná", "Ariquemes", "Vilhena"],
+      "RR": ["Boa Vista", "Rorainópolis", "Caracaraí"],
+      "SC": ["Florianópolis", "Joinville", "Blumenau", "São José", "Criciúma"],
+      "SP": ["São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo", "Santo André", "Osasco", "Ribeirão Preto", "Sorocaba"],
+      "SE": ["Aracaju", "Nossa Senhora do Socorro", "Lagarto", "Itabaiana"],
+      "TO": ["Palmas", "Araguaína", "Gurupi", "Porto Nacional"],
+      "ZZ": ["Exterior / Voto no Exterior"]
+    };
+
+    let verifiedVoter = null;
     let currentInput = "";
     let isBranco = false;
-    let verifiedVoter = null;
-    let currentCityList = [];
 
-    let localChatMessages = [
-      {
-        id: 1,
-        sender: "Eleitoral Bot",
-        uf: "TSE",
-        text: "Bem-vindo ao canal oficial de debates eleitorais! Mantenha o respeito nas conversas.",
-        time: "Agora",
-        isSystem: true
-      }
-    ];
+    let votedCPFs = JSON.parse(localStorage.getItem('simulador_voted_cpfs') || "{}");
+    let voterChoices = JSON.parse(localStorage.getItem('simulador_voter_choices') || "{}"); // Armazena o voto de cada CPF
+    let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}"); // Apelido escolhido por CPF
 
-    const defaultCities = {
-      PA: [
-        "Abaetetuba", "Altamira", "Ananindeua", "Barcarena", "Belém", "Bragança", "Breves", 
-        "Cametá", "Capanema", "Castanhal", "Ipixuna do Pará", "Itaituba", "Marabá", 
-        "Marituba", "Paragominas", "Parauapebas", "Redenção", "Santa Maria das Barreiras", 
-        "Santa Maria do Pará", "Santarém", "Tucuruí", "Ulianópolis", "Xinguara"
-      ],
-      SP: ["São Paulo", "Campinas", "Guarulhos", "Santos", "São José dos Campos", "Ribeirão Preto", "Osasco", "Sorocaba"],
-      RJ: ["Rio de Janeiro", "Niterói", "Duque de Caxias", "Nova Iguaçu", "São Gonçalo", "Petrópolis"],
-      MG: ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros"],
-      BA: ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Juazeiro"],
-      PE: ["Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina"],
-      CE: ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral"],
-      PR: ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel"],
-      RS: ["Porto Alegre", "Caxias do Sul", "Canoas", "Pelotas", "Santa Maria"],
-      SC: ["Florianópolis", "Joinville", "Blumenau", "São José", "Chapecó"],
-      GO: ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde"],
-      DF: ["Brasília"],
-      ZZ: ["Exterior / Votação no Exterior"]
-    };
-
-    let votes = {
-      '22': 0,
-      '13': 0,
-      'BRANCO': 0,
-      'NULO': 0
-    };
-
-    let regionalVotes = {
+    let votes = JSON.parse(localStorage.getItem('simulador_votes') || JSON.stringify({ '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 }));
+    let regionalVotes = JSON.parse(localStorage.getItem('simulador_regional') || JSON.stringify({
       'Norte': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
       'Nordeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
       'Sudeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
       'Sul': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
       'Centro-Oeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
       'Exterior': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 }
-    };
+    }));
+    let cityVotes = JSON.parse(localStorage.getItem('simulador_city_votes') || "{}");
 
-    let cityVotes = {};
+    let chatMessages = JSON.parse(localStorage.getItem('simulador_chat_msgs') || JSON.stringify([
+      { id: 1, sender: "TSE Oficial", uf: "DF", text: "Bem-vindo ao debate eleitoral ao vivo. Mantenha o respeito nas discussões.", time: "Agora", isSystem: true }
+    ]));
 
-    function removeAccents(str) {
-      if (!str) return "";
-      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    }
+    window.addEventListener('DOMContentLoaded', () => {
+      onUFChange();
+      populateQueryUFs();
+      renderStats();
+      renderCityResults();
+      renderChat();
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#voter-city-search') && !e.target.closest('#city-suggestions-container')) {
+          document.getElementById('city-suggestions-container').classList.add('hidden');
+        }
+      });
+    });
 
     function formatCPF(input) {
       let v = input.value.replace(/\D/g, '');
-      if (v.length > 11) v = v.substring(0, 11);
-      v = v.replace(/(\d{3})(\d)/, '$1.$2');
-      v = v.replace(/(\d{3})(\d)/, '$1.$2');
-      v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      if (v.length > 11) v = v.slice(0, 11);
+      if (v.length > 9) {
+        v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+      } else if (v.length > 6) {
+        v = v.replace(/^(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+      } else if (v.length > 3) {
+        v = v.replace(/^(\d{3})(\d{1,3})/, '$1.$2');
+      }
       input.value = v;
     }
 
-    async function onUFChange() {
+    function onUFChange() {
       const ufSelect = document.getElementById('voter-uf-select');
-      const citySearch = document.getElementById('voter-city-search');
-      const hiddenVal = document.getElementById('selected-city-val');
-
-      const uf = ufSelect.value || "PA";
-      citySearch.value = "";
-      hiddenVal.value = "";
-
-      if (uf === 'ZZ') {
-        currentCityList = ["Exterior / Votação no Exterior"];
-        filterCityOptions();
-        return;
-      }
-
-      currentCityList = defaultCities[uf] || ["Capital / Cidade Principal"];
-      filterCityOptions();
-
-      try {
-        const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data && data.length > 0) {
-            currentCityList = data.map(m => m.nome).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-            filterCityOptions();
-          }
-        }
-      } catch (e) {
-        console.warn("Falha no carregamento IBGE, utilizando lista local.");
-      }
+      const selectedUf = ufSelect.value;
+      const cities = stateCities[selectedUf] || ["Capital"];
+      document.getElementById('voter-city-search').value = cities[0];
+      document.getElementById('selected-city-val').value = cities[0];
     }
 
     function filterCityOptions() {
-      const searchInput = document.getElementById('voter-city-search');
+      const uf = document.getElementById('voter-uf-select').value;
+      const cities = stateCities[uf] || [];
+      const query = document.getElementById('voter-city-search').value.toLowerCase().trim();
       const container = document.getElementById('city-suggestions-container');
-      const hiddenVal = document.getElementById('selected-city-val');
 
-      const rawQuery = searchInput.value.trim();
-      const query = removeAccents(rawQuery);
+      const filtered = query === "" ? cities : cities.filter(c => c.toLowerCase().includes(query));
 
-      hiddenVal.value = rawQuery;
-
-      let matches = currentCityList;
-      if (query.length > 0) {
-        matches = currentCityList.filter(c => removeAccents(c).includes(query));
-      }
-
-      if (matches.length === 0) {
-        container.innerHTML = `
-          <div class="p-2 text-xs text-slate-400 italic text-center">
-            Usar cidade digitada: <br>
-            <button onclick="selectCity('${rawQuery.replace(/'/g, "\\'")}')" type="button" class="mt-1 text-emerald-400 underline font-bold">"${rawQuery || 'Cidade Principal'}"</button>
+      let html = "";
+      if (filtered.length > 0) {
+        html = filtered.map(c => `
+          <div onclick="selectCity('${c}')" class="p-2.5 text-xs text-slate-200 hover:bg-slate-900 rounded-lg cursor-pointer flex items-center gap-2">
+            <span>📍</span>
+            <span class="font-medium">${c}</span>
+          </div>
+        `).join('');
+      } else {
+        html = `
+          <div onclick="selectCity('${document.getElementById('voter-city-search').value}')" class="p-2.5 text-xs text-emerald-400 hover:bg-slate-900 rounded-lg cursor-pointer font-bold">
+            📍 Usar: "${document.getElementById('voter-city-search').value}"
           </div>
         `;
-        return;
-      }
-
-      let html = '';
-      matches.slice(0, 50).forEach(city => {
-        const isSelected = (hiddenVal.value === city);
-        html += `
-          <button type="button" onclick="selectCity('${city.replace(/'/g, "\\'")}')" 
-            class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-between transition ${isSelected ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-200 hover:bg-slate-800 hover:text-emerald-400'}">
-            <span>📍 ${city}</span>
-            ${isSelected ? '<span>✓</span>' : ''}
-          </button>
-        `;
-      });
-
-      if (matches.length > 50) {
-        html += `<div class="p-1 text-[10px] text-slate-500 text-center">+ ${matches.length - 50} outras cidades... Continue digitando</div>`;
       }
 
       container.innerHTML = html;
+      container.classList.remove('hidden');
     }
 
-    function selectCity(city) {
-      document.getElementById('voter-city-search').value = city;
-      document.getElementById('selected-city-val').value = city;
-      filterCityOptions();
+    function selectCity(cityName) {
+      document.getElementById('voter-city-search').value = cityName;
+      document.getElementById('selected-city-val').value = cityName;
+      document.getElementById('city-suggestions-container').classList.add('hidden');
     }
 
     function submitStep1() {
-      const nameInput = document.getElementById('voter-name');
-      const docInput = document.getElementById('voter-doc');
+      const name = document.getElementById('voter-name').value.trim();
+      const doc = document.getElementById('voter-doc').value.trim();
       const ufSelect = document.getElementById('voter-uf-select');
-      const citySearch = document.getElementById('voter-city-search');
-      const hiddenVal = document.getElementById('selected-city-val');
+      const city = document.getElementById('voter-city-search').value.trim() || "Capital";
       const errBox = document.getElementById('auth-error');
 
       errBox.classList.add('hidden');
 
-      const name = nameInput.value.trim() || "Eleitor Registrado";
-      const doc = docInput.value.trim();
-      const uf = ufSelect.value || "PA";
-      let city = hiddenVal.value.trim() || citySearch.value.trim();
-
-      if (!city) {
-        city = currentCityList[0] || "Belém";
+      if (!name) {
+        errBox.textContent = "Por favor, digite seu nome completo.";
+        errBox.classList.remove('hidden');
+        return;
       }
 
-      const selectedOption = ufSelect.options[ufSelect.selectedIndex];
-      const region = selectedOption ? (selectedOption.getAttribute('data-region') || 'Norte') : 'Norte';
+      const cleanDoc = doc.replace(/\D/g, '');
+      if (cleanDoc.length < 11) {
+        errBox.textContent = "Digite um CPF válido com 11 dígitos.";
+        errBox.classList.remove('hidden');
+        return;
+      }
 
-      verifiedVoter = {
-        name: name,
-        doc: doc || "000.000.000-00",
-        cleanDoc: doc.replace(/\D/g, ''),
-        city: city,
-        uf: uf,
-        location: `${city} / ${uf}`,
-        region: region
-      };
+      const selectedOpt = ufSelect.options[ufSelect.selectedIndex];
+      const uf = ufSelect.value;
+      const region = selectedOpt.getAttribute('data-region') || 'Norte';
+
+      verifiedVoter = { name, doc, cleanDoc, uf, city, region };
 
       document.getElementById('summary-name').textContent = name;
-      document.getElementById('summary-doc').textContent = doc || "Não Informado";
+      document.getElementById('summary-doc').textContent = doc;
       document.getElementById('summary-state').textContent = `${city} / ${uf} (${region})`;
+
+      const statusSpan = document.getElementById('summary-vote-status');
+      if (votedCPFs[cleanDoc]) {
+        statusSpan.textContent = "VOTO JÁ REGISTRADO";
+        statusSpan.className = "text-amber-400 font-bold";
+      } else {
+        statusSpan.textContent = "APTO PARA VOTAR";
+        statusSpan.className = "text-emerald-400 font-bold";
+      }
 
       document.getElementById('auth-step-1').classList.add('hidden');
       document.getElementById('auth-step-2').classList.remove('hidden');
-
-      document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center justify-center";
-      document.getElementById('step-dot-2').className = "w-7 h-7 rounded-full bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center";
 
       setTimeout(() => {
         document.getElementById('auth-step-2').classList.add('hidden');
         document.getElementById('auth-step-3').classList.remove('hidden');
 
-        document.getElementById('step-dot-2').className = "w-7 h-7 rounded-full bg-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center justify-center";
+        document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center justify-center";
         document.getElementById('step-dot-3').className = "w-7 h-7 rounded-full bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center";
-      }, 1000);
+      }, 900);
     }
 
     function startVotingSession() {
@@ -695,374 +641,371 @@
     }
 
     function switchTab(tab) {
-      const secUrna = document.getElementById('sec-urna');
-      const secDados = document.getElementById('sec-dados');
-      const secChat = document.getElementById('sec-chat');
-      const btnUrna = document.getElementById('btn-tab-urna');
-      const btnDados = document.getElementById('btn-tab-dados');
-      const btnChat = document.getElementById('btn-tab-chat');
+      ['sec-auth', 'sec-urna', 'sec-dados', 'sec-chat'].forEach(s => {
+        const el = document.getElementById(s);
+        if (el) el.classList.add('hidden');
+      });
 
-      secUrna.classList.add('hidden');
-      secDados.classList.add('hidden');
-      secChat.classList.add('hidden');
-
-      btnUrna.className = "px-3 py-1 rounded-md text-slate-400 hover:text-white transition font-semibold";
-      btnDados.className = "px-3 py-1 rounded-md text-slate-400 hover:text-white transition font-semibold";
-      btnChat.className = "px-3 py-1 rounded-md text-slate-400 hover:text-white transition font-semibold flex items-center gap-1";
+      ['btn-tab-urna', 'btn-tab-dados', 'btn-tab-chat'].forEach(b => {
+        const el = document.getElementById(b);
+        if (el) el.className = "px-3 py-1 rounded-md text-slate-400 hover:text-white transition font-semibold";
+      });
 
       if (tab === 'urna') {
-        secUrna.classList.remove('hidden');
-        btnUrna.className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 transition font-bold";
+        document.getElementById('sec-urna').classList.remove('hidden');
+        document.getElementById('btn-tab-urna').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition";
+        resetUrna();
       } else if (tab === 'dados') {
-        secDados.classList.remove('hidden');
-        btnDados.className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 transition font-bold";
+        document.getElementById('sec-dados').classList.remove('hidden');
+        document.getElementById('btn-tab-dados').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition";
         renderStats();
+        renderCityResults();
       } else if (tab === 'chat') {
-        secChat.classList.remove('hidden');
-        btnChat.className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 transition font-bold flex items-center gap-1";
-        renderChatMessages();
-      }
-    }
+        document.getElementById('sec-chat').classList.remove('hidden');
+        document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition flex items-center gap-1";
+        
+        const nickname = verifiedVoter ? voterNicknames[verifiedVoter.cleanDoc] : null;
+        document.getElementById('chat-user-badge').textContent = nickname ? `${nickname} (${verifiedVoter.uf})` : (verifiedVoter ? verifiedVoter.name.split(' ')[0] : "Visitante");
+        
+        const hasVoted = verifiedVoter && votedCPFs[verifiedVoter.cleanDoc];
+        const inputContainer = document.getElementById('chat-input-container');
+        const lockedAlert = document.getElementById('chat-locked-alert');
+        const nicknameBox = document.getElementById('nickname-setup-box');
+        const nickErrBox = document.getElementById('nickname-error');
 
-    function renderChatMessages() {
-      const container = document.getElementById('chat-messages');
-      const badge = document.getElementById('chat-user-badge');
+        nickErrBox.classList.add('hidden');
 
-      if (verifiedVoter) {
-        badge.textContent = `👤 ${verifiedVoter.name.split(' ')[0]} (${verifiedVoter.uf})`;
-      } else {
-        badge.textContent = "👤 Eleitor Anônimo";
-      }
-
-      if (localChatMessages.length === 0) {
-        container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">Nenhuma mensagem ainda. Seja o primeiro a comentar!</div>`;
-        return;
-      }
-
-      let html = '';
-      localChatMessages.forEach(msg => {
-        if (msg.isSystem) {
-          html += `
-            <div class="bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-xl text-center">
-              <p class="text-[11px] text-emerald-400 font-semibold">${msg.text}</p>
-            </div>
-          `;
+        if (hasVoted) {
+          lockedAlert.classList.add('hidden');
+          if (!nickname) {
+            nicknameBox.classList.remove('hidden');
+            inputContainer.classList.add('hidden');
+          } else {
+            nicknameBox.classList.add('hidden');
+            inputContainer.classList.remove('hidden');
+          }
         } else {
-          const isMe = verifiedVoter && (msg.sender === verifiedVoter.name);
-          html += `
-            <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-              <div class="flex items-center gap-1 mb-0.5 text-[10px] text-slate-400">
-                <span class="font-bold text-slate-300">${msg.sender}</span>
-                <span class="bg-slate-800 text-slate-300 px-1 rounded text-[9px]">${msg.uf || 'BR'}</span>
-                <span>•</span>
-                <span>${msg.time}</span>
-              </div>
-              <div class="max-w-[85%] ${isMe ? 'bg-emerald-500 text-slate-950 font-medium' : 'bg-slate-950 border border-slate-800 text-slate-200'} rounded-2xl px-3 py-2 text-xs">
-                ${msg.text}
-              </div>
-            </div>
-          `;
+          inputContainer.classList.add('hidden');
+          nicknameBox.classList.add('hidden');
+          lockedAlert.classList.remove('hidden');
         }
-      });
 
-      container.innerHTML = html;
-      container.scrollTop = container.scrollHeight;
-    }
-
-    function sendChatMessage() {
-      const input = document.getElementById('chat-input');
-      const text = input.value.trim();
-
-      if (!text) return;
-
-      const senderName = verifiedVoter ? verifiedVoter.name : "Eleitor Visitante";
-      const userUF = verifiedVoter ? verifiedVoter.uf : "BR";
-
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-      localChatMessages.push({
-        id: Date.now(),
-        sender: senderName,
-        uf: userUF,
-        text: text,
-        time: timeStr,
-        isSystem: false
-      });
-
-      input.value = "";
-      renderChatMessages();
-    }
-
-    function pressKey(num) {
-      if (isBranco) return;
-      if (currentInput.length < 2) {
-        currentInput += num;
-        updateLcd();
+        renderChat();
       }
     }
 
-    function pressBranco() {
-      currentInput = "";
-      isBranco = true;
-      updateLcd();
-    }
+    function saveNickname() {
+      const input = document.getElementById('chat-nickname-input');
+      const nickname = input.value.trim();
+      const errBox = document.getElementById('nickname-error');
+      
+      errBox.classList.add('hidden');
 
-    function pressCorrige() {
-      currentInput = "";
-      isBranco = false;
-      updateLcd();
-    }
+      if (!nickname || !verifiedVoter) return;
 
-    function quickSelect(num) {
-      isBranco = false;
-      currentInput = num;
-      updateLcd();
-    }
-
-    function updateLcd() {
-      const d1 = document.getElementById('digit-1');
-      const d2 = document.getElementById('digit-2');
-      const candInfo = document.getElementById('candidate-info');
-      const candName = document.getElementById('cand-name');
-      const candParty = document.getElementById('cand-party');
-      const specialMsg = document.getElementById('vote-special-msg');
-      const specialText = document.getElementById('special-text');
-
-      d1.textContent = currentInput[0] || "";
-      d2.textContent = currentInput[1] || "";
-
-      if (isBranco) {
-        d1.textContent = "";
-        d2.textContent = "";
-        candInfo.classList.add('hidden');
-        specialMsg.classList.remove('hidden');
-        specialText.textContent = "VOTO EM BRANCO";
-        return;
-      }
-
-      if (currentInput.length === 2) {
-        if (currentInput === '22') {
-          specialMsg.classList.add('hidden');
-          candInfo.classList.remove('hidden');
-          candName.textContent = "FLÁVIO BOLSONARO";
-          candParty.textContent = "PL";
-        } else if (currentInput === '13') {
-          specialMsg.classList.add('hidden');
-          candInfo.classList.remove('hidden');
-          candName.textContent = "LULA";
-          candParty.textContent = "PT";
-        } else {
-          candInfo.classList.add('hidden');
-          specialMsg.classList.remove('hidden');
-          specialText.textContent = "VOTO NULO";
+      // Verifica se o apelido já está em uso por outro CPF
+      const normalizedNewNick = nickname.toLowerCase();
+      const existingEntries = Object.entries(voterNicknames);
+      
+      for (let [cpfKey, nickVal] of existingEntries) {
+        if (cpfKey !== verifiedVoter.cleanDoc && nickVal.toLowerCase() === normalizedNewNick) {
+          errBox.textContent = `⚠️ O apelido "${nickname}" já está em uso por outro eleitor. Escolha outro.`;
+          errBox.classList.remove('hidden');
+          return;
         }
-      } else {
-        candInfo.classList.add('hidden');
-        specialMsg.classList.add('hidden');
       }
+
+      voterNicknames[verifiedVoter.cleanDoc] = nickname;
+      localStorage.setItem('simulador_voter_nicknames', JSON.stringify(voterNicknames));
+
+      document.getElementById('chat-user-badge').textContent = `${nickname} (${verifiedVoter.uf})`;
+      document.getElementById('nickname-setup-box').classList.add('hidden');
+      document.getElementById('chat-input-container').classList.remove('hidden');
     }
 
     function resetUrna() {
       currentInput = "";
       isBranco = false;
-      updateLcd();
+      renderUrnaScreen();
+    }
+
+    function pressKey(n) {
+      if (isBranco) return;
+      if (verifiedVoter && votedCPFs[verifiedVoter.cleanDoc]) return;
+      if (currentInput.length < 2) {
+        currentInput += n;
+        renderUrnaScreen();
+      }
+    }
+
+    function quickSelect(num) {
+      if (verifiedVoter && votedCPFs[verifiedVoter.cleanDoc]) return;
+      currentInput = num;
+      isBranco = false;
+      renderUrnaScreen();
+    }
+
+    function pressBranco() {
+      if (verifiedVoter && votedCPFs[verifiedVoter.cleanDoc]) return;
+      currentInput = "";
+      isBranco = true;
+      renderUrnaScreen();
+    }
+
+    function pressCorrige() {
+      if (verifiedVoter && votedCPFs[verifiedVoter.cleanDoc]) return;
+      currentInput = "";
+      isBranco = false;
+      renderUrnaScreen();
+    }
+
+    function renderUrnaScreen() {
+      const d1 = document.getElementById('digit-1');
+      const d2 = document.getElementById('digit-2');
+      const info = document.getElementById('candidate-info');
+      const special = document.getElementById('vote-special-msg');
+      const specialText = document.getElementById('special-text');
+      const candName = document.getElementById('cand-name');
+      const candParty = document.getElementById('cand-party');
+
+      if (verifiedVoter && votedCPFs[verifiedVoter.cleanDoc]) {
+        d1.textContent = "X";
+        d2.textContent = "X";
+        info.classList.add('hidden');
+        special.classList.remove('hidden');
+        specialText.textContent = "VOTO JÁ COMPUTADO";
+        return;
+      }
+
+      if (isBranco) {
+        d1.textContent = "B";
+        d2.textContent = "R";
+        info.classList.add('hidden');
+        special.classList.remove('hidden');
+        specialText.textContent = "VOTO EM BRANCO";
+        return;
+      }
+
+      special.classList.add('hidden');
+      d1.textContent = currentInput.length > 0 ? currentInput[0] : "";
+      d2.textContent = currentInput.length > 1 ? currentInput[1] : "";
+
+      if (currentInput.length === 2) {
+        info.classList.remove('hidden');
+        if (currentInput === '22') {
+          candName.textContent = "Flávio Bolsonaro";
+          candParty.textContent = "Partido Liberal (PL)";
+        } else if (currentInput === '13') {
+          candName.textContent = "Lula";
+          candParty.textContent = "Partido dos Trabalhadores (PT)";
+        } else {
+          candName.textContent = "Voto Nulo";
+          candParty.textContent = "Legenda Inexistente";
+        }
+      } else {
+        info.classList.add('hidden');
+      }
     }
 
     function pressConfirma() {
+      if (verifiedVoter && votedCPFs[verifiedVoter.cleanDoc]) {
+        return;
+      }
+
       if (!isBranco && currentInput.length < 2) {
         return;
       }
 
       let voteType = 'NULO';
+      let voteLabel = 'votou Nulo';
       if (isBranco) {
         voteType = 'BRANCO';
+        voteLabel = 'votou Branco';
       } else if (currentInput === '22') {
         voteType = '22';
+        voteLabel = 'votou 22';
       } else if (currentInput === '13') {
         voteType = '13';
+        voteLabel = 'votou 13';
+      }
+
+      if (verifiedVoter) {
+        votedCPFs[verifiedVoter.cleanDoc] = true;
+        voterChoices[verifiedVoter.cleanDoc] = voteLabel;
+        localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+        localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
       }
 
       votes[voteType] = (votes[voteType] || 0) + 1;
+      localStorage.setItem('simulador_votes', JSON.stringify(votes));
 
-      const userRegion = (verifiedVoter && verifiedVoter.region) ? verifiedVoter.region : 'Norte';
-      if (!regionalVotes[userRegion]) {
-        regionalVotes[userRegion] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-      }
-      regionalVotes[userRegion][voteType] = (regionalVotes[userRegion][voteType] || 0) + 1;
+      const region = verifiedVoter ? verifiedVoter.region : 'Norte';
+      if (!regionalVotes[region]) regionalVotes[region] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+      regionalVotes[region][voteType] = (regionalVotes[region][voteType] || 0) + 1;
+      localStorage.setItem('simulador_regional', JSON.stringify(regionalVotes));
 
-      const userUF = (verifiedVoter && verifiedVoter.uf) ? verifiedVoter.uf : 'PA';
-      const userCity = (verifiedVoter && verifiedVoter.city) ? verifiedVoter.city : 'Belém';
-      const cityKey = `${userCity} - ${userUF}`;
-
-      if (!cityVotes[cityKey]) {
-        cityVotes[cityKey] = { uf: userUF, city: userCity, '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-      }
+      const uf = verifiedVoter ? verifiedVoter.uf : 'PA';
+      const city = verifiedVoter ? verifiedVoter.city : 'Belém';
+      const cityKey = `${city} - ${uf}`;
+      if (!cityVotes[cityKey]) cityVotes[cityKey] = { uf, city, '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
       cityVotes[cityKey][voteType] = (cityVotes[cityKey][voteType] || 0) + 1;
+      localStorage.setItem('simulador_city_votes', JSON.stringify(cityVotes));
 
       const lcd = document.getElementById('lcd-content');
-      const originalContent = lcd.innerHTML;
-      
       lcd.innerHTML = `
         <div class="py-8 text-center animate-pulse">
-          <p class="text-4xl font-black text-black">FIM</p>
-          <p class="text-xs font-bold text-black/80 mt-2">VOTO GRAVADO COM SUCESSO</p>
+          <p class="text-3xl font-black text-black">FIM</p>
+          <p class="text-xs font-bold text-black mt-2">VOTO COMPUTADO COM SUCESSO</p>
         </div>
       `;
 
       setTimeout(() => {
-        lcd.innerHTML = originalContent;
-        resetUrna();
         switchTab('dados');
-      }, 1200);
-    }
-
-    function onFilterUFChange() {
-      renderCityStats();
-    }
-
-    function renderCityStats() {
-      const ufSelect = document.getElementById('filter-uf');
-      const filterInput = document.getElementById('filter-city-input');
-      const card = document.getElementById('city-stats-card');
-
-      const uf = ufSelect.value;
-      const query = removeAccents(filterInput.value.trim());
-
-      let keys = Object.keys(cityVotes).filter(k => cityVotes[k].uf === uf);
-
-      if (query.length > 0) {
-        keys = keys.filter(k => removeAccents(cityVotes[k].city).includes(query));
-      }
-
-      if (keys.length === 0) {
-        const cityName = filterInput.value.trim() || "Nenhuma votação cadastrada nesta cidade";
-        card.innerHTML = `
-          <div class="text-center py-3 text-xs text-slate-400">
-            <p class="font-bold text-white mb-1">📍 ${cityName} (${uf})</p>
-            <p class="text-[11px] text-slate-500">Aguardando inserção de novos boletins de urna nesta zona eleitoral.</p>
-          </div>
-        `;
-        return;
-      }
-
-      let html = '';
-      keys.forEach(k => {
-        const c = cityVotes[k];
-        const v22 = c['22'] || 0;
-        const v13 = c['13'] || 0;
-        const vBranco = c['BRANCO'] || 0;
-        const vNulo = c['NULO'] || 0;
-        const validos = v22 + v13;
-        const total = validos + vBranco + vNulo;
-
-        const p22 = validos > 0 ? ((v22 / validos) * 100).toFixed(1) : "0.0";
-        const p13 = validos > 0 ? ((v13 / validos) * 100).toFixed(1) : "0.0";
-
-        html += `
-          <div class="space-y-2 border-b border-slate-800/60 pb-2 last:border-b-0">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-extrabold text-emerald-400">📍 ${c.city} (${c.uf})</span>
-              <span class="text-[10px] font-mono text-slate-400">${total} votos apurados</span>
-            </div>
-
-            <div class="space-y-1.5 text-xs">
-              <div>
-                <div class="flex justify-between items-center text-[11px] mb-0.5">
-                  <span class="text-slate-200">🏛️ Flávio Bolsonaro (22)</span>
-                  <span class="font-bold text-amber-400">${p22}% <span class="text-[9px] text-slate-500">(${v22})</span></span>
-                </div>
-                <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden">
-                  <div class="bg-amber-400 h-1.5 rounded-full" style="width: ${p22}%"></div>
-                </div>
-              </div>
-
-              <div>
-                <div class="flex justify-between items-center text-[11px] mb-0.5">
-                  <span class="text-slate-200">🚩 Lula (13)</span>
-                  <span class="font-bold text-rose-400">${p13}% <span class="text-[9px] text-slate-500">(${v13})</span></span>
-                </div>
-                <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden">
-                  <div class="bg-rose-400 h-1.5 rounded-full" style="width: ${p13}%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-
-      card.innerHTML = html;
+      }, 1300);
     }
 
     function renderStats() {
-      const cnt22 = votes['22'] || 0;
-      const cnt13 = votes['13'] || 0;
-      const cntBranco = votes['BRANCO'] || 0;
-      const cntNulo = votes['NULO'] || 0;
-
-      const validos = cnt22 + cnt13;
-      const total = validos + cntBranco + cntNulo;
+      const valid = (votes['22'] || 0) + (votes['13'] || 0);
+      const total = valid + (votes['BRANCO'] || 0) + (votes['NULO'] || 0);
 
       document.getElementById('stat-total').textContent = total;
-      document.getElementById('stat-validos').textContent = validos;
-      document.getElementById('stat-branco').textContent = cntBranco;
-      document.getElementById('stat-nulo').textContent = cntNulo;
+      document.getElementById('stat-validos').textContent = valid;
+      document.getElementById('stat-branco').textContent = votes['BRANCO'] || 0;
+      document.getElementById('stat-nulo').textContent = votes['NULO'] || 0;
 
-      const pct22 = validos > 0 ? ((cnt22 / validos) * 100).toFixed(1) : "0.0";
-      const pct13 = validos > 0 ? ((cnt13 / validos) * 100).toFixed(1) : "0.0";
+      const p22 = valid > 0 ? ((votes['22'] / valid) * 100).toFixed(1) : 0;
+      const p13 = valid > 0 ? ((votes['13'] / valid) * 100).toFixed(1) : 0;
 
-      document.getElementById('cnt-22').textContent = cnt22;
-      document.getElementById('pct-22').textContent = pct22 + '%';
-      document.getElementById('bar-22').style.width = pct22 + '%';
+      document.getElementById('pct-22').textContent = `${p22}%`;
+      document.getElementById('bar-22').style.width = `${p22}%`;
+      document.getElementById('count-22').textContent = `${votes['22'] || 0} votos`;
 
-      document.getElementById('cnt-13').textContent = cnt13;
-      document.getElementById('pct-13').textContent = pct13 + '%';
-      document.getElementById('bar-13').style.width = pct13 + '%';
+      document.getElementById('pct-13').textContent = `${p13}%`;
+      document.getElementById('bar-13').style.width = `${p13}%`;
+      document.getElementById('count-13').textContent = `${votes['13'] || 0} votos`;
 
-      renderCityStats();
-
-      const regContainer = document.getElementById('regional-container');
-      const regions = ['Norte', 'Nordeste', 'Sudeste', 'Sul', 'Centro-Oeste', 'Exterior'];
-
-      let regHtml = '';
-      regions.forEach(r => {
-        const rData = regionalVotes[r] || { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-        const r22 = rData['22'] || 0;
-        const r13 = rData['13'] || 0;
-        const rValidos = r22 + r13;
-        
-        const rPct22 = rValidos > 0 ? ((r22 / rValidos) * 100).toFixed(0) : 0;
-        const rPct13 = rValidos > 0 ? ((r13 / rValidos) * 100).toFixed(0) : 0;
-
-        regHtml += `
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800/80 space-y-1.5">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-bold text-slate-200">${r}</span>
-              <span class="text-[10px] text-slate-400 font-mono">${rValidos} votos válidos</span>
+      const regContainer = document.getElementById('regional-stats-container');
+      regContainer.innerHTML = Object.keys(regionalVotes).map(r => {
+        const rv = regionalVotes[r];
+        const rValid = (rv['22'] || 0) + (rv['13'] || 0);
+        const rp22 = rValid > 0 ? Math.round((rv['22'] / rValid) * 100) : 0;
+        const rp13 = rValid > 0 ? Math.round((rv['13'] / rValid) * 100) : 0;
+        return `
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+            <div>
+              <p class="font-bold text-white">${r}</p>
+              <p class="text-[10px] text-slate-400">${rValid} votos válidos</p>
             </div>
-
-            <div class="grid grid-cols-2 gap-2 text-[11px]">
-              <div class="bg-slate-900/80 p-1.5 rounded border border-slate-800 flex items-center justify-between">
-                <span class="text-slate-300 font-medium">🏛️ 22</span>
-                <span class="font-bold text-amber-400">${rPct22}% <span class="text-[9px] text-slate-500">(${r22})</span></span>
-              </div>
-              <div class="bg-slate-900/80 p-1.5 rounded border border-slate-800 flex items-center justify-between">
-                <span class="text-slate-300 font-medium">🚩 13</span>
-                <span class="font-bold text-rose-400">${rPct13}% <span class="text-[9px] text-slate-500">(${r13})</span></span>
-              </div>
+            <div class="font-mono text-right text-[11px]">
+              <span class="text-amber-400">22: <b>${rp22}%</b></span> | 
+              <span class="text-rose-400">13: <b>${rp13}%</b></span>
             </div>
           </div>
         `;
-      });
-
-      regContainer.innerHTML = regHtml;
+      }).join('');
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('voter-uf-select').value = "PA";
-      onUFChange();
-      renderStats();
-    });
+    function populateQueryUFs() {
+      const select = document.getElementById('query-uf-select');
+      select.innerHTML = `<option value="">Todas as UFs</option>` + Object.keys(stateCities).map(u => `<option value="${u}">${u}</option>`).join('');
+    }
+
+    function renderCityResults() {
+      const ufFilter = document.getElementById('query-uf-select').value;
+      const textFilter = document.getElementById('query-city-filter').value.toLowerCase();
+      const container = document.getElementById('city-results-list');
+
+      const keys = Object.keys(cityVotes).filter(k => {
+        const d = cityVotes[k];
+        if (ufFilter && d.uf !== ufFilter) return false;
+        if (textFilter && !d.city.toLowerCase().includes(textFilter)) return false;
+        return true;
+      });
+
+      if (keys.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-xs text-slate-500 bg-slate-950 rounded-xl">Nenhum resultado municipal encontrado.</div>`;
+        return;
+      }
+
+      container.innerHTML = keys.map(k => {
+        const d = cityVotes[k];
+        const valid = (d['22'] || 0) + (d['13'] || 0);
+        const p22 = valid > 0 ? ((d['22'] / valid) * 100).toFixed(0) : 0;
+        const p13 = valid > 0 ? ((d['13'] / valid) * 100).toFixed(0) : 0;
+        return `
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs space-y-1">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-white">${d.city} / ${d.uf}</span>
+              <span class="text-[10px] text-slate-400">${valid} votos</span>
+            </div>
+            <div class="flex justify-between text-[11px] font-mono text-slate-300">
+              <span class="text-amber-400">🏛️ 22: <b>${d['22'] || 0}</b> (${p22}%)</span>
+              <span class="text-rose-400">🚩 13: <b>${d['13'] || 0}</b> (${p13}%)</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderChat() {
+      const chatBox = document.getElementById('chat-messages');
+      chatBox.innerHTML = chatMessages.map(m => `
+        <div class="flex flex-col ${m.isSystem ? 'items-center text-center' : 'items-start'}">
+          ${m.isSystem ? `
+            <div class="bg-slate-950 border border-slate-800 text-slate-400 px-3 py-1.5 rounded-xl text-[11px]">
+              🤖 <b>${m.sender}:</b> ${m.text}
+            </div>
+          ` : `
+            <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl max-w-[90%] space-y-1">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="font-bold text-emerald-400">${m.nickname}</span>
+                <span class="text-[9px] bg-slate-900 px-1.5 py-0.5 rounded text-slate-300 font-mono border border-slate-800">${m.uf}</span>
+                <span class="text-[9px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded font-mono font-bold">${m.voteLabel}</span>
+                <span class="text-[9px] text-slate-500 ml-auto">${m.time}</span>
+              </div>
+              <p class="text-slate-200 text-xs">${m.text}</p>
+            </div>
+          `}
+        </div>
+      `).join('');
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendChatMessage() {
+      if (!verifiedVoter || !votedCPFs[verifiedVoter.cleanDoc]) {
+        return;
+      }
+
+      const nickname = voterNicknames[verifiedVoter.cleanDoc];
+      if (!nickname) return;
+
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const uf = verifiedVoter.uf;
+      const voteLabel = voterChoices[verifiedVoter.cleanDoc] || "votou";
+
+      chatMessages.push({
+        id: Date.now(),
+        nickname,
+        uf,
+        voteLabel,
+        text,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isSystem: false
+      });
+
+      localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
+      input.value = "";
+      renderChat();
+    }
+
+    function handleChatKeyPress(e) {
+      if (e.key === 'Enter') {
+        sendChatMessage();
+      }
+    }
   </script>
 </body>
 </html>
