@@ -362,8 +362,10 @@
             <h2 class="text-base font-extrabold text-white">Apuração Oficial TSE</h2>
             <p class="text-[11px] text-slate-400">Resultados consolidados em tempo real via Supabase</p>
           </div>
-          <button onclick="loadCloudStats()" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg hover:bg-emerald-500/20 transition">
-            🔄 Atualizar Dados
+          <button id="btn-refresh-stats" onclick="loadCloudStats()" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg hover:bg-emerald-500/20 transition flex items-center gap-1.5 disabled:opacity-50">
+            <span id="refresh-icon">🔄</span>
+            <span id="refresh-spinner" class="hidden w-3.5 h-3.5 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin"></span>
+            <span>Atualizar Dados</span>
           </button>
         </div>
 
@@ -685,18 +687,38 @@
     }
 
     async function loadCloudStats() {
+      const btnRefresh = document.getElementById('btn-refresh-stats');
+      const iconEl = document.getElementById('refresh-icon');
+      const spinnerEl = document.getElementById('refresh-spinner');
+
+      if (btnRefresh && iconEl && spinnerEl) {
+        btnRefresh.disabled = true;
+        iconEl.classList.add('hidden');
+        spinnerEl.classList.remove('hidden');
+      }
+
       let allVotesData = [];
 
-      if (supabaseClient) {
-        try {
-          const { data, error } = await supabaseClient.from('votos').select('*');
-          if (!error && data) allVotesData = data;
-          else allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-        } catch (err) {
+      try {
+        if (supabaseClient) {
+          try {
+            const { data, error } = await supabaseClient.from('votos').select('*');
+            if (!error && data) allVotesData = data;
+            else allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+          } catch (err) {
+            allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+          }
+        } else {
           allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
         }
-      } else {
-        allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+      } finally {
+        if (btnRefresh && iconEl && spinnerEl) {
+          setTimeout(() => {
+            btnRefresh.disabled = false;
+            iconEl.classList.remove('hidden');
+            spinnerEl.classList.add('hidden');
+          }, 300);
+        }
       }
 
       votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
