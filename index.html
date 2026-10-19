@@ -369,7 +369,7 @@
           </div>
         </div>
 
-        <!-- MODAL COMPROVANTE ELEITORAL (DESIGN NATIVO) -->
+        <!-- MODAL COMPROVANTE ELEITORAL -->
         <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 overflow-y-auto">
           <div class="w-full max-w-sm my-auto space-y-4">
             
@@ -623,17 +623,7 @@
             <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-            Agora a aplicação exige a combinação de CPF, PIN pessoal de 4 dígitos e um Token criptográfico exclusivo gerado no dispositivo do eleitor. Mesmo que alguém descubra o seu CPF, não conseguirá aceder à sessão sem o PIN e sem o dispositivo autorizado.
-          </div>
-        </details>
-
-        <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
-          <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-            <span>⚠️ O que acontece se o CPF do PIX for diferente do cadastrado?</span>
-            <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
-          </summary>
-          <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-            Caso alguém tente efetuar a verificação usando um CPF bancário diferente do CPF informado na identificação da urna, o pagamento será processado normalmente, porém <b class="text-rose-400">o voto será anulado e recusado</b>.
+            A aplicação exige a combinação de CPF, PIN pessoal de 4 dígitos e um Token criptográfico exclusivo gerado no dispositivo do eleitor.
           </div>
         </details>
       </div>
@@ -655,7 +645,6 @@
     let pendingVoteObj = null;
     let confirmedVoteData = null;
 
-    // GERADOR DE TOKEN ÚNICO DE DISPOSITIVO
     let deviceSessionToken = localStorage.getItem('simulador_device_token');
     if (!deviceSessionToken) {
       deviceSessionToken = 'tok_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -718,7 +707,7 @@
     ]));
 
     window.addEventListener('DOMContentLoaded', async () => {
-      onUFChange();
+      loadSavedLocation();
       populateQueryUFs();
       await loadCloudStats();
       renderChat();
@@ -733,6 +722,27 @@
         }
       });
     });
+
+    function loadSavedLocation() {
+      const savedUf = localStorage.getItem('simulador_saved_uf');
+      const savedCity = localStorage.getItem('simulador_saved_city');
+
+      const ufSelect = document.getElementById('voter-uf-select');
+      if (savedUf && stateCities[savedUf]) {
+        ufSelect.value = savedUf;
+      }
+
+      const cities = stateCities[ufSelect.value] || ["Capital"];
+      const cityInput = document.getElementById('voter-city-search');
+      
+      if (savedCity && cities.includes(savedCity)) {
+        cityInput.value = savedCity;
+        document.getElementById('selected-city-val').value = savedCity;
+      } else {
+        cityInput.value = cities[0];
+        document.getElementById('selected-city-val').value = cities[0];
+      }
+    }
 
     function validateCPF(cpf) {
       const clean = cpf.replace(/\D/g, '');
@@ -928,7 +938,6 @@
         return;
       }
 
-      // Validação de PIN/Dispositivo para impedir invasão por CPF alheio
       if (voterDevicePins[cleanDoc] && voterDevicePins[cleanDoc] !== pin) {
         errBox.textContent = "❌ PIN incorreto para este CPF! Este CPF já está associado a outro PIN de segurança.";
         errBox.classList.remove('hidden');
@@ -937,6 +946,10 @@
         voterDevicePins[cleanDoc] = pin;
         localStorage.setItem('simulador_voter_pins', JSON.stringify(voterDevicePins));
       }
+
+      // Salva automaticamente o estado e cidade para os próximos acessos
+      localStorage.setItem('simulador_saved_uf', ufSelect.value);
+      localStorage.setItem('simulador_saved_city', city);
 
       document.getElementById('auth-step-1').classList.add('hidden');
       document.getElementById('auth-step-2').classList.remove('hidden');
