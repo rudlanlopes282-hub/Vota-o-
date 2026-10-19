@@ -362,18 +362,21 @@
           </div>
         </div>
 
-        <!-- MODAL COMPROVANTE ELEITORAL COM IMAGEM PERSONALIZADA -->
+        <!-- MODAL COMPROVANTE ELEITORAL COM TAG DE IMAGEM <img> -->
         <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 overflow-y-auto">
           <div class="w-full max-w-sm my-auto space-y-4">
             
-            <!-- CARD COM IMAGEM DE BACKGROUND COMPLETA -->
-            <div id="receipt-card" class="w-full rounded-3xl shadow-2xl relative overflow-hidden bg-cover bg-center border-2 border-slate-700 min-h-[580px] flex flex-col justify-between p-4 text-white">
+            <!-- CARD COM IMAGEM OFICIAL DE BACKGROUND -->
+            <div id="receipt-card" class="w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-700 min-h-[580px] flex flex-col justify-between p-4 text-white bg-slate-900">
               
-              <!-- TOPO DA ARTE (TRANSPARENTE) -->
-              <div></div>
+              <!-- IMAGEM DE FUNDO DINÂMICA -->
+              <img id="receipt-bg-image" src="" alt="Comprovante" class="absolute inset-0 w-full h-full object-cover z-0">
 
-              <!-- OVERLAY COM DADOS DO ELEITOR SOBREPOSTOS NO RODAPÉ DA ARTE -->
-              <div class="space-y-1 text-xs font-mono bg-black/80 backdrop-blur-sm p-3 rounded-2xl border border-white/20 shadow-2xl mt-auto">
+              <!-- TOPO VAZIO -->
+              <div class="relative z-10"></div>
+
+              <!-- DADOS DO ELEITOR SOBREPOSTOS NO RODAPÉ -->
+              <div class="relative z-10 space-y-1 text-xs font-mono bg-black/85 backdrop-blur-sm p-3 rounded-2xl border border-white/20 shadow-2xl mt-auto">
                 <div class="flex justify-between border-b border-white/10 pb-1">
                   <span class="opacity-70 text-[10px]">ELEITOR:</span>
                   <span id="receipt-voter-name" class="font-bold text-white truncate max-w-[160px]">---</span>
@@ -1414,6 +1417,7 @@
       closePixModal();
 
       const card = document.getElementById('receipt-card');
+      const bgImg = document.getElementById('receipt-bg-image');
       const optText = document.getElementById('receipt-voter-option');
 
       document.getElementById('receipt-voter-name').textContent = confirmedVoteData.voterName;
@@ -1423,21 +1427,24 @@
       const randomHash = "0x" + Array.from({length: 24}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
       document.getElementById('receipt-hash').textContent = randomHash;
 
-      // Aponta para as imagens enviadas diretamente na raiz do repositório
+      // Define a imagem usando tag <img> oficial
       if (confirmedVoteData.opcao === '22') {
-        card.style.backgroundImage = "url('./comprovante-22.jpg')"; 
-        card.className = "w-full rounded-3xl shadow-2xl relative overflow-hidden bg-cover bg-center border-2 border-emerald-500 min-h-[580px] flex flex-col justify-between p-4 text-white";
+        bgImg.src = "./comprovante-22.jpg";
+        bgImg.classList.remove('hidden');
+        card.className = "w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 border-emerald-500 min-h-[580px] flex flex-col justify-between p-4 text-white bg-slate-900";
         optText.textContent = "22 — Flávio Bolsonaro";
         optText.className = "font-black text-xs text-amber-400 uppercase";
 
       } else if (confirmedVoteData.opcao === '13') {
-        card.style.backgroundImage = "url('./comprovante-13.jpg')"; 
-        card.className = "w-full rounded-3xl shadow-2xl relative overflow-hidden bg-cover bg-center border-2 border-rose-500 min-h-[580px] flex flex-col justify-between p-4 text-white";
+        bgImg.src = "./comprovante-13.jpg";
+        bgImg.classList.remove('hidden');
+        card.className = "w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 border-rose-500 min-h-[580px] flex flex-col justify-between p-4 text-white bg-slate-900";
         optText.textContent = "13 — Lula";
         optText.className = "font-black text-xs text-rose-400 uppercase";
 
       } else {
-        card.style.backgroundImage = "none";
+        bgImg.src = "";
+        bgImg.classList.add('hidden');
         card.className = "w-full rounded-3xl shadow-2xl relative overflow-hidden bg-slate-900 border-2 border-slate-700 min-h-[300px] flex flex-col justify-between p-4 text-white";
         optText.textContent = confirmedVoteData.opcao;
         optText.className = "font-black text-xs text-slate-300 uppercase";
