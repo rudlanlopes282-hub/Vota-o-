@@ -196,7 +196,7 @@
             <p class="text-slate-400">STATUS: <span id="summary-vote-status" class="text-emerald-400 font-bold">APTO PARA VOTAR</span></p>
           </div>
 
-          <button id="btn-main-auth-action" onclick="startVotingSession()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-sm transition active:scale-[0.99]">
+          <button onclick="startVotingSession()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-sm transition active:scale-[0.99]">
             Acessar Urna Eleitoral 🗳️
           </button>
         </div>
@@ -788,18 +788,18 @@
     }
 
     async function checkVoterInDatabase(cleanDoc) {
-      if (!supabaseClient) return false;
+      if (!supabaseClient) return null;
       try {
         const { data, error } = await supabaseClient
           .from('votos')
-          .select('cpf, opcao')
+          .select('cpf, opcao, cidade, uf, created_at')
           .eq('cpf', cleanDoc)
           .maybeSingle();
 
-        if (error) return false;
-        return !!data;
+        if (error || !data) return null;
+        return data;
       } catch (err) {
-        return false;
+        return null;
       }
     }
 
@@ -951,8 +951,8 @@
       document.getElementById('auth-step-1').classList.add('hidden');
       document.getElementById('auth-step-2').classList.remove('hidden');
 
-      const alreadyVotedDB = await checkVoterInDatabase(cleanDoc);
-      const isAlreadyVoted = alreadyVotedDB || !!votedCPFs[cleanDoc];
+      const dbRecord = await checkVoterInDatabase(cleanDoc);
+      const isAlreadyVoted = !!dbRecord || !!votedCPFs[cleanDoc];
 
       setTimeout(() => {
         document.getElementById('auth-step-2').classList.add('hidden');
@@ -968,25 +968,27 @@
         document.getElementById('summary-state').textContent = `${city} / ${uf} (${region})`;
 
         const statusEl = document.getElementById('summary-vote-status');
-        const mainBtn = document.getElementById('btn-main-auth-action');
 
         if (isAlreadyVoted) {
-          statusEl.textContent = "JÁ VOTOU (Voto já registrado neste CPF)";
+          statusEl.textContent = "JÁ VOTOU (Aviso: Voto duplicado será bloqueado na urna)";
           statusEl.className = "text-amber-400 font-bold";
-          
-          // Tenta recuperar o comprovante salvo no localStorage
+
+          // Recupera dados salvos localmente ou da nuvem para preparar o comprovante se necessário
           const savedReceipt = localStorage.getItem('simulador_receipt_' + cleanDoc);
           if (savedReceipt) {
             confirmedVoteData = JSON.parse(savedReceipt);
+          } else if (dbRecord) {
+            confirmedVoteData = {
+              voterName: name,
+              voterCpf: doc,
+              cityUf: `${dbRecord.cidade || city} / ${dbRecord.uf || uf}`,
+              opcao: dbRecord.opcao,
+              time: dbRecord.created_at ? new Date(dbRecord.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')
+            };
           }
-
-          mainBtn.textContent = "Ver Meu Comprovante 📄";
-          mainBtn.setAttribute('onclick', 'openReceiptModalFromAuth()');
         } else {
           statusEl.textContent = "APTO PARA VOTAR";
           statusEl.className = "text-emerald-400 font-bold";
-          mainBtn.textContent = "Acessar Urna Eleitoral 🗳️";
-          mainBtn.setAttribute('onclick', 'startVotingSession()');
         }
 
         document.getElementById('auth-step-3').classList.remove('hidden');
@@ -994,14 +996,6 @@
         document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center justify-center";
         document.getElementById('step-dot-3').className = "w-7 h-7 rounded-full bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center";
       }, 1000);
-    }
-
-    function openReceiptModalFromAuth() {
-      if (confirmedVoteData) {
-        openReceiptModal();
-      } else {
-        alert("Comprovante não encontrado neste navegador. Caso tenha votado em outro dispositivo, utilize-o para visualizar.");
-      }
     }
 
     function startVotingSession() {
@@ -1174,16 +1168,42 @@
     async function pressConfirma() {
       if (!verifiedVoter) return;
 
-      const alreadyVotedCloud = await checkVoterInDatabase(verifiedVoter.cleanDoc);
-      if (alreadyVotedCloud || votedCPFs[verifiedVoter.cleanDoc]) {
+      const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
+      const isAlreadyVoted = !!dbRecord || votedCPFs[verifiedVoter.cleanDoc];
+
+      if (isAlreadyVoted) {
         votedCPFs[verifiedVoter.cleanDoc] = true;
         localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+
+        // Se ainda não tiver os dados do comprovante em memória, preenche
+        if (!confirmedVoteData) {
+          const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
+          if (savedReceipt) {
+            confirmedVoteData = JSON.parse(savedReceipt);
+          } else if (dbRecord) {
+            confirmedVoteData = {
+              voterName: verifiedVoter.name,
+              voterCpf: verifiedVoter.doc,
+              cityUf: `${dbRecord.cidade || verifiedVoter.city} / ${dbRecord.uf || verifiedVoter.uf}`,
+              opcao: dbRecord.opcao,
+              time: dbRecord.created_at ? new Date(dbRecord.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')
+            };
+          }
+        }
         
         const lcd = document.getElementById('lcd-content');
         lcd.innerHTML = `
-          <div class="py-6 text-center">
+          <div class="py-3 text-center space-y-2">
             <p class="text-xs font-black text-rose-700 uppercase">ERRO: VOTO DUPLICADO</p>
-            <p class="text-[10px] font-bold text-black mt-1">Este CPF já registrou voto neste pleito.</p>
+            <p class="text-[10px] font-bold text-black">Este CPF já registrou voto neste pleito.</p>
+            <div class="pt-1 flex flex-col gap-1.5 px-2">
+              <button onclick="openReceiptModal()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-1.5 px-2 rounded text-[10px] uppercase shadow">
+                📄 Ver Comprovante
+              </button>
+              <button onclick="switchTab('chat')" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-1 px-2 rounded text-[9px] uppercase">
+                💬 Ir para o Chat
+              </button>
+            </div>
           </div>
         `;
         return;
@@ -1361,7 +1381,7 @@
         time: new Date().toLocaleString('pt-BR')
       };
 
-      // SALVA O COMPROVANTE NO LOCALSTORAGE VINCULADO AO CPF
+      // Salva localmente caso o usuário feche a aba
       localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
 
       votedCPFs[verifiedVoter.cleanDoc] = true;
@@ -1393,7 +1413,10 @@
     }
 
     function openReceiptModal() {
-      if (!confirmedVoteData) return;
+      if (!confirmedVoteData) {
+        alert("Comprovante indisponível no momento.");
+        return;
+      }
 
       closePixModal();
 
