@@ -362,19 +362,19 @@
           </div>
         </div>
 
-        <!-- MODAL COMPROVANTE ELEITORAL (IMAGEM NO TOPO + SEM DADOS PESSOAIS) -->
+        <!-- MODAL COMPROVANTE ELEITORAL (ARTE NO TOPO + SEM DADOS PESSOAIS) -->
         <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 overflow-y-auto">
           <div class="w-full max-w-sm my-auto space-y-4">
             
-            <!-- CARD COM A ARTE OFICIAL NA PARTE DE CIMA -->
+            <!-- CARD DO COMPROVANTE -->
             <div id="receipt-card" class="w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-700 bg-slate-900 p-3 text-white space-y-3">
               
-              <!-- IMAGEM DA ARTE NO TOPO -->
-              <div class="relative w-full rounded-2xl overflow-hidden shadow-lg bg-slate-950">
-                <img id="receipt-poster-img" src="" alt="Comprovante Oficial" class="w-full h-auto object-cover">
+              <!-- IMAGEM DA ARTE NO TOPO COM CARREGAMENTO GARANTIDO -->
+              <div class="relative w-full rounded-2xl overflow-hidden shadow-lg bg-slate-950 min-h-[260px] flex items-center justify-center">
+                <img id="receipt-poster-img" src="" alt="Comprovante Oficial" class="w-full h-auto object-cover block">
               </div>
 
-              <!-- APENAS O NOME DO ELEITOR E VOTO (CPF E DADOS PESSOAIS OCULTOS) -->
+              <!-- APENAS NOME DO ELEITOR E VOTO (CPF E DADOS REMOVIDOS) -->
               <div class="space-y-1 text-xs font-mono bg-black/90 p-3 rounded-2xl border border-white/20 shadow-xl text-center">
                 <p class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">Voto Autenticado</p>
                 <p class="text-sm font-black text-white uppercase" id="receipt-voter-name">---</p>
@@ -1399,22 +1399,23 @@
 
       closePixModal();
 
-      const card = document.getElementById('receipt-card');
       const posterImg = document.getElementById('receipt-poster-img');
       const optText = document.getElementById('receipt-voter-option');
       const nameText = document.getElementById('receipt-voter-name');
 
       nameText.textContent = confirmedVoteData.voterName;
 
-      // Define a imagem da arte na parte de cima
+      // CAMINHO ABSOLUTO DIRETO DO SERVIDOR (com bypass de cache da imagem)
+      const timestamp = new Date().getTime();
+
       if (confirmedVoteData.opcao === '22') {
-        posterImg.src = "./comprovante-22.jpg";
+        posterImg.src = "/comprovante-22.jpg?v=" + timestamp;
         posterImg.classList.remove('hidden');
         optText.textContent = "22 — Flávio Bolsonaro";
         optText.className = "font-black text-xs text-amber-400 uppercase";
 
       } else if (confirmedVoteData.opcao === '13') {
-        posterImg.src = "./comprovante-13.jpg";
+        posterImg.src = "/comprovante-13.jpg?v=" + timestamp;
         posterImg.classList.remove('hidden');
         optText.textContent = "13 — Lula";
         optText.className = "font-black text-xs text-rose-400 uppercase";
