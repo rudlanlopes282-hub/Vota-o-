@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Simulador de Votação Presidencial</title>
+  <title>Painel Brasil — Pesquisa & Voto Independente</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -17,8 +17,8 @@
             mono: ['Share Tech Mono', 'monospace'],
           },
           colors: {
-            urnBg: '#111827',
-            urnPanel: '#1f2937',
+            urnBg: '#090d16',
+            urnPanel: '#131c2e',
             urnLcd: '#c3e2c2',
             urnLcdText: '#051406'
           }
@@ -45,7 +45,7 @@
       border-radius: 8px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #10b981;
+      background: #3b82f6;
     }
     input:disabled, select:disabled {
       opacity: 0.7;
@@ -53,29 +53,29 @@
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between antialiased selection:bg-emerald-500 selection:text-white">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between antialiased selection:bg-blue-500 selection:text-white">
 
   <!-- TOP HEADER -->
-  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
     <div class="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-2.5">
-        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg">
-          🗳️
+        <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-lg">
+          📊
         </div>
         <div>
-          <h1 class="text-sm font-bold text-white leading-tight">Justiça Eleitoral Digital</h1>
-          <p class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Simulação Eleitoral — 2º Turno (Seguro)
+          <h1 class="text-sm font-bold text-white leading-tight">Painel Brasil</h1>
+          <p class="text-[10px] text-blue-400 font-semibold flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+            Pesquisa de Opinião — Simulação 2º Turno
           </p>
         </div>
       </div>
-      <div id="nav-tabs" class="flex bg-slate-800 p-1 rounded-lg text-xs font-semibold">
-        <button id="btn-tab-urna" onclick="switchTab('urna')" class="px-3 py-1 rounded-md bg-emerald-500 text-slate-950 transition font-bold">Urna</button>
-        <button id="btn-tab-dados" onclick="switchTab('dados')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition">Dados</button>
+      <div id="nav-tabs" class="flex bg-slate-800 p-1 rounded-lg text-xs font-semibold hidden">
+        <button id="btn-tab-urna" onclick="switchTab('urna')" class="px-3 py-1 rounded-md bg-blue-600 text-white transition font-bold">Votar</button>
+        <button id="btn-tab-dados" onclick="switchTab('dados')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition">Placar</button>
         <button id="btn-tab-chat" onclick="switchTab('chat')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition flex items-center gap-1">
-          <span>Chat</span>
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span>Debate</span>
+          <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
         </button>
       </div>
     </div>
@@ -83,22 +83,29 @@
 
   <main class="max-w-lg mx-auto w-full px-3 py-3 flex-1 flex flex-col justify-center space-y-4">
 
-    <!-- STEP 1: ETAPA DE VERIFICAÇÃO / AUTENTICAÇÃO DO ELEITOR -->
+    <!-- AVISO DE ISENÇÃO DE RESPONSABILIDADE -->
+    <div class="bg-blue-950/40 border border-blue-500/30 rounded-xl p-2.5 text-center">
+      <p class="text-[10px] text-blue-300 font-medium leading-tight">
+        ℹ️ <b>Plataforma Independente:</b> Esta é uma simulação e pesquisa de opinião não oficial, sem qualquer vínculo com o TSE ou órgãos governamentais.
+      </p>
+    </div>
+
+    <!-- STEP 1: ETAPA DE VERIFICAÇÃO / AUTENTICAÇÃO DO PARTICIPANTE -->
     <section id="sec-auth" class="w-full">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
-        <div class="absolute -top-12 -right-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
         <div class="text-center mb-5">
-          <div class="inline-flex p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-2xl mb-2">
-            🔐
+          <div class="inline-flex p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-2xl mb-2">
+            🛡️
           </div>
-          <h2 class="text-xl font-extrabold text-white">Portal de Identificação Eleitoral</h2>
-          <p class="text-xs text-slate-400 mt-1">Validação segura com geolocalização travada</p>
+          <h2 class="text-xl font-extrabold text-white">Identificação do Participante</h2>
+          <p class="text-xs text-slate-400 mt-1">Validação segura e controle de voto único por dispositivo</p>
         </div>
 
         <!-- Indicador de Passos -->
         <div class="flex items-center justify-center gap-2 mb-6">
-          <div id="step-dot-1" class="w-7 h-7 rounded-full bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center">1</div>
+          <div id="step-dot-1" class="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">1</div>
           <div class="w-8 h-0.5 bg-slate-800"></div>
           <div id="step-dot-2" class="w-7 h-7 rounded-full bg-slate-800 text-slate-500 font-bold text-xs flex items-center justify-center">2</div>
           <div class="w-8 h-0.5 bg-slate-800"></div>
@@ -111,26 +118,26 @@
         <!-- FORMULÁRIO PASSO 1 -->
         <div id="auth-step-1" class="space-y-4">
           <div>
-            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nome Completo do Eleitor</label>
-            <input type="text" id="voter-name" placeholder="Ex: Maria da Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition">
+            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nome Completo</label>
+            <input type="text" id="voter-name" placeholder="Ex: Maria da Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
           </div>
 
           <div>
-            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Eleitor</label>
-            <input type="text" id="voter-doc" inputmode="numeric" pattern="[0-9]*" maxlength="14" placeholder="000.000.000-00" oninput="onCPFInput(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono transition">
-            <p id="cpf-status-hint" class="text-[10px] text-emerald-400 mt-0.5 hidden font-semibold">ℹ️ CPF já cadastrado neste dispositivo. Localização travada.</p>
+            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Participante</label>
+            <input type="text" id="voter-doc" inputmode="numeric" pattern="[0-9]*" maxlength="14" placeholder="000.000.000-00" oninput="onCPFInput(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition">
+            <p id="cpf-status-hint" class="text-[10px] text-blue-400 mt-0.5 hidden font-semibold">ℹ️ CPF já cadastrado neste dispositivo. Localização travada.</p>
           </div>
 
           <!-- SENHA / PIN DE SEGURANÇA PESSOAL -->
           <div>
-            <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-1">PIN / Senha de Acesso (4 dígitos)</label>
-            <input type="password" id="voter-pin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" class="w-full bg-slate-950 border border-emerald-500/40 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono transition text-center tracking-widest text-lg">
+            <label class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">PIN / Senha de Acesso (4 dígitos)</label>
+            <input type="password" id="voter-pin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" class="w-full bg-slate-950 border border-blue-500/40 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition text-center tracking-widest text-lg">
           </div>
 
           <!-- SELEÇÃO DE ESTADO (UF) -->
           <div>
             <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">1. Selecione o Estado (UF)</label>
-            <select id="voter-uf-select" onchange="onUFChange()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
+            <select id="voter-uf-select" onchange="onUFChange()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
               <option value="PA" data-region="Norte">Pará (PA) — Norte</option>
               <option value="SP" data-region="Sudeste">São Paulo (SP) — Sudeste</option>
               <option value="RJ" data-region="Sudeste">Rio de Janeiro (RJ) — Sudeste</option>
@@ -167,32 +174,32 @@
             <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               2. Cidade / Município
             </label>
-            <input type="text" id="voter-city-search" placeholder="Digite sua cidade..." oninput="filterCityOptions()" onfocus="filterCityOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition">
+            <input type="text" id="voter-city-search" placeholder="Digite sua cidade..." oninput="filterCityOptions()" onfocus="filterCityOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
             
-            <div id="city-suggestions-container" class="hidden absolute left-0 right-0 top-full bg-slate-950 border border-emerald-500/40 rounded-xl max-h-48 overflow-y-auto custom-scrollbar p-1 space-y-1 shadow-2xl z-50 mt-1">
+            <div id="city-suggestions-container" class="hidden absolute left-0 right-0 top-full bg-slate-950 border border-blue-500/40 rounded-xl max-h-48 overflow-y-auto custom-scrollbar p-1 space-y-1 shadow-2xl z-50 mt-1">
             </div>
 
             <input type="hidden" id="selected-city-val" value="">
           </div>
 
-          <button onclick="submitStep1()" type="button" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-sm transition active:scale-[0.99] mt-2">
+          <button onclick="submitStep1()" type="button" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 text-sm transition active:scale-[0.99] mt-2">
             Verificar Elegibilidade &rarr;
           </button>
         </div>
 
-        <!-- FORMULÁRIO PASSO 2: SIMULAÇÃO DA BIOMETRIA -->
+        <!-- FORMULÁRIO PASSO 2: SIMULAÇÃO DA VALIDAÇÃO -->
         <div id="auth-step-2" class="hidden text-center py-4 space-y-4">
           <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
-            <div class="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin"></div>
+            <div class="absolute inset-0 rounded-full border-2 border-blue-500/20 border-t-blue-500 animate-spin"></div>
             <div class="text-3xl">👤</div>
           </div>
-          <p class="text-xs text-slate-300 font-semibold">Validando Assinatura Criptográfica e Banco TSE...</p>
+          <p class="text-xs text-slate-300 font-semibold">Validando Assinatura e Credenciais...</p>
           <p class="text-[11px] text-slate-500">Aguarde alguns segundos...</p>
         </div>
 
         <!-- FORMULÁRIO PASSO 3 -->
         <div id="auth-step-3" class="hidden text-center py-3 space-y-4">
-          <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+          <div class="w-12 h-12 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
             ✓
           </div>
           <div>
@@ -201,21 +208,21 @@
           </div>
 
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-left text-xs font-mono space-y-1">
-            <p class="text-slate-400">ELEITOR: <span id="summary-name" class="text-white font-bold"></span></p>
-            <p class="text-slate-400">DOCUMENTO: <span id="summary-doc" class="text-emerald-400 font-bold"></span></p>
-            <p class="text-slate-400">MUNICIPIO / UF: <span id="summary-state" class="text-emerald-400 font-bold"></span></p>
-            <p class="text-slate-400">STATUS: <span id="summary-vote-status" class="text-emerald-400 font-bold">APTO PARA VOTAR</span></p>
+            <p class="text-slate-400">PARTICIPANTE: <span id="summary-name" class="text-white font-bold"></span></p>
+            <p class="text-slate-400">DOCUMENTO: <span id="summary-doc" class="text-blue-400 font-bold"></span></p>
+            <p class="text-slate-400">MUNICIPIO / UF: <span id="summary-state" class="text-blue-400 font-bold"></span></p>
+            <p class="text-slate-400">STATUS: <span id="summary-vote-status" class="text-blue-400 font-bold">APTO PARA VOTAR</span></p>
           </div>
 
-          <button onclick="startVotingSession()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-sm transition active:scale-[0.99]">
-            Acessar Urna Eleitoral 🗳️
+          <button onclick="startVotingSession()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 text-sm transition active:scale-[0.99]">
+            Acessar Cabine de Votação 🗳️
           </button>
         </div>
 
       </div>
     </section>
 
-    <!-- STEP 2: URNA ELETRÔNICA COMPLETA -->
+    <!-- STEP 2: SIMULADOR DE VOTO -->
     <section id="sec-urna" class="hidden w-full space-y-3">
 
       <!-- CARDS DE ATALHO RÁPIDO PARA CANDIDATOS -->
@@ -248,14 +255,14 @@
         </div>
       </div>
 
-      <!-- CORPO DA URNA -->
+      <!-- PAINEL DE VOTAÇÃO -->
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-2xl space-y-3">
         
         <!-- VISOR LCD DA URNA -->
         <div class="bg-[#c3e2c2] border-4 border-slate-800 rounded-xl p-3 text-[#051406] urn-lcd-font shadow-inner min-h-[170px] flex flex-col justify-between relative overflow-hidden">
           
           <div class="flex items-center justify-between border-b border-black/15 pb-1">
-            <span class="text-[11px] font-black uppercase tracking-wider text-black">JUSTIÇA ELEITORAL</span>
+            <span class="text-[11px] font-black uppercase tracking-wider text-black">PAINEL BRASIL</span>
             <span class="text-[10px] font-black text-black/70 bg-black/10 px-1.5 py-0.5 rounded">2º TURNO</span>
           </div>
 
@@ -282,27 +289,27 @@
               <p>CONFIRMA = Votado</p>
               <p>CORRIGE = Reiniciar</p>
             </div>
-            <div class="w-3 h-3 rounded-full bg-emerald-700 animate-ping opacity-75"></div>
+            <div class="w-3 h-3 rounded-full bg-blue-700 animate-ping opacity-75"></div>
           </div>
 
         </div>
 
-        <!-- MODAL DE ANTIFRAUDE / PAGAMENTO PIX -->
+        <!-- MODAL DE ANTIFRAUDE / PAGAMENTO PIX (Mantido conforme solicitado) -->
         <div id="pix-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div class="bg-slate-900 border border-emerald-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4 text-center my-auto">
+          <div class="bg-slate-900 border border-blue-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4 text-center my-auto">
             
-            <div id="pix-header-icon" class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
+            <div id="pix-header-icon" class="w-12 h-12 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
               🛡️
             </div>
 
             <div id="pix-header-text">
               <h3 class="text-base font-extrabold text-white">Verificação Anti-Fraude</h3>
-              <p class="text-xs text-slate-300 mt-1">Taxa simbólica de verificação: <b id="pix-display-amount" class="text-emerald-400">R$ 1,50</b></p>
+              <p class="text-xs text-slate-300 mt-1">Taxa simbólica de verificação: <b id="pix-display-amount" class="text-blue-400">R$ 1,50</b></p>
             </div>
 
             <!-- Loader de Geração -->
             <div id="pix-loading" class="py-6 space-y-2">
-              <div class="w-8 h-8 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mx-auto"></div>
+              <div class="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
               <p class="text-xs text-slate-400">Gerando QR Code PIX de verificação...</p>
             </div>
 
@@ -316,7 +323,7 @@
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Código PIX Copia e Cola</p>
                 <div class="flex items-center gap-1.5 bg-slate-950 border border-slate-800 p-2 rounded-xl">
                   <input type="text" id="pix-code-input" readonly class="bg-transparent text-[10px] font-mono text-slate-300 flex-1 outline-none truncate">
-                  <button onclick="copyPixCode()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] px-2.5 py-1 rounded-lg transition">Copiar</button>
+                  <button onclick="copyPixCode()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] px-2.5 py-1 rounded-lg transition">Copiar</button>
                 </div>
               </div>
 
@@ -329,23 +336,23 @@
 
             <!-- MENSAGEM 1: PAGAMENTO APROVADO + CPF CORRETO (SUCESSO) -->
             <div id="msg-vote-success" class="hidden space-y-4 pt-1">
-              <div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
-                <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wide">
+              <div class="p-3.5 bg-blue-500/10 border border-blue-500/30 rounded-2xl text-left space-y-2">
+                <div class="flex items-center gap-2 text-blue-400 font-bold text-xs uppercase tracking-wide">
                   <span>🎉</span>
-                  <span>Voto Computado com Sucesso!</span>
+                  <span>Voto Registrado com Sucesso!</span>
                 </div>
                 <p class="text-xs text-slate-200 leading-relaxed font-medium">
-                  Parabéns, seu voto foi computado com segurança! O chat está liberado com autenticação por token de dispositivo.
+                  Parabéns, seu voto foi computado com segurança! O chat de debate está liberado.
                 </p>
               </div>
 
               <div class="space-y-2">
-                <button onclick="openReceiptModal()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+                <button onclick="openReceiptModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl shadow-lg shadow-blue-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
                   <span>📄</span>
-                  <span>Ver / Gerar Comprovante do Voto</span>
+                  <span>Ver / Gerar Comprovante</span>
                 </button>
                 <button onclick="goToChatFromModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs transition">
-                  Ir para o Chat Seguro 💬
+                  Ir para o Debate 💬
                 </button>
               </div>
             </div>
@@ -373,44 +380,44 @@
           </div>
         </div>
 
-        <!-- MODAL COMPROVANTE ELEITORAL -->
+        <!-- MODAL COMPROVANTE -->
         <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 overflow-y-auto">
           <div class="w-full max-w-sm my-auto space-y-4">
             
             <!-- CARD DO COMPROVANTE -->
-            <div id="receipt-card" class="w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 border-emerald-500/40 bg-gradient-to-b from-slate-900 to-slate-950 p-5 text-white space-y-4">
+            <div id="receipt-card" class="w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 border-blue-500/40 bg-gradient-to-b from-slate-900 to-slate-950 p-5 text-white space-y-4">
               
               <!-- CABEÇALHO DO COMPROVANTE -->
               <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div class="flex items-center gap-2">
-                  <span class="text-xl">🗳️</span>
+                  <span class="text-xl">📊</span>
                   <div>
-                    <h4 class="text-xs font-black uppercase tracking-wider text-white">Justiça Eleitoral</h4>
-                    <p class="text-[9px] text-emerald-400 font-bold">Comprovante Oficial Autenticado</p>
+                    <h4 class="text-xs font-black uppercase tracking-wider text-white">Painel Brasil</h4>
+                    <p class="text-[9px] text-blue-400 font-bold">Comprovante de Participação</p>
                   </div>
                 </div>
-                <span class="text-[10px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded-full font-mono font-bold">2º TURNO</span>
+                <span class="text-[10px] bg-blue-500/10 border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded-full font-mono font-bold">2º TURNO</span>
               </div>
 
               <!-- CONTEÚDO VISUAL DINÂMICO -->
               <div id="receipt-dynamic-box" class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-center space-y-2 shadow-inner">
                 <div id="receipt-badge-icon" class="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-lg"></div>
                 <p id="receipt-candidate-title" class="text-sm font-black uppercase tracking-wide"></p>
-                <p class="text-[10px] text-slate-400">Simulação Presidencial Oficial</p>
+                <p class="text-[10px] text-slate-400">Simulação de Opinião Pública</p>
               </div>
 
-              <!-- DADOS DO ELEITOR -->
+              <!-- DADOS DO PARTICIPANTE -->
               <div class="space-y-1.5 text-xs font-mono bg-black/40 p-3.5 rounded-2xl border border-slate-800/80 shadow-inner text-center">
-                <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Eleitor(a) Registrado(a)</p>
+                <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Participante Registrado(a)</p>
                 <p class="text-sm font-black text-white uppercase" id="receipt-voter-name">---</p>
-                <p id="receipt-voter-location" class="text-[10px] text-emerald-400 font-bold">---</p>
+                <p id="receipt-voter-location" class="text-[10px] text-blue-400 font-bold">---</p>
               </div>
 
             </div>
 
             <!-- BOTÕES DE AÇÃO -->
             <div class="space-y-2">
-              <button onclick="shareReceipt()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl shadow-lg shadow-emerald-500/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+              <button onclick="shareReceipt()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-2xl shadow-lg shadow-blue-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
                 <span>📲</span>
                 <span>Compartilhar nas Redes Sociais</span>
               </button>
@@ -420,7 +427,7 @@
                   Copiar Texto 📋
                 </button>
                 <button onclick="closeReceiptModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition">
-                  Ir para o Chat 💬
+                  Ir para o Debate 💬
                 </button>
               </div>
             </div>
@@ -428,7 +435,7 @@
           </div>
         </div>
 
-        <!-- TECLADO NUMÉRICO E BOTOES DA URNA -->
+        <!-- TECLADO NUMÉRICO E BOTOES -->
         <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2">
           
           <div class="grid grid-cols-3 gap-2">
@@ -450,7 +457,7 @@
           <div class="grid grid-cols-3 gap-2 pt-1">
             <button onclick="pressBranco()" class="bg-slate-100 hover:bg-white text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-slate-300 transition uppercase">BRANCO</button>
             <button onclick="pressCorrige()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-amber-700 transition uppercase">CORRIGE</button>
-            <button onclick="pressConfirma()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-emerald-700 transition uppercase">CONFIRMA</button>
+            <button onclick="pressConfirma()" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs py-2.5 rounded-lg border-b-2 border-blue-800 transition uppercase">CONFIRMA</button>
           </div>
 
         </div>
@@ -459,18 +466,18 @@
 
     </section>
 
-    <!-- STEP 3: PAINEL DE APURAÇÃO / DADOS -->
+    <!-- STEP 3: PAINEL DE PLACAR / DADOS -->
     <section id="sec-dados" class="hidden w-full space-y-4">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
         
         <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
           <div>
-            <h2 class="text-base font-extrabold text-white">Apuração Oficial TSE</h2>
-            <p class="text-[11px] text-slate-400">Resultados consolidados em tempo real via Supabase</p>
+            <h2 class="text-base font-extrabold text-white">Placar da Pesquisa Independente</h2>
+            <p class="text-[11px] text-slate-400">Resultados consolidados em tempo real</p>
           </div>
-          <button id="btn-refresh-stats" onclick="loadCloudStats()" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg hover:bg-emerald-500/20 transition flex items-center gap-1.5 disabled:opacity-50">
+          <button id="btn-refresh-stats" onclick="loadCloudStats()" class="text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg hover:bg-blue-500/20 transition flex items-center gap-1.5 disabled:opacity-50">
             <span id="refresh-icon">🔄</span>
-            <span id="refresh-spinner" class="hidden w-3.5 h-3.5 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin"></span>
+            <span id="refresh-spinner" class="hidden w-3.5 h-3.5 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin"></span>
             <span>Atualizar Dados</span>
           </button>
         </div>
@@ -478,12 +485,12 @@
         <!-- CARDS DE ESTATÍSTICA GERAL -->
         <div class="grid grid-cols-2 gap-2.5">
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <p class="text-[10px] font-bold text-slate-500 uppercase">TOTAL VOTOS</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase">TOTAL DE VOTOS</p>
             <p id="stat-total" class="text-2xl font-black text-white">0</p>
           </div>
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <p class="text-[10px] font-bold text-emerald-500 uppercase">VOTOS VÁLIDOS</p>
-            <p id="stat-validos" class="text-2xl font-black text-emerald-400">0</p>
+            <p class="text-[10px] font-bold text-blue-500 uppercase">VOTOS VÁLIDOS</p>
+            <p id="stat-validos" class="text-2xl font-black text-blue-400">0</p>
           </div>
         </div>
 
@@ -558,14 +565,14 @@
       </div>
     </section>
 
-    <!-- STEP 4: CHAT DOS ELEITORES -->
+    <!-- STEP 4: DEBATE / CHAT -->
     <section id="sec-chat" class="hidden w-full space-y-3">
       <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm">💬</div>
+          <div class="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-sm">💬</div>
           <div>
-            <h3 class="text-xs font-bold text-white">Debate Eleitoral ao Vivo</h3>
-            <p class="text-[10px] text-emerald-400 font-medium">● Chat Seguro com Token</p>
+            <h3 class="text-xs font-bold text-white">Debate Público ao Vivo</h3>
+            <p class="text-[10px] text-blue-400 font-medium">● Chat Seguro</p>
           </div>
         </div>
         <span id="chat-user-badge" class="text-[10px] font-mono bg-slate-950 border border-slate-800 px-2 py-1 rounded-lg text-slate-300"></span>
@@ -576,16 +583,16 @@
         <!-- Renderizado via JS -->
       </div>
 
-      <!-- ALERTA: BLOQUEIO PARA QUEM AINDA NÃO VOTOU -->
+      <!-- ALERTA: BLOQUEIO PARA QUEM AINDA NÃO VOTO -->
       <div id="chat-locked-warning" class="hidden bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl text-center space-y-2">
         <p class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
-          🔒 Acesso ao Chat Bloqueado
+          🔒 Acesso ao Debate Bloqueado
         </p>
         <p class="text-[11px] text-slate-300">
-          Você precisa registrar seu voto na <b>Urna Eletrônica</b> e autenticar seu dispositivo antes de participar.
+          Você precisa registrar seu voto na pesquisa antes de participar do chat.
         </p>
         <button onclick="switchTab('urna')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs px-4 py-2 rounded-xl transition shadow-lg">
-          Ir para a Urna Votar 🗳️
+          Ir para a Votação 🗳️
         </button>
       </div>
 
@@ -593,41 +600,41 @@
       <div id="nickname-error" class="hidden bg-rose-500/10 border border-rose-500/30 p-2.5 rounded-xl text-center text-rose-400 text-xs font-medium"></div>
 
       <!-- Configuração de Apelido -->
-      <div id="nickname-setup-box" class="hidden bg-slate-900 border border-emerald-500/40 p-3 rounded-xl space-y-2">
-        <p class="text-xs font-bold text-emerald-400">Escolha seu Apelido para o Chat:</p>
+      <div id="nickname-setup-box" class="hidden bg-slate-900 border border-blue-500/40 p-3 rounded-xl space-y-2">
+        <p class="text-xs font-bold text-blue-400">Escolha seu Apelido para o Chat:</p>
         <div class="flex gap-2">
-          <input type="text" id="chat-nickname-input" placeholder="Digite seu apelido..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-500">
-          <button onclick="saveNickname()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs transition">Salvar</button>
+          <input type="text" id="chat-nickname-input" placeholder="Digite seu apelido..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-blue-500">
+          <button onclick="saveNickname()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-2 rounded-xl text-xs transition">Salvar</button>
         </div>
       </div>
 
       <!-- Enviar Mensagem -->
       <div id="chat-input-container" class="hidden flex gap-2">
-        <input type="text" id="chat-input" placeholder="Digite seu comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-emerald-500">
-        <button onclick="sendChatMessage()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-lg shadow-emerald-500/20">
+        <input type="text" id="chat-input" placeholder="Digite seu comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-blue-500">
+        <button onclick="sendChatMessage()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-lg shadow-blue-600/20">
           Enviar 🚀
         </button>
       </div>
     </section>
 
-    <!-- SESSÃO DE DÚVIDAS FREQUENTES (FAQ) -->
+    <!-- FAQ -->
     <section id="sec-faq" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
       <div class="flex items-center gap-2 border-b border-slate-800 pb-2">
         <span class="text-lg">❓</span>
         <div>
-          <h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Sessão de Dúvidas & Perguntas Frequentes</h3>
-          <p class="text-[10px] text-slate-400">Tudo sobre as regras, segurança e validação do pleito</p>
+          <h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Dúvidas Frequentes</h3>
+          <p class="text-[10px] text-slate-400">Sobre a segurança e regras da pesquisa</p>
         </div>
       </div>
 
       <div class="space-y-2.5 text-xs">
         <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
           <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-            <span>🛡️ Como o sistema protege a localização do eleitor?</span>
-            <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
+            <span>🛡️ Como o sistema protege a localização?</span>
+            <span class="text-blue-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-            Assim que o eleitor se cadastra e vota pela primeira vez, a localização (Estado e Cidade) fica permanentemente travada para aquele CPF no dispositivo, impedindo alterações posteriores.
+            Após o primeiro registo com o CPF, a localização (Estado e Cidade) vinculada fica travada no dispositivo para garantir consistência e evitar fraudes na amostra da pesquisa.
           </div>
         </details>
       </div>
@@ -636,7 +643,7 @@
   </main>
 
   <footer class="text-center py-3 text-[10px] text-slate-500 border-t border-slate-900">
-    © Justiça Eleitoral Digital — Simulador de Votação Presidencial (Seguro)
+    © Painel Brasil — Pesquisa Independente de Opinião Pública
   </footer>
 
   <script>
@@ -708,7 +715,7 @@
     let cityVotes = {};
 
     let chatMessages = JSON.parse(localStorage.getItem('simulador_chat_msgs') || JSON.stringify([
-      { id: 1, sender: "TSE Oficial", uf: "DF", text: "Bem-vindo ao debate eleitoral seguro. Autenticação por token ativada.", time: "Agora", isSystem: true }
+      { id: 1, sender: "Moderação", uf: "DF", text: "Bem-vindo ao debate público independente. Mantenha o respeito.", time: "Agora", isSystem: true }
     ]));
 
     window.addEventListener('DOMContentLoaded', async () => {
@@ -907,7 +914,7 @@
         `).join('');
       } else {
         html = `
-          <div onclick="selectCity('${document.getElementById('voter-city-search').value}')" class="p-2.5 text-xs text-emerald-400 hover:bg-slate-900 rounded-lg cursor-pointer font-bold">
+          <div onclick="selectCity('${document.getElementById('voter-city-search').value}')" class="p-2.5 text-xs text-blue-400 hover:bg-slate-900 rounded-lg cursor-pointer font-bold">
             📍 Usar: "${document.getElementById('voter-city-search').value}"
           </div>
         `;
@@ -962,7 +969,6 @@
         localStorage.setItem('simulador_voter_pins', JSON.stringify(voterDevicePins));
       }
 
-      // Salva a localização fixa vinculada ao CPF
       if (!voterLocations[cleanDoc]) {
         voterLocations[cleanDoc] = { uf: ufSelect.value, city: city };
         localStorage.setItem('simulador_voter_locations', JSON.stringify(voterLocations));
@@ -1007,13 +1013,13 @@
           }
         } else {
           statusEl.textContent = "APTO PARA VOTAR";
-          statusEl.className = "text-emerald-400 font-bold";
+          statusEl.className = "text-blue-400 font-bold";
         }
 
         document.getElementById('auth-step-3').classList.remove('hidden');
 
-        document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center justify-center";
-        document.getElementById('step-dot-3').className = "w-7 h-7 rounded-full bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center";
+        document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-blue-500/30 text-blue-400 font-bold text-xs flex items-center justify-center";
+        document.getElementById('step-dot-3').className = "w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center";
       }, 1000);
     }
 
@@ -1038,15 +1044,15 @@
 
       if (tab === 'urna') {
         document.getElementById('sec-urna').classList.remove('hidden');
-        document.getElementById('btn-tab-urna').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition";
+        document.getElementById('btn-tab-urna').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
         resetUrna();
       } else if (tab === 'dados') {
         document.getElementById('sec-dados').classList.remove('hidden');
-        document.getElementById('btn-tab-dados').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition";
+        document.getElementById('btn-tab-dados').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
         loadCloudStats();
       } else if (tab === 'chat') {
         document.getElementById('sec-chat').classList.remove('hidden');
-        document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition flex items-center gap-1";
+        document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition flex items-center gap-1";
         
         const hasVoted = verifiedVoter && votedCPFs[verifiedVoter.cleanDoc];
         const nickname = verifiedVoter ? voterNicknames[verifiedVoter.cleanDoc] : null;
@@ -1099,7 +1105,7 @@
       
       for (let [cpfKey, nickVal] of existingEntries) {
         if (cpfKey !== verifiedVoter.cleanDoc && nickVal.toLowerCase() === normalizedNewNick) {
-          errBox.textContent = `⚠️ O apelido "${nickname}" já está em uso por outro eleitor. Escolha outro.`;
+          errBox.textContent = `⚠️ O apelido "${nickname}" já está em uso por outro participante.`;
           errBox.classList.remove('hidden');
           return;
         }
@@ -1213,14 +1219,14 @@
         const lcd = document.getElementById('lcd-content');
         lcd.innerHTML = `
           <div class="py-3 text-center space-y-2">
-            <p class="text-xs font-black text-rose-700 uppercase">ERRO: VOTO DUPLICADO</p>
-            <p class="text-[10px] font-bold text-black">Este CPF já registrou voto neste pleito.</p>
+            <p class="text-xs font-black text-rose-700 uppercase">AVISO: VOTO DUPLICADO</p>
+            <p class="text-[10px] font-bold text-black">Este CPF já registrou participação nesta pesquisa.</p>
             <div class="pt-1 flex flex-col gap-1.5 px-2">
-              <button onclick="openReceiptModal()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-1.5 px-2 rounded text-[10px] uppercase shadow">
+              <button onclick="openReceiptModal()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-1.5 px-2 rounded text-[10px] uppercase shadow">
                 📄 Ver Comprovante
               </button>
               <button onclick="switchTab('chat')" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-1 px-2 rounded text-[9px] uppercase">
-                💬 Ir para o Chat
+                💬 Ir para o Debate
               </button>
             </div>
           </div>
@@ -1272,7 +1278,7 @@
       document.getElementById('msg-vote-success').classList.add('hidden');
       document.getElementById('msg-vote-rejected').classList.add('hidden');
 
-      document.getElementById('pix-header-icon').className = "w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
+      document.getElementById('pix-header-icon').className = "w-12 h-12 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
       document.getElementById('pix-header-icon').textContent = "🛡️";
       document.getElementById('pix-header-text').classList.remove('hidden');
       document.getElementById('btn-cancel-pix').classList.remove('hidden');
@@ -1286,7 +1292,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: verifiedVoter.name,
-            email: "eleitor@simulador.org",
+            email: "participante@painelbrasil.org",
             cpf: verifiedVoter.cleanDoc,
             amount: randomAmount
           })
@@ -1311,7 +1317,7 @@
     }
 
     function fallbackPixSimulated(amount) {
-      const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865404" + Math.floor(amount * 100) + "5802BR5920INSTITUICAO BENEFICENTE6009SAO PAULO62070503***6304E2CA";
+      const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865404" + Math.floor(amount * 100) + "5802BR5920PESQUISA INDEPENDENTE6009SAO PAULO62070503***6304E2CA";
       document.getElementById('pix-code-input').value = mockPix;
       document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mockPix)}`;
       
@@ -1380,7 +1386,7 @@
         return;
       }
 
-      document.getElementById('pix-header-icon').className = "w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
+      document.getElementById('pix-header-icon').className = "w-12 h-12 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
       document.getElementById('pix-header-icon').textContent = "✅";
       document.getElementById('msg-vote-success').classList.remove('hidden');
 
@@ -1449,7 +1455,7 @@
       }
 
       if (!confirmedVoteData) {
-        alert("Não foi possível carregar os dados do eleitor.");
+        alert("Não foi possível carregar os dados.");
         return;
       }
 
@@ -1475,7 +1481,7 @@
         candidateTitle.className = "text-sm font-black uppercase tracking-wide text-rose-400";
       } else {
         badgeIcon.className = "w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-lg bg-slate-800 border border-slate-700 text-slate-300";
-        badgeIcon.textContent = "🗳️";
+        badgeIcon.textContent = "📊";
         candidateTitle.textContent = confirmedVoteData.opcao;
         candidateTitle.className = "text-sm font-black uppercase tracking-wide text-slate-200";
       }
@@ -1496,14 +1502,14 @@
     async function shareReceipt() {
       if (!confirmedVoteData) return;
 
-      let slogan = confirmedVoteData.opcao === '22' ? "🇧🇷 Estou com o Flávio 22!" : (confirmedVoteData.opcao === '13' ? "🚩 Estou com o Lula 13!" : "🗳️ Voto computado na Justiça Eleitoral Digital!");
+      let slogan = confirmedVoteData.opcao === '22' ? "🇧🇷 Participando da pesquisa: Flávio 22!" : (confirmedVoteData.opcao === '13' ? "🚩 Participando da pesquisa: Lula 13!" : "📊 Voto registrado no Painel Brasil!");
 
-      const shareText = `${slogan}\n\nAcabei de registrar meu voto na Simulação Eleitoral Oficial!\n\nEleitor(a): ${confirmedVoteData.voterName}\nStatus: Voto Autenticado e Auditado.\n\nParticipe você também e defenda o seu lado no debate ao vivo!`;
+      const shareText = `${slogan}\n\nAcabei de participar da Pesquisa Independente de Opinião Pública!\n\nParticipante: ${confirmedVoteData.voterName}\nStatus: Participação Auditada.\n\nParticipe você também e deixe sua opinião no debate ao vivo!`;
 
       if (navigator.share) {
         try {
           await navigator.share({
-            title: 'Comprovante de Votação Presidencial',
+            title: 'Comprovante de Participação - Painel Brasil',
             text: shareText,
             url: window.location.href
           });
@@ -1517,8 +1523,8 @@
 
     function copyReceiptText() {
       if (!confirmedVoteData) return;
-      let slogan = confirmedVoteData.opcao === '22' ? "🇧🇷 Estou com o Flávio 22!" : (confirmedVoteData.opcao === '13' ? "🚩 Estou com o Lula 13!" : "🗳️ Voto computado!");
-      const shareText = `${slogan}\nEleitor(a): ${confirmedVoteData.voterName}\nComprovante Autenticado na Justiça Eleitoral Digital!`;
+      let slogan = confirmedVoteData.opcao === '22' ? "🇧🇷 Flávio 22!" : (confirmedVoteData.opcao === '13' ? "🚩 Lula 13!" : "📊 Voto registrado!");
+      const shareText = `${slogan}\nParticipante: ${confirmedVoteData.voterName}\nComprovante emitido pelo Painel Brasil!`;
 
       navigator.clipboard.writeText(shareText);
       alert('Texto do comprovante copiado!');
@@ -1624,7 +1630,7 @@
           ` : `
             <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl max-w-[90%] space-y-1">
               <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="font-bold text-emerald-400">${m.nickname}</span>
+                <span class="font-bold text-blue-400">${m.nickname}</span>
                 <span class="text-[9px] bg-slate-900 px-1.5 py-0.5 rounded text-slate-300 font-mono border border-slate-800">${m.uf}</span>
                 <span class="text-[9px] ${badgeStyle} px-1.5 py-0.5 rounded font-mono font-bold">${m.voteLabel}</span>
                 <span class="text-[9px] text-slate-500 ml-auto">${m.time}</span>
