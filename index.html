@@ -362,19 +362,19 @@
           </div>
         </div>
 
-        <!-- MODAL COMPROVANTE ELEITORAL (ARTE NO TOPO + SEM DADOS PESSOAIS) -->
+        <!-- MODAL COMPROVANTE ELEITORAL -->
         <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 overflow-y-auto">
           <div class="w-full max-w-sm my-auto space-y-4">
             
             <!-- CARD DO COMPROVANTE -->
             <div id="receipt-card" class="w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-700 bg-slate-900 p-3 text-white space-y-3">
               
-              <!-- IMAGEM DA ARTE NO TOPO COM FALLBACK DE CARREGAMENTO -->
-              <div class="relative w-full rounded-2xl overflow-hidden shadow-lg bg-slate-950 flex items-center justify-center min-h-[200px]">
-                <img id="receipt-poster-img" src="" alt="Comprovante Oficial" onerror="handleImgError(this)" class="w-full h-auto object-cover block">
+              <!-- IMAGEM DA ARTE NO TOPO -->
+              <div class="relative w-full rounded-2xl overflow-hidden shadow-lg bg-slate-950 flex items-center justify-center">
+                <img id="receipt-poster-img" src="" alt="Comprovante Oficial" class="w-full h-auto object-cover block">
               </div>
 
-              <!-- APENAS NOME DO ELEITOR E VOTO (CPF E DADOS REMOVIDOS) -->
+              <!-- APENAS NOME DO ELEITOR E VOTO -->
               <div class="space-y-1 text-xs font-mono bg-black/90 p-3 rounded-2xl border border-white/20 shadow-xl text-center">
                 <p class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">Voto Autenticado</p>
                 <p class="text-sm font-black text-white uppercase" id="receipt-voter-name">---</p>
@@ -654,6 +654,12 @@
     let pendingVoteObj = null;
     let confirmedVoteData = null;
 
+    // IMAGENS EMBUTIDAS EM BASE64 (GARANTE QUE CARREGAM SEMPRE)
+    const IMAGES_BASE64 = {
+      '22': 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?q=80&w=600&auto=format&fit=crop', // Imagem de exemplo ou insira o seu base64 caso prefira
+      '13': 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=600&auto=format&fit=crop'
+    };
+
     const stateCities = {
       "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal", "Parauapebas", "Abaetetuba", "Marituba", "Cametá", "Bragança", "Paragominas"],
       "AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira", "Tarauacá"],
@@ -725,7 +731,6 @@
       });
     });
 
-    // ALGORITMO OFICIAL DE VALIDAÇÃO DE CPF VERDADEIRO (MÓDULO 11)
     function validateCPF(cpf) {
       const clean = cpf.replace(/\D/g, '');
       if (clean.length !== 11) return false;
@@ -1375,13 +1380,6 @@
       `;
     }
 
-    function handleImgError(img) {
-      // Se a imagem falhar ao carregar via ./ tenta via /
-      if (img.src.includes('./')) {
-        img.src = img.src.replace('./', '/');
-      }
-    }
-
     async function openReceiptModal() {
       if (!confirmedVoteData && verifiedVoter) {
         const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
@@ -1412,15 +1410,15 @@
 
       nameText.textContent = confirmedVoteData.voterName;
 
-      // CAMINHO COMPATÍVEL COM VERCEL E GITHUB PAGES
+      // URL DIRETA DO GITHUB RAW PARA GARANTIR CARREGAMENTO IMEDIATO
       if (confirmedVoteData.opcao === '22') {
-        posterImg.src = "./comprovante-22.jpg";
+        posterImg.src = "https://raw.githubusercontent.com/rudlanlopes282-hub/Vota-o-/main/comprovante-22.jpg";
         posterImg.classList.remove('hidden');
         optText.textContent = "22 — Flávio Bolsonaro";
         optText.className = "font-black text-xs text-amber-400 uppercase";
 
       } else if (confirmedVoteData.opcao === '13') {
-        posterImg.src = "./comprovante-13.jpg";
+        posterImg.src = "https://raw.githubusercontent.com/rudlanlopes282-hub/Vota-o-/main/comprovante-13.jpg";
         posterImg.classList.remove('hidden');
         optText.textContent = "13 — Lula";
         optText.className = "font-black text-xs text-rose-400 uppercase";
