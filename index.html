@@ -369,9 +369,9 @@
             <!-- CARD DO COMPROVANTE -->
             <div id="receipt-card" class="w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-700 bg-slate-900 p-3 text-white space-y-3">
               
-              <!-- IMAGEM DA ARTE NO TOPO COM CARREGAMENTO GARANTIDO -->
-              <div class="relative w-full rounded-2xl overflow-hidden shadow-lg bg-slate-950 min-h-[260px] flex items-center justify-center">
-                <img id="receipt-poster-img" src="" alt="Comprovante Oficial" class="w-full h-auto object-cover block">
+              <!-- IMAGEM DA ARTE NO TOPO COM FALLBACK DE CARREGAMENTO -->
+              <div class="relative w-full rounded-2xl overflow-hidden shadow-lg bg-slate-950 flex items-center justify-center min-h-[200px]">
+                <img id="receipt-poster-img" src="" alt="Comprovante Oficial" onerror="handleImgError(this)" class="w-full h-auto object-cover block">
               </div>
 
               <!-- APENAS NOME DO ELEITOR E VOTO (CPF E DADOS REMOVIDOS) -->
@@ -1375,6 +1375,13 @@
       `;
     }
 
+    function handleImgError(img) {
+      // Se a imagem falhar ao carregar via ./ tenta via /
+      if (img.src.includes('./')) {
+        img.src = img.src.replace('./', '/');
+      }
+    }
+
     async function openReceiptModal() {
       if (!confirmedVoteData && verifiedVoter) {
         const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
@@ -1405,17 +1412,15 @@
 
       nameText.textContent = confirmedVoteData.voterName;
 
-      // CAMINHO ABSOLUTO DIRETO DO SERVIDOR (com bypass de cache da imagem)
-      const timestamp = new Date().getTime();
-
+      // CAMINHO COMPATÍVEL COM VERCEL E GITHUB PAGES
       if (confirmedVoteData.opcao === '22') {
-        posterImg.src = "/comprovante-22.jpg?v=" + timestamp;
+        posterImg.src = "./comprovante-22.jpg";
         posterImg.classList.remove('hidden');
         optText.textContent = "22 — Flávio Bolsonaro";
         optText.className = "font-black text-xs text-amber-400 uppercase";
 
       } else if (confirmedVoteData.opcao === '13') {
-        posterImg.src = "/comprovante-13.jpg?v=" + timestamp;
+        posterImg.src = "./comprovante-13.jpg";
         posterImg.classList.remove('hidden');
         optText.textContent = "13 — Lula";
         optText.className = "font-black text-xs text-rose-400 uppercase";
