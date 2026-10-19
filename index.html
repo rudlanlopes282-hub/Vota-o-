@@ -196,7 +196,7 @@
             <p class="text-slate-400">STATUS: <span id="summary-vote-status" class="text-emerald-400 font-bold">APTO PARA VOTAR</span></p>
           </div>
 
-          <button onclick="startVotingSession()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-sm transition active:scale-[0.99]">
+          <button id="btn-main-auth-action" onclick="startVotingSession()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-sm transition active:scale-[0.99]">
             Acessar Urna Eleitoral 🗳️
           </button>
         </div>
@@ -968,12 +968,25 @@
         document.getElementById('summary-state').textContent = `${city} / ${uf} (${region})`;
 
         const statusEl = document.getElementById('summary-vote-status');
+        const mainBtn = document.getElementById('btn-main-auth-action');
+
         if (isAlreadyVoted) {
-          statusEl.textContent = "JÁ VOTOU (Aviso: Voto duplicado será bloqueado na urna)";
+          statusEl.textContent = "JÁ VOTOU (Voto já registrado neste CPF)";
           statusEl.className = "text-amber-400 font-bold";
+          
+          // Tenta recuperar o comprovante salvo no localStorage
+          const savedReceipt = localStorage.getItem('simulador_receipt_' + cleanDoc);
+          if (savedReceipt) {
+            confirmedVoteData = JSON.parse(savedReceipt);
+          }
+
+          mainBtn.textContent = "Ver Meu Comprovante 📄";
+          mainBtn.setAttribute('onclick', 'openReceiptModalFromAuth()');
         } else {
           statusEl.textContent = "APTO PARA VOTAR";
           statusEl.className = "text-emerald-400 font-bold";
+          mainBtn.textContent = "Acessar Urna Eleitoral 🗳️";
+          mainBtn.setAttribute('onclick', 'startVotingSession()');
         }
 
         document.getElementById('auth-step-3').classList.remove('hidden');
@@ -981,6 +994,14 @@
         document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center justify-center";
         document.getElementById('step-dot-3').className = "w-7 h-7 rounded-full bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center";
       }, 1000);
+    }
+
+    function openReceiptModalFromAuth() {
+      if (confirmedVoteData) {
+        openReceiptModal();
+      } else {
+        alert("Comprovante não encontrado neste navegador. Caso tenha votado em outro dispositivo, utilize-o para visualizar.");
+      }
     }
 
     function startVotingSession() {
@@ -1339,6 +1360,9 @@
         opcao: pendingVoteObj.opcao,
         time: new Date().toLocaleString('pt-BR')
       };
+
+      // SALVA O COMPROVANTE NO LOCALSTORAGE VINCULADO AO CPF
+      localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
 
       votedCPFs[verifiedVoter.cleanDoc] = true;
       voterChoices[verifiedVoter.cleanDoc] = pendingVoteObj.voteLabel;
