@@ -294,27 +294,54 @@
 
         </div>
 
-        <!-- MODAL DE ANTIFRAUDE / PAGAMENTO PIX (Mantido conforme solicitado) -->
+        <!-- MODAL DO KIT APOIADOR & CHAT VIP (PÓS-VOTO COM PIX OPCIONAL) -->
         <div id="pix-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div class="bg-slate-900 border border-blue-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4 text-center my-auto">
             
-            <div id="pix-header-icon" class="w-12 h-12 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
-              🛡️
+            <!-- CABEÇALHO -->
+            <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-2xl">
+              🎉
             </div>
 
-            <div id="pix-header-text">
-              <h3 class="text-base font-extrabold text-white">Verificação Anti-Fraude</h3>
-              <p class="text-xs text-slate-300 mt-1">Taxa simbólica de verificação: <b id="pix-display-amount" class="text-blue-400">R$ 1,50</b></p>
+            <div id="pix-header-text" class="space-y-1">
+              <h3 class="text-base font-extrabold text-white">Voto Registrado com Sucesso!</h3>
+              <p class="text-xs text-slate-300">Sua opinião já foi computada na pesquisa.</p>
+            </div>
+
+            <!-- OPÇÕES DE APOIO -->
+            <div id="pix-options-box" class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl text-left space-y-3">
+              <p class="text-xs font-bold text-blue-400 uppercase tracking-wider text-center">💬 Quer entrar no Chat e Viralizar seu Apoio?</p>
+
+              <div class="text-[11px] text-slate-300 space-y-1.5 leading-relaxed">
+                <p>✔️ <b>Card Exclusivo de Apoiador</b> para compartilhar nas redes.</p>
+                <p>✔️ <b>Acesso Imediato ao Chat VIP</b> de debate em tempo real.</p>
+                <p class="text-[10px] text-slate-400 pt-1 border-t border-slate-900">
+                  💡 <i>100% da contribuição cobre os custos de tráfego pago do site.</i>
+                </p>
+              </div>
+
+              <!-- BOTÃO PRINCIPAL (R$ 2,00) -->
+              <button onclick="requestPixCheckout(2.00)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+                <span>🎨</span>
+                <span>Gerar Kit Apoiador por R$ 2,00</span>
+              </button>
+
+              <!-- BOTÃO SECUNDÁRIO (R$ 1,01 a R$ 1,99) -->
+              <button onclick="requestPixCheckout(gerarValorMenorSyncPay())" class="w-full text-slate-400 hover:text-slate-200 font-semibold text-[11px] underline text-center block pt-1 transition">
+                Não tem R$ 2,00? Gerar valor menor dinâmico &rarr;
+              </button>
             </div>
 
             <!-- Loader de Geração -->
-            <div id="pix-loading" class="py-6 space-y-2">
+            <div id="pix-loading" class="hidden py-6 space-y-2">
               <div class="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-              <p class="text-xs text-slate-400">Gerando QR Code PIX de verificação...</p>
+              <p class="text-xs text-slate-400">Gerando QR Code PIX via SyncPay...</p>
             </div>
 
             <!-- Área do QR Code e Copia e Cola -->
             <div id="pix-content" class="hidden space-y-3">
+              <p class="text-xs text-slate-300 font-semibold">Contribuição: <b id="pix-display-amount" class="text-emerald-400">R$ 2,00</b></p>
+              
               <div class="bg-white p-3 rounded-xl inline-block shadow-inner mx-auto">
                 <img id="pix-qr-img" src="" alt="QR Code PIX" class="w-44 h-44 mx-auto">
               </div>
@@ -334,48 +361,34 @@
               </div>
             </div>
 
-            <!-- MENSAGEM 1: PAGAMENTO APROVADO + CPF CORRETO (SUCESSO) -->
+            <!-- PAINEL DESBLOQUEADO (Aprovação do PIX) -->
             <div id="msg-vote-success" class="hidden space-y-4 pt-1">
-              <div class="p-3.5 bg-blue-500/10 border border-blue-500/30 rounded-2xl text-left space-y-2">
-                <div class="flex items-center gap-2 text-blue-400 font-bold text-xs uppercase tracking-wide">
-                  <span>🎉</span>
-                  <span>Voto Registrado com Sucesso!</span>
+              <div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
+                <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wide">
+                  <span>✅</span>
+                  <span>Pagamento Confirmado!</span>
                 </div>
                 <p class="text-xs text-slate-200 leading-relaxed font-medium">
-                  Parabéns, seu voto foi computado com segurança! O chat de debate está liberado.
+                  Seu Kit Apoiador e o Acesso ao Chat VIP foram liberados!
                 </p>
               </div>
+
+              <!-- CANVAS OCORRENDO EM SEGUNDO PLANO -->
+              <canvas id="cardCanvas" width="800" height="800" class="hidden"></canvas>
 
               <div class="space-y-2">
-                <button onclick="openReceiptModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl shadow-lg shadow-blue-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
-                  <span>📄</span>
-                  <span>Ver / Gerar Comprovante</span>
-                </button>
-                <button onclick="goToChatFromModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs transition">
-                  Ir para o Debate 💬
+                <a id="downloadCardBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2" download="meu-card-apoiador.png">
+                  <span>📥</span>
+                  <span>Baixar Card de Apoiador</span>
+                </a>
+                <button onclick="goToChatFromModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
+                  Entrar no Chat VIP de Debate 💬
                 </button>
               </div>
-            </div>
-
-            <!-- MENSAGEM 2: PAGAMENTO APROVADO + CPF DIVERGENTE (ERRO) -->
-            <div id="msg-vote-rejected" class="hidden space-y-4 pt-1">
-              <div class="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-left space-y-2">
-                <div class="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wide">
-                  <span>⚠️</span>
-                  <span>Voto Não Computado!</span>
-                </div>
-                <p class="text-xs text-slate-200 leading-relaxed font-medium">
-                  Pagamento aprovado! Voto recusado: o CPF da conta bancária utilizada no PIX é divergente do CPF informado no cadastro inicial.
-                </p>
-              </div>
-
-              <button onclick="closePixModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs transition">
-                Tentar Novamente
-              </button>
             </div>
 
             <button id="btn-cancel-pix" onclick="closePixModal()" class="text-xs text-slate-500 hover:text-slate-300 font-medium transition underline pt-1 block mx-auto">
-              Cancelar Votação
+              Pular / Voltar ao Início
             </button>
           </div>
         </div>
@@ -583,7 +596,7 @@
         <!-- Renderizado via JS -->
       </div>
 
-      <!-- ALERTA: BLOQUEIO PARA QUEM AINDA NÃO VOTO -->
+      <!-- ALERTA: BLOQUEIO PARA QUEM AINDA NÃO VOTOU -->
       <div id="chat-locked-warning" class="hidden bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl text-center space-y-2">
         <p class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
           🔒 Acesso ao Debate Bloqueado
@@ -1190,6 +1203,7 @@
       }
     }
 
+    // 1. CONFIRMAÇÃO DO VOTO GRATUITO NO BANCO DE DADOS
     async function pressConfirma() {
       if (!verifiedVoter) return;
 
@@ -1258,33 +1272,73 @@
         cidade: verifiedVoter.city,
         regiao: verifiedVoter.region,
         voteLabel: voteLabel,
-        deviceToken: verifiedVoter.token
+        device_token: verifiedVoter.token
       };
 
-      initiatePixVerification();
+      // REGISTRAR VOTO NO BANCO DE DADOS (GRATUITO)
+      confirmedVoteData = {
+        voterName: verifiedVoter.name,
+        voterCpf: verifiedVoter.doc,
+        cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
+        opcao: voteType,
+        time: new Date().toLocaleString('pt-BR')
+      };
+
+      localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
+      votedCPFs[verifiedVoter.cleanDoc] = true;
+      voterChoices[verifiedVoter.cleanDoc] = voteLabel;
+      localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+      localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
+
+      const localVotes = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+      localVotes.push(pendingVoteObj);
+      localStorage.setItem('simulador_all_votes', JSON.stringify(localVotes));
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('votos').insert([pendingVoteObj]);
+        } catch (err) {
+          console.error("Falha ao gravar voto no Supabase:", err);
+        }
+      }
+
+      await loadCloudStats();
+
+      // Mudar tela da Urna para "FIM"
+      const lcd = document.getElementById('lcd-content');
+      lcd.innerHTML = `
+        <div class="py-8 text-center animate-pulse">
+          <p class="text-3xl font-black text-black">FIM</p>
+          <p class="text-xs font-bold text-black mt-2">VOTO COMPUTADO COM SUCESSO</p>
+        </div>
+      `;
+
+      // Exibir Modal de Conversão para Kit Apoiador
+      openApoiadorModal();
     }
 
-    function getRandomPixAmount() {
-      const min = 1.00;
-      const max = 2.00;
-      const val = Math.random() * (max - min) + min;
-      return parseFloat(val.toFixed(2));
+    // Função para gerar valor aleatório aceito pela SyncPay (entre R$ 1,01 e R$ 1,99)
+    function gerarValorMenorSyncPay() {
+      const min = 1.01;
+      const max = 1.99;
+      const valorAleatorio = (Math.random() * (max - min) + min).toFixed(2);
+      return parseFloat(valorAleatorio);
     }
 
-    async function initiatePixVerification() {
+    function openApoiadorModal() {
       document.getElementById('pix-modal').classList.remove('hidden');
-      document.getElementById('pix-loading').classList.remove('hidden');
+      document.getElementById('pix-options-box').classList.remove('hidden');
+      document.getElementById('pix-loading').classList.add('hidden');
       document.getElementById('pix-content').classList.add('hidden');
       document.getElementById('msg-vote-success').classList.add('hidden');
-      document.getElementById('msg-vote-rejected').classList.add('hidden');
-
-      document.getElementById('pix-header-icon').className = "w-12 h-12 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
-      document.getElementById('pix-header-icon').textContent = "🛡️";
-      document.getElementById('pix-header-text').classList.remove('hidden');
       document.getElementById('btn-cancel-pix').classList.remove('hidden');
+    }
 
-      const randomAmount = getRandomPixAmount();
-      document.getElementById('pix-display-amount').textContent = `R$ ${randomAmount.toFixed(2).replace('.', ',')}`;
+    // Solicitante do PIX via SyncPay
+    async function requestPixCheckout(amountValue) {
+      document.getElementById('pix-options-box').classList.add('hidden');
+      document.getElementById('pix-loading').classList.remove('hidden');
+      document.getElementById('pix-display-amount').textContent = `R$ ${amountValue.toFixed(2).replace('.', ',')}`;
 
       try {
         const response = await fetch('/api/gerar-pix', {
@@ -1292,9 +1346,9 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: verifiedVoter.name,
-            email: "participante@painelbrasil.org",
+            email: "apoiador@painelbrasil.org",
             cpf: verifiedVoter.cleanDoc,
-            amount: randomAmount
+            amount: amountValue
           })
         });
 
@@ -1309,15 +1363,15 @@
 
           startPixStatusPolling(data.identifier);
         } else {
-          fallbackPixSimulated(randomAmount);
+          fallbackPixSimulated(amountValue);
         }
       } catch (err) {
-        fallbackPixSimulated(randomAmount);
+        fallbackPixSimulated(amountValue);
       }
     }
 
     function fallbackPixSimulated(amount) {
-      const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865404" + Math.floor(amount * 100) + "5802BR5920PESQUISA INDEPENDENTE6009SAO PAULO62070503***6304E2CA";
+      const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865404" + Math.floor(amount * 100) + "5802BR5920KIT APOIADOR PAINEL BRASIL6009SAO PAULO62070503***6304E2CA";
       document.getElementById('pix-code-input').value = mockPix;
       document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mockPix)}`;
       
@@ -1325,7 +1379,7 @@
       document.getElementById('pix-content').classList.remove('hidden');
 
       setTimeout(() => {
-        finalizeConfirmedVote(true, verifiedVoter.cleanDoc);
+        finalizePixSuccess();
       }, 5000);
     }
 
@@ -1340,8 +1394,7 @@
 
           if (data && data.paid) {
             clearInterval(pixPollInterval);
-            const isMatch = data.cpfMatches !== undefined ? data.cpfMatches : true;
-            finalizeConfirmedVote(isMatch, data.payerCpf || verifiedVoter.cleanDoc);
+            finalizePixSuccess();
           }
         } catch (err) {
           console.error("Erro na verificação do PIX:", err);
@@ -1359,82 +1412,71 @@
     function closePixModal() {
       if (pixPollInterval) clearInterval(pixPollInterval);
       document.getElementById('pix-modal').classList.add('hidden');
-      pendingVoteObj = null;
     }
 
-    async function finalizeConfirmedVote(isCpfMatch = true, actualPayerCpf = "") {
-      if (!pendingVoteObj || !verifiedVoter) return;
-
+    // 2. CONCLUIR PIX: GERAR O CARD AUTOMÁTICO E LIBERAR O CHAT
+    function finalizePixSuccess() {
       if (pixPollInterval) clearInterval(pixPollInterval);
 
       document.getElementById('pix-content').classList.add('hidden');
       document.getElementById('btn-cancel-pix').classList.add('hidden');
-      document.getElementById('pix-header-text').classList.add('hidden');
-
-      if (!isCpfMatch) {
-        document.getElementById('pix-header-icon').className = "w-12 h-12 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
-        document.getElementById('pix-header-icon').textContent = "❌";
-        document.getElementById('msg-vote-rejected').classList.remove('hidden');
-
-        const lcd = document.getElementById('lcd-content');
-        lcd.innerHTML = `
-          <div class="py-6 text-center">
-            <p class="text-xs font-black text-rose-700 uppercase">VOTO RECUSADO</p>
-            <p class="text-[10px] font-bold text-black mt-1">CPF da conta bancária incompatível.</p>
-          </div>
-        `;
-        return;
-      }
-
-      document.getElementById('pix-header-icon').className = "w-12 h-12 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
-      document.getElementById('pix-header-icon').textContent = "✅";
       document.getElementById('msg-vote-success').classList.remove('hidden');
 
-      const voteObj = {
-        cpf: pendingVoteObj.cpf,
-        opcao: pendingVoteObj.opcao,
-        uf: pendingVoteObj.uf,
-        cidade: pendingVoteObj.cidade,
-        regiao: pendingVoteObj.regiao,
-        device_token: pendingVoteObj.deviceToken
-      };
+      // Desenhar o Card no HTML5 Canvas
+      renderCardCanvas(verifiedVoter.name, confirmedVoteData.opcao, `${verifiedVoter.city} / ${verifiedVoter.uf}`);
+    }
 
-      confirmedVoteData = {
-        voterName: verifiedVoter.name,
-        voterCpf: verifiedVoter.doc,
-        cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-        opcao: pendingVoteObj.opcao,
-        time: new Date().toLocaleString('pt-BR')
-      };
+    // GERADOR DO CARD DE APOIADOR VIA HTML5 CANVAS
+    function renderCardCanvas(nomeUsuario, opcaoVoto, localidade) {
+      const canvas = document.getElementById('cardCanvas');
+      const ctx = canvas.getContext('2d');
 
-      localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
+      // Fundo Escuro Moderno
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      votedCPFs[verifiedVoter.cleanDoc] = true;
-      voterChoices[verifiedVoter.cleanDoc] = pendingVoteObj.voteLabel;
-      localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
-      localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
+      // Moldura Interna
+      ctx.fillStyle = '#131c2e';
+      ctx.fillRect(30, 30, 740, 740);
 
-      const localVotes = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-      localVotes.push(voteObj);
-      localStorage.setItem('simulador_all_votes', JSON.stringify(localVotes));
+      ctx.strokeStyle = opcaoVoto === '13' ? '#f43f5e' : '#f59e0b';
+      ctx.lineWidth = 8;
+      ctx.strokeRect(40, 40, 720, 720);
 
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('votos').insert([voteObj]);
-        } catch (err) {
-          console.error("Falha ao gravar voto no Supabase:", err);
-        }
-      }
+      // Cabeçalho
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('PAINEL BRASIL • PESQUISA 2026', 400, 110);
 
-      await loadCloudStats();
+      // Slogan
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '24px Arial';
+      ctx.fillText('EU JÁ REGISTREI MEU VOTO EM:', 400, 260);
 
-      const lcd = document.getElementById('lcd-content');
-      lcd.innerHTML = `
-        <div class="py-8 text-center animate-pulse">
-          <p class="text-3xl font-black text-black">FIM</p>
-          <p class="text-xs font-bold text-black mt-2">VOTO COMPUTADO COM SUCESSO</p>
-        </div>
-      `;
+      // Candidato Destacado
+      let candText = opcaoVoto === '22' ? 'FLÁVIO BOLSONARO (22)' : (opcaoVoto === '13' ? 'LULA (13)' : opcaoVoto);
+      ctx.fillStyle = opcaoVoto === '13' ? '#f43f5e' : '#f59e0b';
+      ctx.font = 'bold 46px Arial';
+      ctx.fillText(candText, 400, 340);
+
+      // Participante
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px Arial';
+      ctx.fillText(`Apoiador: ${nomeUsuario}`, 400, 480);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '22px Arial';
+      ctx.fillText(`📍 ${localidade}`, 400, 520);
+
+      // Rodapé Viral
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'italic 20px Arial';
+      ctx.fillText('Vote você também e acompanhe a pesquisa em tempo real!', 400, 700);
+
+      // Atualizar o Link de Download
+      const downloadBtn = document.getElementById('downloadCardBtn');
+      downloadBtn.href = canvas.toDataURL('image/png');
     }
 
     async function openReceiptModal() {
