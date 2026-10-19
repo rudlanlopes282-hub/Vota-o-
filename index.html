@@ -47,10 +47,6 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: #10b981;
     }
-    .receipt-edge {
-      background: radial-gradient(circle, transparent, transparent 50%, #090d16 50%, #090d16 100%);
-      background-size: 16px 16px;
-    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between antialiased selection:bg-emerald-500 selection:text-white">
@@ -366,53 +362,58 @@
           </div>
         </div>
 
-        <!-- MODAL COMPROVANTE ELEITORAL DE IMPRESSÃO VIRALIZÁVEL -->
+        <!-- MODAL COMPROVANTE ELEITORAL ESTILO ARTES DE DIVULGAÇÃO -->
         <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 overflow-y-auto">
           <div class="w-full max-w-sm my-auto space-y-4">
             
             <!-- COMPROVANTE ESTILIZADO -->
             <div id="receipt-card" class="bg-slate-900 border-2 rounded-3xl p-5 shadow-2xl relative overflow-hidden transition-all duration-300">
               
-              <!-- Efeito de Cabeçalho / Marca d'água -->
-              <div class="text-center space-y-1 border-b border-dashed pb-4 relative" id="receipt-header-border">
-                <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-1 text-2xl shadow-inner" id="receipt-badge-icon">
-                  🗳️
-                </div>
-                <h3 class="text-xs font-black uppercase tracking-widest text-slate-300">JUSTIÇA ELEITORAL DIGITAL</h3>
-                <p class="text-[10px] font-bold tracking-wider uppercase opacity-80" id="receipt-subtitle">Comprovante de Votação Presidencial</p>
-                <div class="text-[9px] font-mono opacity-60" id="receipt-timestamp">--/--/---- --:--:--</div>
+              <!-- AVISO DE ARTE ILUSTRATIVA -->
+              <div id="receipt-disclaimer" class="text-[9px] font-black uppercase text-center tracking-widest py-1 mb-2 rounded bg-black/40 border border-white/10">
+                ARTE ILUSTRATIVA — NÃO É COMPROVANTE OFICIAL
               </div>
 
-              <!-- FRASE DE IMPACTO VIRAL -->
-              <div class="my-4 py-3 px-2 text-center rounded-2xl border font-black uppercase tracking-wide shadow-md" id="receipt-slogan-box">
-                <p id="receipt-slogan" class="text-base leading-tight">ESTOU COM O MEU CANDIDATO!</p>
+              <!-- EFEITO DE CABEÇALHO -->
+              <div class="text-center space-y-0.5 border-b border-dashed pb-3 relative" id="receipt-header-border">
+                <h3 class="text-xs font-black uppercase tracking-widest opacity-90">COMPROVANTE DE VOTAÇÃO</h3>
+                <p class="text-[10px] font-bold tracking-wider uppercase opacity-75">ELEIÇÕES 2026</p>
               </div>
 
-              <!-- DADOS DO ELEITOR -->
-              <div class="space-y-2 text-xs font-mono bg-black/30 p-3.5 rounded-2xl border border-white/10">
+              <!-- FOTO DO CANDIDATO DINÂMICA -->
+              <div id="receipt-img-container" class="relative w-28 h-32 mx-auto my-3 rounded-2xl overflow-hidden border-2 shadow-lg">
+                <img id="receipt-candidate-photo" src="" alt="Candidato" class="w-full h-full object-cover object-top">
+              </div>
+
+              <!-- FRASE DE IMPACTO / SLOGAN -->
+              <div class="my-3 py-2 px-2 text-center rounded-2xl border font-black uppercase tracking-wide shadow-md" id="receipt-slogan-box">
+                <p id="receipt-slogan" class="text-xs leading-tight">UM BRASIL MAIS JUSTO COMEÇA COM O SEU VOTO</p>
+              </div>
+
+              <!-- DADOS DO ELEITOR E VOTO -->
+              <div class="space-y-1.5 text-xs font-mono bg-black/40 p-3 rounded-2xl border border-white/10">
                 <div class="flex justify-between border-b border-white/10 pb-1">
-                  <span class="opacity-60">ELEITOR:</span>
+                  <span class="opacity-60 text-[10px]">ELEITOR:</span>
                   <span id="receipt-voter-name" class="font-bold text-white truncate max-w-[160px]">---</span>
                 </div>
                 <div class="flex justify-between border-b border-white/10 pb-1">
-                  <span class="opacity-60">CPF:</span>
+                  <span class="opacity-60 text-[10px]">CPF:</span>
                   <span id="receipt-voter-cpf" class="font-bold text-white">---</span>
                 </div>
                 <div class="flex justify-between border-b border-white/10 pb-1">
-                  <span class="opacity-60">UF / CIDADE:</span>
+                  <span class="opacity-60 text-[10px]">UF / CIDADE:</span>
                   <span id="receipt-voter-city" class="font-bold text-white">---</span>
                 </div>
-                <div class="flex justify-between">
-                  <span class="opacity-60">OPÇÃO DE VOTO:</span>
+                <div class="flex justify-between items-center pt-0.5">
+                  <span class="opacity-60 text-[10px]">VOTO:</span>
                   <span id="receipt-voter-option" class="font-black text-sm">---</span>
                 </div>
               </div>
 
               <!-- RODAPÉ TÉCNICO COMPROVANTE -->
-              <div class="mt-4 pt-3 border-t border-dashed text-center space-y-1" id="receipt-footer-border">
-                <p class="text-[9px] font-mono opacity-70">HASH DE AUTENTICAÇÃO SH-256:</p>
-                <p id="receipt-hash" class="text-[8px] font-mono opacity-50 break-all select-all">0x8F92A...4B1C</p>
-                <p class="text-[9px] font-extrabold uppercase tracking-widest mt-2" id="receipt-status-badge">● VOTO REGISTRADO E AUDITADO</p>
+              <div class="mt-3 pt-2 border-t border-dashed text-center space-y-1" id="receipt-footer-border">
+                <p class="text-[8px] font-mono opacity-50">HASH: <span id="receipt-hash">0x8F92A...4B1C</span></p>
+                <p class="text-[9px] font-extrabold uppercase tracking-widest mt-1" id="receipt-status-badge">● VOTO REGISTRADO E AUDITADO</p>
               </div>
 
             </div>
@@ -1257,7 +1258,6 @@
       document.getElementById('pix-loading').classList.add('hidden');
       document.getElementById('pix-content').classList.remove('hidden');
 
-      // Simulação de teste
       setTimeout(() => {
         finalizeConfirmedVote(true, verifiedVoter.cleanDoc);
       }, 5000);
@@ -1306,7 +1306,6 @@
       document.getElementById('pix-header-text').classList.add('hidden');
 
       if (!isCpfMatch) {
-        // MENSAGEM 2: PAGAMENTO APROVADO, MAS CPF DIVERGENTE
         document.getElementById('pix-header-icon').className = "w-12 h-12 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
         document.getElementById('pix-header-icon').textContent = "❌";
         document.getElementById('msg-vote-rejected').classList.remove('hidden');
@@ -1321,7 +1320,6 @@
         return;
       }
 
-      // MENSAGEM 1: PAGAMENTO APROVADO + CPF CORRETO
       document.getElementById('pix-header-icon').className = "w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
       document.getElementById('pix-header-icon').textContent = "✅";
       document.getElementById('msg-vote-success').classList.remove('hidden');
@@ -1378,46 +1376,51 @@
       const card = document.getElementById('receipt-card');
       const sloganBox = document.getElementById('receipt-slogan-box');
       const sloganText = document.getElementById('receipt-slogan');
-      const badgeIcon = document.getElementById('receipt-badge-icon');
       const optText = document.getElementById('receipt-voter-option');
-      const subtitle = document.getElementById('receipt-subtitle');
+      const photoImg = document.getElementById('receipt-candidate-photo');
+      const disclaimer = document.getElementById('receipt-disclaimer');
+      const imgContainer = document.getElementById('receipt-img-container');
 
       document.getElementById('receipt-voter-name').textContent = confirmedVoteData.voterName;
       document.getElementById('receipt-voter-cpf').textContent = confirmedVoteData.voterCpf;
       document.getElementById('receipt-voter-city').textContent = confirmedVoteData.cityUf;
-      document.getElementById('receipt-timestamp').textContent = confirmedVoteData.time;
 
       const randomHash = "0x" + Array.from({length: 24}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
       document.getElementById('receipt-hash').textContent = randomHash;
 
-      // ESTILIZAÇÃO TEMÁTICA DO COMPROVANTE
       if (confirmedVoteData.opcao === '22') {
-        // TEMA VERDE E AMARELO
-        card.className = "bg-gradient-to-b from-slate-900 via-emerald-950/40 to-slate-900 border-2 border-emerald-400/80 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100";
-        sloganBox.className = "my-4 py-3 px-2 text-center rounded-2xl border-2 border-amber-400/80 bg-amber-500/10 text-amber-300 font-black uppercase tracking-wide shadow-lg shadow-amber-500/10";
-        sloganText.innerHTML = "🇧🇷 ESTOU COM O FLÁVIO 22!";
-        badgeIcon.className = "w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center mx-auto text-2xl shadow-inner text-amber-400";
-        badgeIcon.textContent = "🏛️";
+        // TEMA VERDE E AMARELO (Flávio Bolsonaro 22)
+        card.className = "bg-gradient-to-b from-slate-900 via-emerald-950/50 to-slate-900 border-2 border-emerald-500 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100 shadow-emerald-500/20";
+        sloganBox.className = "my-3 py-2 px-2 text-center rounded-2xl border-2 border-amber-400 bg-amber-500/10 text-amber-300 font-black uppercase tracking-wide shadow-lg";
+        sloganText.innerHTML = "UM BRASIL MAIS JUSTO COMEÇA COM O SEU VOTO";
         optText.textContent = "22 — Flávio Bolsonaro";
         optText.className = "font-black text-sm text-amber-400";
+        disclaimer.className = "text-[9px] font-black uppercase text-center tracking-widest py-1 mb-2 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400";
+        
+        photoImg.src = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Foto_oficial_do_senador_Fl%C3%A1vio_Bolsonaro_%28v._AgSen%29_%283x4%29.jpg/800px-Foto_oficial_do_senador_Fl%C3%A1vio_Bolsonaro_%28v._AgSen%29_%283x4%29.jpg";
+        imgContainer.className = "relative w-28 h-32 mx-auto my-3 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-lg shadow-amber-500/30 block";
+
       } else if (confirmedVoteData.opcao === '13') {
-        // TEMA VERMELHO E BRANCO
-        card.className = "bg-gradient-to-b from-slate-900 via-rose-950/40 to-slate-900 border-2 border-rose-500/80 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100";
-        sloganBox.className = "my-4 py-3 px-2 text-center rounded-2xl border-2 border-rose-500/80 bg-rose-500/10 text-rose-300 font-black uppercase tracking-wide shadow-lg shadow-rose-500/10";
-        sloganText.innerHTML = "🚩 ESTOU COM O LULA 13!";
-        badgeIcon.className = "w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-400/40 flex items-center justify-center mx-auto text-2xl shadow-inner text-rose-400";
-        badgeIcon.textContent = "🚩";
+        // TEMA VERMELHO (Lula 13)
+        card.className = "bg-gradient-to-b from-slate-900 via-rose-950/50 to-slate-900 border-2 border-rose-500 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100 shadow-rose-500/20";
+        sloganBox.className = "my-3 py-2 px-2 text-center rounded-2xl border-2 border-rose-500 bg-rose-500/10 text-rose-300 font-black uppercase tracking-wide shadow-lg";
+        sloganText.innerHTML = "UM BRASIL MAIS JUSTO COMEÇA COM O SEU VOTO";
         optText.textContent = "13 — Lula";
         optText.className = "font-black text-sm text-rose-400";
+        disclaimer.className = "text-[9px] font-black uppercase text-center tracking-widest py-1 mb-2 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400";
+        
+        photoImg.src = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Foto_oficial_de_Luiz_In%C3%A1cio_Lula_da_Silva_%28ombros%29_denoise_%28cropped%29.jpg/1200px-Foto_oficial_de_Luiz_In%C3%A1cio_Lula_da_Silva_%28ombros%29_denoise_%28cropped%29.jpg";
+        imgContainer.className = "relative w-28 h-32 mx-auto my-3 rounded-2xl overflow-hidden border-2 border-rose-500 shadow-lg shadow-rose-500/30 block";
+
       } else {
         // BRANCO OU NULO
         card.className = "bg-slate-900 border-2 border-slate-700 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100";
-        sloganBox.className = "my-4 py-3 px-2 text-center rounded-2xl border border-slate-700 bg-slate-800 text-slate-300 font-black uppercase tracking-wide";
+        sloganBox.className = "my-3 py-2 px-2 text-center rounded-2xl border border-slate-700 bg-slate-800 text-slate-300 font-black uppercase tracking-wide";
         sloganText.textContent = "VOTO REGISTRADO COM SUCESSO!";
-        badgeIcon.className = "w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto text-2xl shadow-inner text-slate-300";
-        badgeIcon.textContent = "🗳️";
         optText.textContent = confirmedVoteData.opcao;
         optText.className = "font-black text-sm text-slate-300";
+        disclaimer.className = "text-[9px] font-black uppercase text-center tracking-widest py-1 mb-2 rounded bg-slate-800 border border-slate-700 text-slate-400";
+        imgContainer.className = "hidden";
       }
 
       document.getElementById('receipt-modal').classList.remove('hidden');
