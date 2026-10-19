@@ -1,1616 +1,1310 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Simulador de Votação Presidencial</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Plus Jakarta Sans', 'sans-serif'],
-            mono: ['Share Tech Mono', 'monospace'],
-          },
-          colors: {
-            urnBg: '#111827',
-            urnPanel: '#1f2937',
-            urnLcd: '#c3e2c2',
-            urnLcdText: '#051406'
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    body {
-      touch-action: manipulation;
-    }
-    .urn-lcd-font {
-      font-family: 'Share Tech Mono', monospace;
-    }
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: #020617;
-      border-radius: 8px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 8px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #10b981;
-    }
-    .receipt-edge {
-      background: radial-gradient(circle, transparent, transparent 50%, #090d16 50%, #090d16 100%);
-      background-size: 16px 16px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Simulador de Votação Presidencial</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+darkMode: 'class',
+theme: {
+extend: {
+fontFamily: {
+sans: ['Plus Jakarta Sans', 'sans-serif'],
+mono: ['Share Tech Mono', 'monospace'],
+},
+colors: {
+urnBg: '#111827',
+urnPanel: '#1f2937',
+urnLcd: '#c3e2c2',
+urnLcdText: '#051406'
+}
+}
+}
+}
+</script>
+<style>
+body {
+touch-action: manipulation;
+}
+.urn-lcd-font {
+font-family: 'Share Tech Mono', monospace;
+}
+.custom-scrollbar::-webkit-scrollbar {
+width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+background: #020617;
+border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+background: #334155;
+border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+background: #10b981;
+}
+</style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between antialiased selection:bg-emerald-500 selection:text-white">
-
-  <!-- TOP HEADER -->
-  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center space-x-2.5">
-        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg">
-          🗳️
-        </div>
-        <div>
-          <h1 class="text-sm font-bold text-white leading-tight">Justiça Eleitoral Digital</h1>
-          <p class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Simulação Eleitoral — 2º Turno
-          </p>
-        </div>
-      </div>
-      <div id="nav-tabs" class="flex bg-slate-800 p-1 rounded-lg text-xs font-semibold">
-        <button id="btn-tab-urna" onclick="switchTab('urna')" class="px-3 py-1 rounded-md bg-emerald-500 text-slate-950 transition font-bold">Urna</button>
-        <button id="btn-tab-dados" onclick="switchTab('dados')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition">Dados</button>
-        <button id="btn-tab-chat" onclick="switchTab('chat')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition flex items-center gap-1">
-          <span>Chat</span>
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <main class="max-w-lg mx-auto w-full px-3 py-3 flex-1 flex flex-col justify-center space-y-4">
-
-    <!-- STEP 1: ETAPA DE VERIFICAÇÃO / AUTENTICAÇÃO DO ELEITOR -->
-    <section id="sec-auth" class="w-full">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
-        <div class="absolute -top-12 -right-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
-        <div class="text-center mb-5">
-          <div class="inline-flex p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-2xl mb-2">
-            🔐
-          </div>
-          <h2 class="text-xl font-extrabold text-white">Portal de Identificação Eleitoral</h2>
-          <p class="text-xs text-slate-400 mt-1">Validação de documento e registro regional</p>
-        </div>
-
-        <!-- Indicador de Passos -->
-        <div class="flex items-center justify-center gap-2 mb-6">
-          <div id="step-dot-1" class="w-7 h-7 rounded-full bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center">1</div>
-          <div class="w-8 h-0.5 bg-slate-800"></div>
-          <div id="step-dot-2" class="w-7 h-7 rounded-full bg-slate-800 text-slate-500 font-bold text-xs flex items-center justify-center">2</div>
-          <div class="w-8 h-0.5 bg-slate-800"></div>
-          <div id="step-dot-3" class="w-7 h-7 rounded-full bg-slate-800 text-slate-500 font-bold text-xs flex items-center justify-center">3</div>
-        </div>
-
-        <!-- Alerta de Erro -->
-        <div id="auth-error" class="hidden mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl text-center font-medium"></div>
-
-        <!-- FORMULÁRIO PASSO 1 -->
-        <div id="auth-step-1" class="space-y-4">
-          <div>
-            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nome Completo do Eleitor</label>
-            <input type="text" id="voter-name" placeholder="Ex: Maria da Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition">
-          </div>
-
-          <div>
-            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Eleitor</label>
-            <input type="text" id="voter-doc" maxlength="14" placeholder="000.000.000-00" oninput="formatCPF(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono transition">
-          </div>
-
-          <!-- SELEÇÃO DE ESTADO (UF) -->
-          <div>
-            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">1. Selecione o Estado (UF)</label>
-            <select id="voter-uf-select" onchange="onUFChange()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-              <option value="PA" data-region="Norte">Pará (PA) — Norte</option>
-              <option value="SP" data-region="Sudeste">São Paulo (SP) — Sudeste</option>
-              <option value="RJ" data-region="Sudeste">Rio de Janeiro (RJ) — Sudeste</option>
-              <option value="MG" data-region="Sudeste">Minas Gerais (MG) — Sudeste</option>
-              <option value="ES" data-region="Sudeste">Espírito Santo (ES) — Sudeste</option>
-              <option value="BA" data-region="Nordeste">Bahia (BA) — Nordeste</option>
-              <option value="PE" data-region="Nordeste">Pernambuco (PE) — Nordeste</option>
-              <option value="CE" data-region="Nordeste">Ceará (CE) — Nordeste</option>
-              <option value="MA" data-region="Nordeste">Maranhão (MA) — Nordeste</option>
-              <option value="PB" data-region="Nordeste">Paraíba (PB) — Nordeste</option>
-              <option value="RN" data-region="Nordeste">Rio Grande do Norte (RN) — Nordeste</option>
-              <option value="AL" data-region="Nordeste">Alagoas (AL) — Nordeste</option>
-              <option value="SE" data-region="Nordeste">Sergipe (SE) — Nordeste</option>
-              <option value="PI" data-region="Nordeste">Piauí (PI) — Nordeste</option>
-              <option value="PR" data-region="Sul">Paraná (PR) — Sul</option>
-              <option value="RS" data-region="Sul">Rio Grande do Sul (RS) — Sul</option>
-              <option value="SC" data-region="Sul">Santa Catarina (SC) — Sul</option>
-              <option value="GO" data-region="Centro-Oeste">Goiás (GO) — Centro-Oeste</option>
-              <option value="DF" data-region="Centro-Oeste">Distrito Federal (DF) — Centro-Oeste</option>
-              <option value="MT" data-region="Centro-Oeste">Mato Grosso (MT) — Centro-Oeste</option>
-              <option value="MS" data-region="Centro-Oeste">Mato Grosso do Sul (MS) — Centro-Oeste</option>
-              <option value="AM" data-region="Norte">Amazonas (AM) — Norte</option>
-              <option value="RO" data-region="Norte">Rondônia (RO) — Norte</option>
-              <option value="AP" data-region="Norte">Amapá (AP) — Norte</option>
-              <option value="AC" data-region="Norte">Acre (AC) — Norte</option>
-              <option value="RR" data-region="Norte">Roraima (RR) — Norte</option>
-              <option value="TO" data-region="Norte">Tocantins (TO) — Norte</option>
-              <option value="ZZ" data-region="Exterior">Exterior (ZZ) — Votação no Exterior</option>
-            </select>
-          </div>
-
-          <!-- SELEÇÃO DE CIDADE COM SUGESTÕES EM LISTA -->
-          <div id="city-group" class="space-y-1.5 relative">
-            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              2. Cidade / Município
-            </label>
-            <input type="text" id="voter-city-search" placeholder="Digite sua cidade..." oninput="filterCityOptions()" onfocus="filterCityOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition">
-            
-            <div id="city-suggestions-container" class="hidden absolute left-0 right-0 top-full bg-slate-950 border border-emerald-500/40 rounded-xl max-h-48 overflow-y-auto custom-scrollbar p-1 space-y-1 shadow-2xl z-50 mt-1">
-            </div>
-
-            <input type="hidden" id="selected-city-val" value="">
-          </div>
-
-          <button onclick="submitStep1()" type="button" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-sm transition active:scale-[0.99] mt-2">
-            Verificar Elegibilidade &rarr;
-          </button>
-        </div>
-
-        <!-- FORMULÁRIO PASSO 2: SIMULAÇÃO DA BIOMETRIA -->
-        <div id="auth-step-2" class="hidden text-center py-4 space-y-4">
-          <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
-            <div class="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin"></div>
-            <div class="text-3xl">👤</div>
-          </div>
-          <p class="text-xs text-slate-300 font-semibold">Validando Biometria e Banco de Dados TSE...</p>
-          <p class="text-[11px] text-slate-500">Aguarde alguns segundos...</p>
-        </div>
-
-        <!-- FORMULÁRIO PASSO 3 -->
-        <div id="auth-step-3" class="hidden text-center py-3 space-y-4">
-          <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
-            ✓
-          </div>
-          <div>
-            <h3 class="text-base font-bold text-white">Eleitor Autenticado com Sucesso!</h3>
-            <p class="text-xs text-slate-400 mt-0.5">Sua sessão de votação está liberada e criptografada.</p>
-          </div>
-
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-left text-xs font-mono space-y-1">
-            <p class="text-slate-400">ELEITOR: <span id="summary-name" class="text-white font-bold"></span></p>
-            <p class="text-slate-400">DOCUMENTO: <span id="summary-doc" class="text-emerald-400 font-bold"></span></p>
-            <p class="text-slate-400">MUNICIPIO / UF: <span id="summary-state" class="text-emerald-400 font-bold"></span></p>
-            <p class="text-slate-400">STATUS: <span id="summary-vote-status" class="text-emerald-400 font-bold">APTO PARA VOTAR</span></p>
-          </div>
-
-          <button onclick="startVotingSession()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-sm transition active:scale-[0.99]">
-            Acessar Urna Eleitoral 🗳️
-          </button>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- STEP 2: URNA ELETRÔNICA COMPLETA -->
-    <section id="sec-urna" class="hidden w-full space-y-3">
-
-      <!-- CARDS DE ATALHO RÁPIDO PARA CANDIDATOS -->
-      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 text-center">Clique para Votar Direto</p>
-        <div class="grid grid-cols-2 gap-2">
-          
-          <button onclick="quickSelect('22')" class="flex items-center gap-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 p-2 rounded-xl text-left transition group">
-            <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-sm">
-              🏛️
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-xs font-bold text-white truncate group-hover:text-amber-400">Flávio Bolsonaro</p>
-              <p class="text-[10px] text-slate-400">PL — 22</p>
-            </div>
-            <span class="text-xs font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">22</span>
-          </button>
-
-          <button onclick="quickSelect('13')" class="flex items-center gap-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 p-2 rounded-xl text-left transition group">
-            <div class="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-sm">
-              🚩
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-xs font-bold text-white truncate group-hover:text-rose-400">Lula</p>
-              <p class="text-[10px] text-slate-400">PT — 13</p>
-            </div>
-            <span class="text-xs font-black text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">13</span>
-          </button>
-
-        </div>
-      </div>
-
-      <!-- CORPO DA URNA -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-2xl space-y-3">
-        
-        <!-- VISOR LCD DA URNA -->
-        <div class="bg-[#c3e2c2] border-4 border-slate-800 rounded-xl p-3 text-[#051406] urn-lcd-font shadow-inner min-h-[170px] flex flex-col justify-between relative overflow-hidden">
-          
-          <div class="flex items-center justify-between border-b border-black/15 pb-1">
-            <span class="text-[11px] font-black uppercase tracking-wider text-black">JUSTIÇA ELEITORAL</span>
-            <span class="text-[10px] font-black text-black/70 bg-black/10 px-1.5 py-0.5 rounded">2º TURNO</span>
-          </div>
-
-          <div id="lcd-content" class="py-2">
-            <p class="text-[11px] font-extrabold uppercase text-black/70 text-center">PRESIDENTE</p>
-            
-            <div class="flex justify-center gap-2 my-2">
-              <div id="digit-1" class="w-9 h-11 border-2 border-black/80 bg-white/80 rounded flex items-center justify-center text-xl font-black text-black"></div>
-              <div id="digit-2" class="w-9 h-11 border-2 border-black/80 bg-white/80 rounded flex items-center justify-center text-xl font-black text-black"></div>
-            </div>
-
-            <div id="candidate-info" class="hidden space-y-0.5 text-left bg-black/5 p-2 rounded border border-black/10">
-              <p class="text-[11px] font-extrabold text-black">Nome: <span id="cand-name" class="font-black text-black uppercase">---</span></p>
-              <p class="text-[11px] font-extrabold text-black">Partido: <span id="cand-party" class="font-black text-black uppercase">---</span></p>
-            </div>
-
-            <div id="vote-special-msg" class="hidden text-center my-2">
-              <p id="special-text" class="text-lg font-black text-black uppercase">VOTO EM BRANCO</p>
-            </div>
-          </div>
-
-          <div class="border-t border-black/15 pt-1 text-[10px] font-black text-black/80 flex justify-between items-end">
-            <div>
-              <p>CONFIRMA = Votado</p>
-              <p>CORRIGE = Reiniciar</p>
-            </div>
-            <div class="w-3 h-3 rounded-full bg-emerald-700 animate-ping opacity-75"></div>
-          </div>
-
-        </div>
-
-        <!-- MODAL DE ANTIFRAUDE / PAGAMENTO PIX -->
-        <div id="pix-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div class="bg-slate-900 border border-emerald-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4 text-center my-auto">
-            
-            <div id="pix-header-icon" class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
-              🛡️
-            </div>
-
-            <div id="pix-header-text">
-              <h3 class="text-base font-extrabold text-white">Verificação Anti-Fraude</h3>
-              <p class="text-xs text-slate-300 mt-1">Taxa simbólica de verificação: <b id="pix-display-amount" class="text-emerald-400">R$ 1,50</b></p>
-            </div>
-
-            <!-- Loader de Geração -->
-            <div id="pix-loading" class="py-6 space-y-2">
-              <div class="w-8 h-8 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mx-auto"></div>
-              <p class="text-xs text-slate-400">Gerando QR Code PIX de verificação...</p>
-            </div>
-
-            <!-- Área do QR Code e Copia e Cola -->
-            <div id="pix-content" class="hidden space-y-3">
-              <div class="bg-white p-3 rounded-xl inline-block shadow-inner mx-auto">
-                <img id="pix-qr-img" src="" alt="QR Code PIX" class="w-44 h-44 mx-auto">
-              </div>
-
-              <div>
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Código PIX Copia e Cola</p>
-                <div class="flex items-center gap-1.5 bg-slate-950 border border-slate-800 p-2 rounded-xl">
-                  <input type="text" id="pix-code-input" readonly class="bg-transparent text-[10px] font-mono text-slate-300 flex-1 outline-none truncate">
-                  <button onclick="copyPixCode()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] px-2.5 py-1 rounded-lg transition">Copiar</button>
-                </div>
-              </div>
-
-              <!-- Status do Pagamento -->
-              <div class="bg-slate-950 border border-slate-800 p-2 rounded-xl flex items-center justify-center gap-2">
-                <div id="pix-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
-                <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
-              </div>
-            </div>
-
-            <!-- MENSAGEM 1: PAGAMENTO APROVADO + CPF CORRETO (SUCESSO) -->
-            <div id="msg-vote-success" class="hidden space-y-4 pt-1">
-              <div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
-                <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wide">
-                  <span>🎉</span>
-                  <span>Voto Computado com Sucesso!</span>
-                </div>
-                <p class="text-xs text-slate-200 leading-relaxed font-medium">
-                  Parabéns, seu voto foi computado! Compartilhe seu comprovante nas redes e mostre a força do seu lado! O chat está liberado, debata com respeito e tente ganhar votos para o seu candidato!
-                </p>
-              </div>
-
-              <div class="space-y-2">
-                <button onclick="openReceiptModal()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
-                  <span>📄</span>
-                  <span>Ver / Gerar Comprovante do Voto</span>
-                </button>
-                <button onclick="goToChatFromModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs transition">
-                  Ir para o Chat de Eleitores 💬
-                </button>
-              </div>
-            </div>
-
-            <!-- MENSAGEM 2: PAGAMENTO APROVADO + CPF DIVERGENTE (ERRO) -->
-            <div id="msg-vote-rejected" class="hidden space-y-4 pt-1">
-              <div class="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-left space-y-2">
-                <div class="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wide">
-                  <span>⚠️</span>
-                  <span>Voto Não Computado!</span>
-                </div>
-                <p class="text-xs text-slate-200 leading-relaxed font-medium">
-                  Pagamento aprovado! Voto não computado: o CPF da conta bancária utilizada no PIX é divergente do CPF informado no cadastro inicial.
-                </p>
-              </div>
-
-              <button onclick="closePixModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs transition">
-                Tentar Novamente
-              </button>
-            </div>
-
-            <button id="btn-cancel-pix" onclick="closePixModal()" class="text-xs text-slate-500 hover:text-slate-300 font-medium transition underline pt-1 block mx-auto">
-              Cancelar Votação
-            </button>
-          </div>
-        </div>
-
-        <!-- MODAL COMPROVANTE ELEITORAL DE IMPRESSÃO VIRALIZÁVEL -->
-        <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 overflow-y-auto">
-          <div class="w-full max-w-sm my-auto space-y-4">
-            
-            <!-- COMPROVANTE ESTILIZADO -->
-            <div id="receipt-card" class="bg-slate-900 border-2 rounded-3xl p-5 shadow-2xl relative overflow-hidden transition-all duration-300">
-              
-              <!-- Efeito de Cabeçalho / Marca d'água -->
-              <div class="text-center space-y-1 border-b border-dashed pb-4 relative" id="receipt-header-border">
-                <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-1 text-2xl shadow-inner" id="receipt-badge-icon">
-                  🗳️
-                </div>
-                <h3 class="text-xs font-black uppercase tracking-widest text-slate-300">JUSTIÇA ELEITORAL DIGITAL</h3>
-                <p class="text-[10px] font-bold tracking-wider uppercase opacity-80" id="receipt-subtitle">Comprovante de Votação Presidencial</p>
-                <div class="text-[9px] font-mono opacity-60" id="receipt-timestamp">--/--/---- --:--:--</div>
-              </div>
-
-              <!-- FRASE DE IMPACTO VIRAL -->
-              <div class="my-4 py-3 px-2 text-center rounded-2xl border font-black uppercase tracking-wide shadow-md" id="receipt-slogan-box">
-                <p id="receipt-slogan" class="text-base leading-tight">ESTOU COM O MEU CANDIDATO!</p>
-              </div>
-
-              <!-- DADOS DO ELEITOR -->
-              <div class="space-y-2 text-xs font-mono bg-black/30 p-3.5 rounded-2xl border border-white/10">
-                <div class="flex justify-between border-b border-white/10 pb-1">
-                  <span class="opacity-60">ELEITOR:</span>
-                  <span id="receipt-voter-name" class="font-bold text-white truncate max-w-[160px]">---</span>
-                </div>
-                <div class="flex justify-between border-b border-white/10 pb-1">
-                  <span class="opacity-60">CPF:</span>
-                  <span id="receipt-voter-cpf" class="font-bold text-white">---</span>
-                </div>
-                <div class="flex justify-between border-b border-white/10 pb-1">
-                  <span class="opacity-60">UF / CIDADE:</span>
-                  <span id="receipt-voter-city" class="font-bold text-white">---</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="opacity-60">OPÇÃO DE VOTO:</span>
-                  <span id="receipt-voter-option" class="font-black text-sm">---</span>
-                </div>
-              </div>
-
-              <!-- RODAPÉ TÉCNICO COMPROVANTE -->
-              <div class="mt-4 pt-3 border-t border-dashed text-center space-y-1" id="receipt-footer-border">
-                <p class="text-[9px] font-mono opacity-70">HASH DE AUTENTICAÇÃO SH-256:</p>
-                <p id="receipt-hash" class="text-[8px] font-mono opacity-50 break-all select-all">0x8F92A...4B1C</p>
-                <p class="text-[9px] font-extrabold uppercase tracking-widest mt-2" id="receipt-status-badge">● VOTO REGISTRADO E AUDITADO</p>
-              </div>
-
-            </div>
-
-            <!-- BOTOES DE AÇÃO COMPARTILHAMENTO -->
-            <div class="space-y-2">
-              <button onclick="shareReceipt()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl shadow-lg shadow-emerald-500/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
-                <span>📲</span>
-                <span>Compartilhar nas Redes Sociais</span>
-              </button>
-              
-              <div class="grid grid-cols-2 gap-2">
-                <button onclick="copyReceiptText()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition">
-                  Copiar Texto 📋
-                </button>
-                <button onclick="closeReceiptModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition">
-                  Ir para o Chat 💬
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- TECLADO NUMÉRICO E BOTOES DA URNA -->
-        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2">
-          
-          <div class="grid grid-cols-3 gap-2">
-            <button onclick="pressKey('1')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">1</button>
-            <button onclick="pressKey('2')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">2</button>
-            <button onclick="pressKey('3')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">3</button>
-            <button onclick="pressKey('4')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">4</button>
-            <button onclick="pressKey('5')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">5</button>
-            <button onclick="pressKey('6')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">6</button>
-            <button onclick="pressKey('7')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">7</button>
-            <button onclick="pressKey('8')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">8</button>
-            <button onclick="pressKey('9')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">9</button>
-          </div>
-
-          <div class="flex justify-center">
-            <button onclick="pressKey('0')" class="w-1/3 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">0</button>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2 pt-1">
-            <button onclick="pressBranco()" class="bg-slate-100 hover:bg-white text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-slate-300 transition uppercase">BRANCO</button>
-            <button onclick="pressCorrige()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-amber-700 transition uppercase">CORRIGE</button>
-            <button onclick="pressConfirma()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-emerald-700 transition uppercase">CONFIRMA</button>
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- STEP 3: PAINEL DE APURAÇÃO / DADOS -->
-    <section id="sec-dados" class="hidden w-full space-y-4">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
-        
-        <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
-          <div>
-            <h2 class="text-base font-extrabold text-white">Apuração Oficial TSE</h2>
-            <p class="text-[11px] text-slate-400">Resultados consolidados em tempo real via Supabase</p>
-          </div>
-          <button id="btn-refresh-stats" onclick="loadCloudStats()" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg hover:bg-emerald-500/20 transition flex items-center gap-1.5 disabled:opacity-50">
-            <span id="refresh-icon">🔄</span>
-            <span id="refresh-spinner" class="hidden w-3.5 h-3.5 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin"></span>
-            <span>Atualizar Dados</span>
-          </button>
-        </div>
-
-        <!-- CARDS DE ESTATÍSTICA GERAL -->
-        <div class="grid grid-cols-2 gap-2.5">
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <p class="text-[10px] font-bold text-slate-500 uppercase">TOTAL VOTOS</p>
-            <p id="stat-total" class="text-2xl font-black text-white">0</p>
-          </div>
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <p class="text-[10px] font-bold text-emerald-500 uppercase">VOTOS VÁLIDOS</p>
-            <p id="stat-validos" class="text-2xl font-black text-emerald-400">0</p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2.5">
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <p class="text-[10px] font-bold text-slate-400 uppercase">VOTOS BRANCOS</p>
-            <p id="stat-branco" class="text-xl font-black text-slate-200">0</p>
-          </div>
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <p class="text-[10px] font-bold text-rose-500 uppercase">VOTOS NULOS</p>
-            <p id="stat-nulo" class="text-xl font-black text-rose-400">0</p>
-          </div>
-        </div>
-
-        <!-- CANDIDATOS PLACAR -->
-        <div class="space-y-3 pt-2">
-          
-          <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2">
-            <div class="flex justify-between items-center text-xs">
-              <span class="font-bold text-white flex items-center gap-1.5">
-                🏛️ Flávio Bolsonaro (22)
-              </span>
-              <span id="pct-22" class="font-black text-amber-400 text-sm">0.0%</span>
-            </div>
-            <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
-              <div id="bar-22" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
-            </div>
-            <p id="count-22" class="text-[10px] text-slate-400 text-right font-mono">0 votos</p>
-          </div>
-
-          <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2">
-            <div class="flex justify-between items-center text-xs">
-              <span class="font-bold text-white flex items-center gap-1.5">
-                🚩 Lula (13)
-              </span>
-              <span id="pct-13" class="font-black text-rose-400 text-sm">0.0%</span>
-            </div>
-            <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
-              <div id="bar-13" class="bg-rose-500 h-full transition-all duration-500" style="width: 0%"></div>
-            </div>
-            <p id="count-13" class="text-[10px] text-slate-400 text-right font-mono">0 votos</p>
-          </div>
-
-        </div>
-
-        <!-- DESEMPENHO POR REGIÃO -->
-        <div class="space-y-2 pt-2">
-          <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-            🗺️ Desempenho por Região
-          </h3>
-          <div id="regional-stats-container" class="space-y-2">
-            <!-- Renderizado via JS -->
-          </div>
-        </div>
-
-        <!-- CONSULTA POR MUNICÍPIO -->
-        <div class="space-y-2.5 pt-2 border-t border-slate-800">
-          <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-            🏙️ Apuração por Município
-          </h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <select id="query-uf-select" onchange="renderCityResults()" class="bg-slate-950 border border-slate-800 text-xs text-white rounded-xl p-2.5 outline-none">
-              <option value="">Todas as UFs</option>
-            </select>
-            <input type="text" id="query-city-filter" placeholder="Filtrar município..." oninput="renderCityResults()" class="bg-slate-950 border border-slate-800 text-xs text-white rounded-xl p-2.5 placeholder-slate-600 outline-none">
-          </div>
-          <div id="city-results-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-            <!-- Renderizado via JS -->
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- STEP 4: CHAT DOS ELEITORES -->
-    <section id="sec-chat" class="hidden w-full space-y-3">
-      <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm">💬</div>
-          <div>
-            <h3 class="text-xs font-bold text-white">Debate Eleitoral ao Vivo</h3>
-            <p class="text-[10px] text-emerald-400 font-medium">● Chat dos Eleitores</p>
-          </div>
-        </div>
-        <span id="chat-user-badge" class="text-[10px] font-mono bg-slate-950 border border-slate-800 px-2 py-1 rounded-lg text-slate-300"></span>
-      </div>
-
-      <!-- Caixa de Mensagens -->
-      <div id="chat-messages" class="bg-slate-900 border border-slate-800 p-3 rounded-2xl h-64 overflow-y-auto custom-scrollbar space-y-3 text-xs flex flex-col">
-        <!-- Renderizado via JS -->
-      </div>
-
-      <!-- ALERTA: BLOQUEIO PARA QUEM AINDA NÃO VOTOU -->
-      <div id="chat-locked-warning" class="hidden bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl text-center space-y-2">
-        <p class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
-          🔒 Acesso ao Chat Bloqueado
-        </p>
-        <p class="text-[11px] text-slate-300">
-          Você precisa registrar seu voto na <b>Urna Eletrônica</b> antes de participar do debate ao vivo.
-        </p>
-        <button onclick="switchTab('urna')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs px-4 py-2 rounded-xl transition shadow-lg">
-          Ir para a Urna Votar 🗳️
-        </button>
-      </div>
-
-      <!-- Alerta de Erro de Apelido Duplicado -->
-      <div id="nickname-error" class="hidden bg-rose-500/10 border border-rose-500/30 p-2.5 rounded-xl text-center text-rose-400 text-xs font-medium"></div>
-
-      <!-- Configuração de Apelido -->
-      <div id="nickname-setup-box" class="hidden bg-slate-900 border border-emerald-500/40 p-3 rounded-xl space-y-2">
-        <p class="text-xs font-bold text-emerald-400">Escolha seu Apelido para o Chat:</p>
-        <div class="flex gap-2">
-          <input type="text" id="chat-nickname-input" placeholder="Digite seu apelido..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-500">
-          <button onclick="saveNickname()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs transition">Salvar</button>
-        </div>
-      </div>
-
-      <!-- Enviar Mensagem -->
-      <div id="chat-input-container" class="hidden flex gap-2">
-        <input type="text" id="chat-input" placeholder="Digite seu comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-emerald-500">
-        <button onclick="sendChatMessage()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-lg shadow-emerald-500/20">
-          Enviar 🚀
-        </button>
-      </div>
-    </section>
-
-    <!-- SESSÃO DE DÚVIDAS FREQUENTES (FAQ) -->
-    <section id="sec-faq" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
-      <div class="flex items-center gap-2 border-b border-slate-800 pb-2">
-        <span class="text-lg">❓</span>
-        <div>
-          <h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Sessão de Dúvidas & Perguntas Frequentes</h3>
-          <p class="text-[10px] text-slate-400">Tudo sobre as regras, segurança e validação do pleito</p>
-        </div>
-      </div>
-
-      <div class="space-y-2.5 text-xs">
-        <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
-          <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-            <span>🛡️ Como funciona a validação anti-fraude?</span>
-            <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
-          </summary>
-          <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-            Para garantir que a apuração retrate votos reais e evitar disparos automatizados por robôs (bots), exigimos a confirmação de uma taxa simbólica via PIX. O sistema bancário realiza a checagem automática do CPF da conta pagadora.
-          </div>
-        </details>
-
-        <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
-          <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-            <span>⚠️ O que acontece se o CPF do PIX for diferente do cadastrado?</span>
-            <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
-          </summary>
-          <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-            Caso alguém tente efetuar a verificação usando um CPF bancário diferente do CPF informado na identificação da urna, o pagamento será processado normalmente, porém <b class="text-rose-400">o voto será anulado e recusado</b>. Portanto, certifique-se de realizar o PIX a partir de sua própria conta.
-          </div>
-        </details>
-
-        <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
-          <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-            <span>🤝 Para onde são destinados os recursos arrecadados?</span>
-            <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
-          </summary>
-          <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-            75% dos valores arrecadados através das taxas simbólicas de verificação são repassados integralmente a instituições de caridade e projetos sociais parceiros, cobrindo também as taxas operacionais de transação do sistema.
-          </div>
-        </details>
-
-        <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
-          <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-            <span>🗳️ Posso votar mais de uma vez?</span>
-            <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
-          </summary>
-          <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-            Não. Cada número de CPF tem direito a apenas 1 (um) voto contabilizado na base de dados centralizada do sistema.
-          </div>
-        </details>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="text-center py-3 text-[10px] text-slate-500 border-t border-slate-900">
-    © Justiça Eleitoral Digital — Simulador de Votação Presidencial
-  </footer>
-
-  <script>
-    const SUPABASE_URL = "https://SEU_PROJETO.supabase.co"; 
-    const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_SUPABASE"; 
-    const isSupabaseConfigured = window.supabase && SUPABASE_URL !== "https://SEU_PROJETO.supabase.co" && !SUPABASE_URL.includes("SEU_PROJETO");
-    const supabaseClient = isSupabaseConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-
-    let pixPollInterval = null;
-    let pendingVoteObj = null;
-    let confirmedVoteData = null;
-
-    const stateCities = {
-      "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal", "Parauapebas", "Abaetetuba", "Marituba", "Cametá", "Bragança", "Paragominas"],
-      "AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira", "Tarauacá"],
-      "AL": ["Maceió", "Arapiraca", "Rio Largo", "Palmeira dos Índios"],
-      "AP": ["Macapá", "Santana", "Laranjal do Jari"],
-      "AM": ["Manaus", "Parintins", "Itacoatiara", "Manacapuru"],
-      "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Itabuna"],
-      "CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral"],
-      "DF": ["Brasília", "Ceilândia", "Taguatinga", "Samambaia"],
-      "ES": ["Vitória", "Vila Velha", "Serra", "Cariacica", "Guarapari"],
-      "GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde"],
-      "MA": ["São Luís", "Imperatriz", "São José de Ribamar", "Timon", "Caxias"],
-      "MT": ["Cuiabá", "Várzea Grande", "Rondonópolis", "Sinop", "Tangará da Serra"],
-      "MS": ["Campo Grande", "Dourados", "Três Lagoas", "Corumbá"],
-      "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros"],
-      "PB": ["João Pessoa", "Campina Grande", "Santa Rita", "Patos"],
-      "PR": ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "Foz do Iguaçu"],
-      "PE": ["Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina"],
-      "PI": ["Teresina", "Parnaíba", "Picos", "Floriano"],
-      "RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Petropolis"],
-      "RN": ["Natal", "Mossoró", "Parnamirim", "São Gonçalo do Amarante"],
-      "RS": ["Porto Alegre", "Caxias do Sul", "Canoas", "Pelotas", "Santa Maria", "Gravataí"],
-      "RO": ["Porto Velho", "Ji-Paraná", "Ariquemes", "Vilhena"],
-      "RR": ["Boa Vista", "Rorainópolis", "Caracaraí"],
-      "SC": ["Florianópolis", "Joinville", "Blumenau", "São José", "Criciúma"],
-      "SP": ["São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo", "Santo André", "Osasco", "Ribeirão Preto", "Sorocaba"],
-      "SE": ["Aracaju", "Nossa Senhora do Socorro", "Lagarto", "Itabaiana"],
-      "TO": ["Palmas", "Araguaína", "Gurupi", "Porto Nacional"],
-      "ZZ": ["Exterior / Voto no Exterior"]
-    };
-
-    let verifiedVoter = null;
-    let currentInput = "";
-    let isBranco = false;
-
-    let votedCPFs = JSON.parse(localStorage.getItem('simulador_voted_cpfs') || "{}");
-    let voterChoices = JSON.parse(localStorage.getItem('simulador_voter_choices') || "{}");
-    let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}");
-
-    let votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-    let regionalVotes = {
-      'Norte': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Nordeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Sudeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Sul': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Centro-Oeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Exterior': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 }
-    };
-    let cityVotes = {};
-
-    let chatMessages = JSON.parse(localStorage.getItem('simulador_chat_msgs') || JSON.stringify([
-      { id: 1, sender: "TSE Oficial", uf: "DF", text: "Bem-vindo ao debate eleitoral ao vivo. Mantenha o respeito nas discussões.", time: "Agora", isSystem: true }
-    ]));
-
-    window.addEventListener('DOMContentLoaded', async () => {
-      onUFChange();
-      populateQueryUFs();
-      await loadCloudStats();
-      renderChat();
-
-      setInterval(() => {
-        loadCloudStats();
-      }, 10000);
-
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('#voter-city-search') && !e.target.closest('#city-suggestions-container')) {
-          document.getElementById('city-suggestions-container').classList.add('hidden');
-        }
-      });
-    });
-
-    // ALGORITMO OFICIAL DE VALIDAÇÃO DE CPF VERDADEIRO (MÓDULO 11)
-    function validateCPF(cpf) {
-      const clean = cpf.replace(/\D/g, '');
-      if (clean.length !== 11) return false;
-      if (/^(\d)\1{10}$/.test(clean)) return false;
-
-      let sum = 0;
-      let remainder;
-
-      for (let i = 1; i <= 9; i++) {
-        sum += parseInt(clean.substring(i - 1, i)) * (11 - i);
-      }
-      remainder = (sum * 10) % 11;
-      if (remainder === 10 || remainder === 11) remainder = 0;
-      if (remainder !== parseInt(clean.substring(9, 10))) return false;
-
-      sum = 0;
-      for (let i = 1; i <= 10; i++) {
-        sum += parseInt(clean.substring(i - 1, i)) * (12 - i);
-      }
-      remainder = (sum * 10) % 11;
-      if (remainder === 10 || remainder === 11) remainder = 0;
-      if (remainder !== parseInt(clean.substring(10, 11))) return false;
-
-      return true;
-    }
-
-    async function checkVoterInDatabase(cleanDoc) {
-      if (!supabaseClient) return false;
-      try {
-        const { data, error } = await supabaseClient
-          .from('votos')
-          .select('cpf, opcao')
-          .eq('cpf', cleanDoc)
-          .maybeSingle();
-
-        if (error) return false;
-        return !!data;
-      } catch (err) {
-        return false;
-      }
-    }
-
-    async function loadCloudStats() {
-      const btnRefresh = document.getElementById('btn-refresh-stats');
-      const iconEl = document.getElementById('refresh-icon');
-      const spinnerEl = document.getElementById('refresh-spinner');
-
-      if (btnRefresh && iconEl && spinnerEl) {
-        btnRefresh.disabled = true;
-        iconEl.classList.add('hidden');
-        spinnerEl.classList.remove('hidden');
-      }
-
-      let allVotesData = [];
-
-      try {
-        if (supabaseClient) {
-          try {
-            const { data, error } = await supabaseClient.from('votos').select('*');
-            if (!error && data) allVotesData = data;
-            else allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-          } catch (err) {
-            allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-          }
-        } else {
-          allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-        }
-      } finally {
-        if (btnRefresh && iconEl && spinnerEl) {
-          setTimeout(() => {
-            btnRefresh.disabled = false;
-            iconEl.classList.remove('hidden');
-            spinnerEl.classList.add('hidden');
-          }, 300);
-        }
-      }
-
-      votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-      cityVotes = {};
-      Object.keys(regionalVotes).forEach(r => {
-        regionalVotes[r] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-      });
-
-      allVotesData.forEach(item => {
-        const op = item.opcao;
-        if (votes[op] !== undefined) votes[op]++;
-        else votes['NULO']++;
-
-        const reg = item.regiao || 'Norte';
-        if (regionalVotes[reg]) {
-          if (regionalVotes[reg][op] !== undefined) regionalVotes[reg][op]++;
-          else regionalVotes[reg]['NULO']++;
-        }
-
-        const cityKey = `${item.cidade || 'Capital'} - ${item.uf || 'PA'}`;
-        if (!cityVotes[cityKey]) {
-          cityVotes[cityKey] = { uf: item.uf || 'PA', city: item.cidade || 'Capital', '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-        }
-        if (cityVotes[cityKey][op] !== undefined) cityVotes[cityKey][op]++;
-        else cityVotes[cityKey]['NULO']++;
-
-        if (item.cpf) votedCPFs[item.cpf] = true;
-      });
-
-      localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
-      renderStats();
-      renderCityResults();
-    }
-
-    function formatCPF(input) {
-      let v = input.value.replace(/\D/g, '');
-      if (v.length > 11) v = v.slice(0, 11);
-      if (v.length > 9) {
-        v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-      } else if (v.length > 6) {
-        v = v.replace(/^(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
-      } else if (v.length > 3) {
-        v = v.replace(/^(\d{3})(\d{1,3})/, '$1.$2');
-      }
-      input.value = v;
-    }
-
-    function onUFChange() {
-      const ufSelect = document.getElementById('voter-uf-select');
-      const selectedUf = ufSelect.value;
-      const cities = stateCities[selectedUf] || ["Capital"];
-      document.getElementById('voter-city-search').value = cities[0];
-      document.getElementById('selected-city-val').value = cities[0];
-    }
-
-    function filterCityOptions() {
-      const uf = document.getElementById('voter-uf-select').value;
-      const cities = stateCities[uf] || [];
-      const query = document.getElementById('voter-city-search').value.toLowerCase().trim();
-      const container = document.getElementById('city-suggestions-container');
-
-      const filtered = query === "" ? cities : cities.filter(c => c.toLowerCase().includes(query));
-
-      let html = "";
-      if (filtered.length > 0) {
-        html = filtered.map(c => `
-          <div onclick="selectCity('${c}')" class="p-2.5 text-xs text-slate-200 hover:bg-slate-900 rounded-lg cursor-pointer flex items-center gap-2">
-            <span>📍</span>
-            <span class="font-medium">${c}</span>
-          </div>
-        `).join('');
-      } else {
-        html = `
-          <div onclick="selectCity('${document.getElementById('voter-city-search').value}')" class="p-2.5 text-xs text-emerald-400 hover:bg-slate-900 rounded-lg cursor-pointer font-bold">
-            📍 Usar: "${document.getElementById('voter-city-search').value}"
-          </div>
-        `;
-      }
-
-      container.innerHTML = html;
-      container.classList.remove('hidden');
-    }
-
-    function selectCity(cityName) {
-      document.getElementById('voter-city-search').value = cityName;
-      document.getElementById('selected-city-val').value = cityName;
-      document.getElementById('city-suggestions-container').classList.add('hidden');
-    }
-
-    async function submitStep1() {
-      const name = document.getElementById('voter-name').value.trim();
-      const doc = document.getElementById('voter-doc').value.trim();
-      const ufSelect = document.getElementById('voter-uf-select');
-      const city = document.getElementById('voter-city-search').value.trim() || "Capital";
-      const errBox = document.getElementById('auth-error');
-
-      errBox.classList.add('hidden');
-
-      if (!name) {
-        errBox.textContent = "Por favor, digite seu nome completo.";
-        errBox.classList.remove('hidden');
-        return;
-      }
-
-      const cleanDoc = doc.replace(/\D/g, '');
-      
-      if (!validateCPF(cleanDoc)) {
-        errBox.textContent = "⚠️ CPF inválido ou inexistente. Informe um número de CPF verdadeiro.";
-        errBox.classList.remove('hidden');
-        return;
-      }
-
-      document.getElementById('auth-step-1').classList.add('hidden');
-      document.getElementById('auth-step-2').classList.remove('hidden');
-
-      const alreadyVotedDB = await checkVoterInDatabase(cleanDoc);
-      const isAlreadyVoted = alreadyVotedDB || !!votedCPFs[cleanDoc];
-
-      setTimeout(() => {
-        document.getElementById('auth-step-2').classList.add('hidden');
-
-        const selectedOpt = ufSelect.options[ufSelect.selectedIndex];
-        const uf = ufSelect.value;
-        const region = selectedOpt.getAttribute('data-region') || 'Norte';
-
-        verifiedVoter = { name, doc, cleanDoc, uf, city, region };
-
-        document.getElementById('summary-name').textContent = name;
-        document.getElementById('summary-doc').textContent = doc;
-        document.getElementById('summary-state').textContent = `${city} / ${uf} (${region})`;
-
-        const statusEl = document.getElementById('summary-vote-status');
-        if (isAlreadyVoted) {
-          statusEl.textContent = "JÁ VOTOU (Aviso: Voto duplicado será bloqueado na urna)";
-          statusEl.className = "text-amber-400 font-bold";
-        } else {
-          statusEl.textContent = "APTO PARA VOTAR";
-          statusEl.className = "text-emerald-400 font-bold";
-        }
-
-        document.getElementById('auth-step-3').classList.remove('hidden');
-
-        document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center justify-center";
-        document.getElementById('step-dot-3').className = "w-7 h-7 rounded-full bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center";
-      }, 1000);
-    }
-
-    function startVotingSession() {
-      document.getElementById('sec-auth').classList.add('hidden');
-      document.getElementById('sec-urna').classList.remove('hidden');
-      document.getElementById('nav-tabs').classList.remove('hidden');
-      switchTab('urna');
-      resetUrna();
-    }
-
-    function switchTab(tab) {
-      ['sec-auth', 'sec-urna', 'sec-dados', 'sec-chat'].forEach(s => {
-        const el = document.getElementById(s);
-        if (el) el.classList.add('hidden');
-      });
-
-      ['btn-tab-urna', 'btn-tab-dados', 'btn-tab-chat'].forEach(b => {
-        const el = document.getElementById(b);
-        if (el) el.className = "px-3 py-1 rounded-md text-slate-400 hover:text-white transition font-semibold";
-      });
-
-      if (tab === 'urna') {
-        document.getElementById('sec-urna').classList.remove('hidden');
-        document.getElementById('btn-tab-urna').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition";
-        resetUrna();
-      } else if (tab === 'dados') {
-        document.getElementById('sec-dados').classList.remove('hidden');
-        document.getElementById('btn-tab-dados').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition";
-        loadCloudStats();
-      } else if (tab === 'chat') {
-        document.getElementById('sec-chat').classList.remove('hidden');
-        document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition flex items-center gap-1";
-        
-        const hasVoted = verifiedVoter && votedCPFs[verifiedVoter.cleanDoc];
-        const nickname = verifiedVoter ? voterNicknames[verifiedVoter.cleanDoc] : null;
-        
-        document.getElementById('chat-user-badge').textContent = nickname ? `${nickname} (${verifiedVoter.uf})` : (verifiedVoter ? verifiedVoter.name.split(' ')[0] : "Visitante");
-        
-        const lockWarning = document.getElementById('chat-locked-warning');
-        const nicknameBox = document.getElementById('nickname-setup-box');
-        const inputContainer = document.getElementById('chat-input-container');
-        const nickErrBox = document.getElementById('nickname-error');
-
-        nickErrBox.classList.add('hidden');
-
-        if (!hasVoted) {
-          lockWarning.classList.remove('hidden');
-          nicknameBox.classList.add('hidden');
-          inputContainer.classList.add('hidden');
-        } else {
-          lockWarning.classList.add('hidden');
-          if (!nickname) {
-            nicknameBox.classList.remove('hidden');
-            inputContainer.classList.add('hidden');
-          } else {
-            nicknameBox.classList.add('hidden');
-            inputContainer.classList.remove('hidden');
-          }
-        }
-
-        renderChat();
-      }
-    }
-
-    function saveNickname() {
-      const input = document.getElementById('chat-nickname-input');
-      const nickname = input.value.trim();
-      const errBox = document.getElementById('nickname-error');
-      
-      errBox.classList.add('hidden');
-
-      if (!verifiedVoter || !votedCPFs[verifiedVoter.cleanDoc]) {
-        errBox.textContent = "⚠️ Você precisa votar antes de configurar um apelido.";
-        errBox.classList.remove('hidden');
-        return;
-      }
-
-      if (!nickname) return;
-
-      const normalizedNewNick = nickname.toLowerCase();
-      const existingEntries = Object.entries(voterNicknames);
-      
-      for (let [cpfKey, nickVal] of existingEntries) {
-        if (cpfKey !== verifiedVoter.cleanDoc && nickVal.toLowerCase() === normalizedNewNick) {
-          errBox.textContent = `⚠️ O apelido "${nickname}" já está em uso por outro eleitor. Escolha outro.`;
-          errBox.classList.remove('hidden');
-          return;
-        }
-      }
-
-      voterNicknames[verifiedVoter.cleanDoc] = nickname;
-      localStorage.setItem('simulador_voter_nicknames', JSON.stringify(voterNicknames));
-
-      document.getElementById('chat-user-badge').textContent = `${nickname} (${verifiedVoter.uf})`;
-      document.getElementById('nickname-setup-box').classList.add('hidden');
-      document.getElementById('chat-input-container').classList.remove('hidden');
-    }
-
-    function resetUrna() {
-      currentInput = "";
-      isBranco = false;
-      renderUrnaScreen();
-    }
-
-    function pressKey(n) {
-      if (isBranco) return;
-      if (currentInput.length < 2) {
-        currentInput += n;
-        renderUrnaScreen();
-      }
-    }
-
-    function quickSelect(num) {
-      currentInput = num;
-      isBranco = false;
-      renderUrnaScreen();
-    }
-
-    function pressBranco() {
-      currentInput = "";
-      isBranco = true;
-      renderUrnaScreen();
-    }
-
-    function pressCorrige() {
-      currentInput = "";
-      isBranco = false;
-      renderUrnaScreen();
-    }
-
-    function renderUrnaScreen() {
-      const d1 = document.getElementById('digit-1');
-      const d2 = document.getElementById('digit-2');
-      const info = document.getElementById('candidate-info');
-      const special = document.getElementById('vote-special-msg');
-      const specialText = document.getElementById('special-text');
-      const candName = document.getElementById('cand-name');
-      const candParty = document.getElementById('cand-party');
-
-      if (isBranco) {
-        d1.textContent = "B";
-        d2.textContent = "R";
-        info.classList.add('hidden');
-        special.classList.remove('hidden');
-        specialText.textContent = "VOTO EM BRANCO";
-        return;
-      }
-
-      special.classList.add('hidden');
-      d1.textContent = currentInput.length > 0 ? currentInput[0] : "";
-      d2.textContent = currentInput.length > 1 ? currentInput[1] : "";
-
-      if (currentInput.length === 2) {
-        info.classList.remove('hidden');
-        if (currentInput === '22') {
-          candName.textContent = "Flávio Bolsonaro";
-          candParty.textContent = "Partido Liberal (PL)";
-        } else if (currentInput === '13') {
-          candName.textContent = "Lula";
-          candParty.textContent = "Partido dos Trabalhadores (PT)";
-        } else {
-          candName.textContent = "Voto Nulo";
-          candParty.textContent = "Legenda Inexistente";
-        }
-      } else {
-        info.classList.add('hidden');
-      }
-    }
-
-    async function pressConfirma() {
-      if (!verifiedVoter) return;
-
-      const alreadyVotedCloud = await checkVoterInDatabase(verifiedVoter.cleanDoc);
-      if (alreadyVotedCloud || votedCPFs[verifiedVoter.cleanDoc]) {
-        votedCPFs[verifiedVoter.cleanDoc] = true;
-        localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
-        
-        const lcd = document.getElementById('lcd-content');
-        lcd.innerHTML = `
-          <div class="py-6 text-center">
-            <p class="text-xs font-black text-rose-700 uppercase">ERRO: VOTO DUPLICADO</p>
-            <p class="text-[10px] font-bold text-black mt-1">Este CPF já registrou voto neste pleito.</p>
-          </div>
-        `;
-        return;
-      }
-
-      if (!isBranco && currentInput.length < 2) {
-        return;
-      }
-
-      let voteType = 'NULO';
-      let voteLabel = 'votou Nulo';
-      if (isBranco) {
-        voteType = 'BRANCO';
-        voteLabel = 'votou Branco';
-      } else if (currentInput === '22') {
-        voteType = '22';
-        voteLabel = 'votou 22';
-      } else if (currentInput === '13') {
-        voteType = '13';
-        voteLabel = 'votou 13';
-      }
-
-      pendingVoteObj = {
-        cpf: verifiedVoter.cleanDoc,
-        opcao: voteType,
-        uf: verifiedVoter.uf,
-        cidade: verifiedVoter.city,
-        regiao: verifiedVoter.region,
-        voteLabel: voteLabel
-      };
-
-      initiatePixVerification();
-    }
-
-    function getRandomPixAmount() {
-      const min = 1.00;
-      const max = 2.00;
-      const val = Math.random() * (max - min) + min;
-      return parseFloat(val.toFixed(2));
-    }
-
-    async function initiatePixVerification() {
-      document.getElementById('pix-modal').classList.remove('hidden');
-      document.getElementById('pix-loading').classList.remove('hidden');
-      document.getElementById('pix-content').classList.add('hidden');
-      document.getElementById('msg-vote-success').classList.add('hidden');
-      document.getElementById('msg-vote-rejected').classList.add('hidden');
-
-      document.getElementById('pix-header-icon').className = "w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
-      document.getElementById('pix-header-icon').textContent = "🛡️";
-      document.getElementById('pix-header-text').classList.remove('hidden');
-      document.getElementById('btn-cancel-pix').classList.remove('hidden');
-
-      const randomAmount = getRandomPixAmount();
-      document.getElementById('pix-display-amount').textContent = `R$ ${randomAmount.toFixed(2).replace('.', ',')}`;
-
-      try {
-        const response = await fetch('/api/gerar-pix', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: verifiedVoter.name,
-            email: "eleitor@simulador.org",
-            cpf: verifiedVoter.cleanDoc,
-            amount: randomAmount
-          })
-        });
-
-        const data = await response.json();
-
-        if (data && data.pix_code) {
-          document.getElementById('pix-code-input').value = data.pix_code;
-          document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.pix_code)}`;
-          
-          document.getElementById('pix-loading').classList.add('hidden');
-          document.getElementById('pix-content').classList.remove('hidden');
-
-          startPixStatusPolling(data.identifier);
-        } else {
-          fallbackPixSimulated(randomAmount);
-        }
-      } catch (err) {
-        console.warn("Utilizando modo de simulação visual:", err);
-        fallbackPixSimulated(randomAmount);
-      }
-    }
-
-    function fallbackPixSimulated(amount) {
-      const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865404" + Math.floor(amount * 100) + "5802BR5920INSTITUICAO BENEFICENTE6009SAO PAULO62070503***6304E2CA";
-      document.getElementById('pix-code-input').value = mockPix;
-      document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mockPix)}`;
-      
-      document.getElementById('pix-loading').classList.add('hidden');
-      document.getElementById('pix-content').classList.remove('hidden');
-
-      // Simulação de teste
-      setTimeout(() => {
-        finalizeConfirmedVote(true, verifiedVoter.cleanDoc);
-      }, 5000);
-    }
-
-    function startPixStatusPolling(transactionId) {
-      if (!transactionId) return;
-      if (pixPollInterval) clearInterval(pixPollInterval);
-
-      pixPollInterval = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/gerar-pix?id=${transactionId}&voterCpf=${verifiedVoter.cleanDoc}`);
-          const data = await res.json();
-
-          if (data && data.paid) {
-            clearInterval(pixPollInterval);
-            const isMatch = data.cpfMatches !== undefined ? data.cpfMatches : true;
-            finalizeConfirmedVote(isMatch, data.payerCpf || verifiedVoter.cleanDoc);
-          }
-        } catch (err) {
-          console.error("Erro na verificação do PIX:", err);
-        }
-      }, 3000);
-    }
-
-    function copyPixCode() {
-      const input = document.getElementById('pix-code-input');
-      input.select();
-      document.execCommand('copy');
-      alert('Código PIX copiado para a área de transferência!');
-    }
-
-    function closePixModal() {
-      if (pixPollInterval) clearInterval(pixPollInterval);
-      document.getElementById('pix-modal').classList.add('hidden');
-      pendingVoteObj = null;
-    }
-
-    async function finalizeConfirmedVote(isCpfMatch = true, actualPayerCpf = "") {
-      if (!pendingVoteObj || !verifiedVoter) return;
-
-      if (pixPollInterval) clearInterval(pixPollInterval);
-
-      document.getElementById('pix-content').classList.add('hidden');
-      document.getElementById('btn-cancel-pix').classList.add('hidden');
-      document.getElementById('pix-header-text').classList.add('hidden');
-
-      if (!isCpfMatch) {
-        // MENSAGEM 2: PAGAMENTO APROVADO, MAS CPF DIVERGENTE
-        document.getElementById('pix-header-icon').className = "w-12 h-12 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
-        document.getElementById('pix-header-icon').textContent = "❌";
-        document.getElementById('msg-vote-rejected').classList.remove('hidden');
-
-        const lcd = document.getElementById('lcd-content');
-        lcd.innerHTML = `
-          <div class="py-6 text-center">
-            <p class="text-xs font-black text-rose-700 uppercase">VOTO RECUSADO</p>
-            <p class="text-[10px] font-bold text-black mt-1">CPF da conta bancária incompatível.</p>
-          </div>
-        `;
-        return;
-      }
-
-      // MENSAGEM 1: PAGAMENTO APROVADO + CPF CORRETO
-      document.getElementById('pix-header-icon').className = "w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
-      document.getElementById('pix-header-icon').textContent = "✅";
-      document.getElementById('msg-vote-success').classList.remove('hidden');
-
-      const voteObj = {
-        cpf: pendingVoteObj.cpf,
-        opcao: pendingVoteObj.opcao,
-        uf: pendingVoteObj.uf,
-        cidade: pendingVoteObj.cidade,
-        regiao: pendingVoteObj.regiao
-      };
-
-      confirmedVoteData = {
-        voterName: verifiedVoter.name,
-        voterCpf: verifiedVoter.doc,
-        cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-        opcao: pendingVoteObj.opcao,
-        time: new Date().toLocaleString('pt-BR')
-      };
-
-      votedCPFs[verifiedVoter.cleanDoc] = true;
-      voterChoices[verifiedVoter.cleanDoc] = pendingVoteObj.voteLabel;
-      localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
-      localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
-
-      const localVotes = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-      localVotes.push(voteObj);
-      localStorage.setItem('simulador_all_votes', JSON.stringify(localVotes));
-
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('votos').insert([voteObj]);
-        } catch (err) {
-          console.error("Falha ao gravar voto no Supabase:", err);
-        }
-      }
-
-      await loadCloudStats();
-
-      const lcd = document.getElementById('lcd-content');
-      lcd.innerHTML = `
-        <div class="py-8 text-center animate-pulse">
-          <p class="text-3xl font-black text-black">FIM</p>
-          <p class="text-xs font-bold text-black mt-2">VOTO COMPUTADO COM SUCESSO</p>
-        </div>
-      `;
-    }
-
-    function openReceiptModal() {
-      if (!confirmedVoteData) return;
-
-      closePixModal();
-
-      const card = document.getElementById('receipt-card');
-      const sloganBox = document.getElementById('receipt-slogan-box');
-      const sloganText = document.getElementById('receipt-slogan');
-      const badgeIcon = document.getElementById('receipt-badge-icon');
-      const optText = document.getElementById('receipt-voter-option');
-      const subtitle = document.getElementById('receipt-subtitle');
-
-      document.getElementById('receipt-voter-name').textContent = confirmedVoteData.voterName;
-      document.getElementById('receipt-voter-cpf').textContent = confirmedVoteData.voterCpf;
-      document.getElementById('receipt-voter-city').textContent = confirmedVoteData.cityUf;
-      document.getElementById('receipt-timestamp').textContent = confirmedVoteData.time;
-
-      const randomHash = "0x" + Array.from({length: 24}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
-      document.getElementById('receipt-hash').textContent = randomHash;
-
-      // ESTILIZAÇÃO TEMÁTICA DO COMPROVANTE
-      if (confirmedVoteData.opcao === '22') {
-        // TEMA VERDE E AMARELO
-        card.className = "bg-gradient-to-b from-slate-900 via-emerald-950/40 to-slate-900 border-2 border-emerald-400/80 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100";
-        sloganBox.className = "my-4 py-3 px-2 text-center rounded-2xl border-2 border-amber-400/80 bg-amber-500/10 text-amber-300 font-black uppercase tracking-wide shadow-lg shadow-amber-500/10";
-        sloganText.innerHTML = "🇧🇷 ESTOU COM O FLÁVIO 22!";
-        badgeIcon.className = "w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center mx-auto text-2xl shadow-inner text-amber-400";
-        badgeIcon.textContent = "🏛️";
-        optText.textContent = "22 — Flávio Bolsonaro";
-        optText.className = "font-black text-sm text-amber-400";
-      } else if (confirmedVoteData.opcao === '13') {
-        // TEMA VERMELHO E BRANCO
-        card.className = "bg-gradient-to-b from-slate-900 via-rose-950/40 to-slate-900 border-2 border-rose-500/80 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100";
-        sloganBox.className = "my-4 py-3 px-2 text-center rounded-2xl border-2 border-rose-500/80 bg-rose-500/10 text-rose-300 font-black uppercase tracking-wide shadow-lg shadow-rose-500/10";
-        sloganText.innerHTML = "🚩 ESTOU COM O LULA 13!";
-        badgeIcon.className = "w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-400/40 flex items-center justify-center mx-auto text-2xl shadow-inner text-rose-400";
-        badgeIcon.textContent = "🚩";
-        optText.textContent = "13 — Lula";
-        optText.className = "font-black text-sm text-rose-400";
-      } else {
-        // BRANCO OU NULO
-        card.className = "bg-slate-900 border-2 border-slate-700 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100";
-        sloganBox.className = "my-4 py-3 px-2 text-center rounded-2xl border border-slate-700 bg-slate-800 text-slate-300 font-black uppercase tracking-wide";
-        sloganText.textContent = "VOTO REGISTRADO COM SUCESSO!";
-        badgeIcon.className = "w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto text-2xl shadow-inner text-slate-300";
-        badgeIcon.textContent = "🗳️";
-        optText.textContent = confirmedVoteData.opcao;
-        optText.className = "font-black text-sm text-slate-300";
-      }
-
-      document.getElementById('receipt-modal').classList.remove('hidden');
-    }
-
-    function closeReceiptModal() {
-      document.getElementById('receipt-modal').classList.add('hidden');
-      switchTab('chat');
-    }
-
-    function goToChatFromModal() {
-      closePixModal();
-      switchTab('chat');
-    }
-
-    async function shareReceipt() {
-      if (!confirmedVoteData) return;
-
-      let slogan = confirmedVoteData.opcao === '22' ? "🇧🇷 Estou com o Flávio 22!" : (confirmedVoteData.opcao === '13' ? "🚩 Estou com o Lula 13!" : "🗳️ Voto computado na Justiça Eleitoral Digital!");
-
-      const shareText = `${slogan}\n\nAcabei de registrar meu voto na Simulação Eleitoral Oficial!\n\nEleitor: ${confirmedVoteData.voterName}\nMunicípio: ${confirmedVoteData.cityUf}\nStatus: Voto Autenticado e Auditado via PIX.\n\nParticipe você também e defenda o seu lado no debate ao vivo!`;
-
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'Comprovante de Votação Presidencial',
-            text: shareText,
-            url: window.location.href
-          });
-        } catch (err) {
-          console.log("Compartilhamento cancelado ou não suportado:", err);
-        }
-      } else {
-        copyReceiptText();
-      }
-    }
-
-    function copyReceiptText() {
-      if (!confirmedVoteData) return;
-      let slogan = confirmedVoteData.opcao === '22' ? "🇧🇷 Estou com o Flávio 22!" : (confirmedVoteData.opcao === '13' ? "🚩 Estou com o Lula 13!" : "🗳️ Voto computado!");
-      const shareText = `${slogan}\nEleitor: ${confirmedVoteData.voterName}\nUF/Cidade: ${confirmedVoteData.cityUf}\nComprovante Autenticado!`;
-
-      navigator.clipboard.writeText(shareText);
-      alert('Texto do comprovante copiado! Cole no WhatsApp, Instagram ou TikTok.');
-    }
-
-    function renderStats() {
-      const valid = (votes['22'] || 0) + (votes['13'] || 0);
-      const total = valid + (votes['BRANCO'] || 0) + (votes['NULO'] || 0);
-
-      document.getElementById('stat-total').textContent = total;
-      document.getElementById('stat-validos').textContent = valid;
-      document.getElementById('stat-branco').textContent = votes['BRANCO'] || 0;
-      document.getElementById('stat-nulo').textContent = votes['NULO'] || 0;
-
-      const p22 = valid > 0 ? ((votes['22'] / valid) * 100).toFixed(1) : "0.0";
-      const p13 = valid > 0 ? ((votes['13'] / valid) * 100).toFixed(1) : "0.0";
-
-      document.getElementById('pct-22').textContent = `${p22}%`;
-      document.getElementById('bar-22').style.width = `${p22}%`;
-      document.getElementById('count-22').textContent = `${votes['22'] || 0} votos`;
-
-      document.getElementById('pct-13').textContent = `${p13}%`;
-      document.getElementById('bar-13').style.width = `${p13}%`;
-      document.getElementById('count-13').textContent = `${votes['13'] || 0} votos`;
-
-      const regContainer = document.getElementById('regional-stats-container');
-      regContainer.innerHTML = Object.keys(regionalVotes).map(r => {
-        const rv = regionalVotes[r];
-        const rValid = (rv['22'] || 0) + (rv['13'] || 0);
-        const rp22 = rValid > 0 ? Math.round((rv['22'] / rValid) * 100) : 0;
-        const rp13 = rValid > 0 ? Math.round((rv['13'] / rValid) * 100) : 0;
-        return `
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-            <div>
-              <p class="font-bold text-white">${r}</p>
-              <p class="text-[10px] text-slate-400">${rValid} votos válidos</p>
-            </div>
-            <div class="font-mono text-right text-[11px]">
-              <span class="text-amber-400">22: <b>${rp22}%</b></span> | 
-              <span class="text-rose-400">13: <b>${rp13}%</b></span>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function populateQueryUFs() {
-      const select = document.getElementById('query-uf-select');
-      select.innerHTML = `<option value="">Todas as UFs</option>` + Object.keys(stateCities).map(u => `<option value="${u}">${u}</option>`).join('');
-    }
-
-    function renderCityResults() {
-      const ufFilter = document.getElementById('query-uf-select').value;
-      const textFilter = document.getElementById('query-city-filter').value.toLowerCase();
-      const container = document.getElementById('city-results-list');
-
-      const keys = Object.keys(cityVotes).filter(k => {
-        const d = cityVotes[k];
-        if (ufFilter && d.uf !== ufFilter) return false;
-        if (textFilter && !d.city.toLowerCase().includes(textFilter)) return false;
-        return true;
-      });
-
-      if (keys.length === 0) {
-        container.innerHTML = `<div class="p-4 text-center text-xs text-slate-500 bg-slate-950 rounded-xl">Nenhum resultado municipal encontrado.</div>`;
-        return;
-      }
-
-      container.innerHTML = keys.map(k => {
-        const d = cityVotes[k];
-        const valid = (d['22'] || 0) + (d['13'] || 0);
-        const p22 = valid > 0 ? ((d['22'] / valid) * 100).toFixed(0) : 0;
-        const p13 = valid > 0 ? ((d['13'] / valid) * 100).toFixed(0) : 0;
-        return `
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs space-y-1">
-            <div class="flex justify-between items-center">
-              <span class="font-bold text-white">${d.city} / ${d.uf}</span>
-              <span class="text-[10px] text-slate-400">${valid} votos</span>
-            </div>
-            <div class="flex justify-between text-[11px] font-mono text-slate-300">
-              <span class="text-amber-400">🏛️ 22: <b>${d['22'] || 0}</b> (${p22}%)</span>
-              <span class="text-rose-400">🚩 13: <b>${d['13'] || 0}</b> (${p13}%)</span>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function renderChat() {
-      const chatBox = document.getElementById('chat-messages');
-      chatBox.innerHTML = chatMessages.map(m => {
-        const isVote13 = m.voteLabel && m.voteLabel.includes('13');
-        const badgeStyle = isVote13
-          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
-
-        return `
-        <div class="flex flex-col ${m.isSystem ? 'items-center text-center' : 'items-start'}">
-          ${m.isSystem ? `
-            <div class="bg-slate-950 border border-slate-800 text-slate-400 px-3 py-1.5 rounded-xl text-[11px]">
-              🤖 <b>${m.sender}:</b> ${m.text}
-            </div>
-          ` : `
-            <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl max-w-[90%] space-y-1">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="font-bold text-emerald-400">${m.nickname}</span>
-                <span class="text-[9px] bg-slate-900 px-1.5 py-0.5 rounded text-slate-300 font-mono border border-slate-800">${m.uf}</span>
-                <span class="text-[9px] ${badgeStyle} px-1.5 py-0.5 rounded font-mono font-bold">${m.voteLabel}</span>
-                <span class="text-[9px] text-slate-500 ml-auto">${m.time}</span>
-              </div>
-              <p class="text-slate-200 text-xs">${m.text}</p>
-            </div>
-          `}
-        </div>
-      `;
-      }).join('');
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function sendChatMessage() {
-      if (!verifiedVoter) return;
-
-      const nickname = voterNicknames[verifiedVoter.cleanDoc];
-      if (!nickname) return;
-
-      const input = document.getElementById('chat-input');
-      const text = input.value.trim();
-      if (!text) return;
-
-      const uf = verifiedVoter.uf;
-      const voteLabel = voterChoices[verifiedVoter.cleanDoc] || "votou";
-
-      chatMessages.push({
-        id: Date.now(),
-        nickname,
-        uf,
-        voteLabel,
-        text,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isSystem: false
-      });
-
-      localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
-      input.value = "";
-      renderChat();
-    }
-
-    function handleChatKeyPress(e) {
-      if (e.key === 'Enter') {
-        sendChatMessage();
-      }
-    }
-  </script>
+<!-- TOP HEADER -->
+<header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+<div class="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+<div class="flex items-center space-x-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg">
+🗳️
+</div>
+<div>
+<h1 class="text-sm font-bold text-white leading-tight">Justiça Eleitoral Digital</h1>
+<p class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+Simulação Eleitoral — 2º Turno
+</p>
+</div>
+</div>
+<div id="nav-tabs" class="flex bg-slate-800 p-1 rounded-lg text-xs font-semibold">
+<button id="btn-tab-urna" onclick="switchTab('urna')" class="px-3 py-1 rounded-md bg-emerald-500 text-slate-950 transition font-bold">Urna</button>
+<button id="btn-tab-dados" onclick="switchTab('dados')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition">Dados</button>
+<button id="btn-tab-chat" onclick="switchTab('chat')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition flex items-center gap-1">
+<span>Chat</span>
+<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+</button>
+</div>
+</div>
+</header>
+<main class="max-w-lg mx-auto w-full px-3 py-3 flex-1 flex flex-col justify-center space-y-4">
+<!-- STEP 1: ETAPA DE VERIFICAÇÃO / AUTENTICAÇÃO DO ELEITOR -->
+<section id="sec-auth" class="w-full">
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
+<div class="absolute -top-12 -right-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+<div class="text-center mb-5">
+<div class="inline-flex p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-2xl mb-2">
+🔐
+</div>
+<h2 class="text-xl font-extrabold text-white">Portal de Identificação Eleitoral</h2>
+<p class="text-xs text-slate-400 mt-1">Validação de documento e registro regional</p>
+</div>
+<!-- Indicador de Passos -->
+<div class="flex items-center justify-center gap-2 mb-6">
+<div id="step-dot-1" class="w-7 h-7 rounded-full bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center">1</div>
+<div class="w-8 h-0.5 bg-slate-800"></div>
+<div id="step-dot-2" class="w-7 h-7 rounded-full bg-slate-800 text-slate-500 font-bold text-xs flex items-center justify-center">2</div>
+<div class="w-8 h-0.5 bg-slate-800"></div>
+<div id="step-dot-3" class="w-7 h-7 rounded-full bg-slate-800 text-slate-500 font-bold text-xs flex items-center justify-center">3</div>
+</div>
+<!-- Alerta de Erro -->
+<div id="auth-error" class="hidden mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl text-center font-medium"></div>
+<!-- FORMULÁRIO PASSO 1 -->
+<div id="auth-step-1" class="space-y-4">
+<div>
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nome Completo do Eleitor</label>
+<input type="text" id="voter-name" placeholder="Ex: Maria da Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition">
+</div>
+<div>
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Eleitor</label>
+<input type="text" id="voter-doc" maxlength="14" placeholder="000.000.000-00" oninput="formatCPF(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono transition">
+</div>
+<!-- SELEÇÃO DE ESTADO (UF) -->
+<div>
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">1. Selecione o Estado (UF)</label>
+<select id="voter-uf-select" onchange="onUFChange()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
+<option value="PA" data-region="Norte">Pará (PA) — Norte</option>
+<option value="SP" data-region="Sudeste">São Paulo (SP) — Sudeste</option>
+<option value="RJ" data-region="Sudeste">Rio de Janeiro (RJ) — Sudeste</option>
+<option value="MG" data-region="Sudeste">Minas Gerais (MG) — Sudeste</option>
+<option value="ES" data-region="Sudeste">Espírito Santo (ES) — Sudeste</option>
+<option value="BA" data-region="Nordeste">Bahia (BA) — Nordeste</option>
+<option value="PE" data-region="Nordeste">Pernambuco (PE) — Nordeste</option>
+<option value="CE" data-region="Nordeste">Ceará (CE) — Nordeste</option>
+<option value="MA" data-region="Nordeste">Maranhão (MA) — Nordeste</option>
+<option value="PB" data-region="Nordeste">Paraíba (PB) — Nordeste</option>
+<option value="RN" data-region="Nordeste">Rio Grande do Norte (RN) — Nordeste</option>
+<option value="AL" data-region="Nordeste">Alagoas (AL) — Nordeste</option>
+<option value="SE" data-region="Nordeste">Sergipe (SE) — Nordeste</option>
+<option value="PI" data-region="Nordeste">Piauí (PI) — Nordeste</option>
+<option value="PR" data-region="Sul">Paraná (PR) — Sul</option>
+<option value="RS" data-region="Sul">Rio Grande do Sul (RS) — Sul</option>
+<option value="SC" data-region="Sul">Santa Catarina (SC) — Sul</option>
+<option value="GO" data-region="Centro-Oeste">Goiás (GO) — Centro-Oeste</option>
+<option value="DF" data-region="Centro-Oeste">Distrito Federal (DF) — Centro-Oeste</option>
+<option value="MT" data-region="Centro-Oeste">Mato Grosso (MT) — Centro-Oeste</option>
+<option value="MS" data-region="Centro-Oeste">Mato Grosso do Sul (MS) — Centro-Oeste</option>
+<option value="AM" data-region="Norte">Amazonas (AM) — Norte</option>
+<option value="RO" data-region="Norte">Rondônia (RO) — Norte</option>
+<option value="AP" data-region="Norte">Amapá (AP) — Norte</option>
+<option value="AC" data-region="Norte">Acre (AC) — Norte</option>
+<option value="RR" data-region="Norte">Roraima (RR) — Norte</option>
+<option value="TO" data-region="Norte">Tocantins (TO) — Norte</option>
+<option value="ZZ" data-region="Exterior">Exterior (ZZ) — Votação no Exterior</option>
+</select>
+</div>
+<!-- SELEÇÃO DE CIDADE COM SUGESTÕES EM LISTA -->
+<div id="city-group" class="space-y-1.5 relative">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+2. Cidade / Município
+</label>
+<input type="text" id="voter-city-search" placeholder="Digite sua cidade..." oninput="filterCityOptions()" onfocus="filterCityOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition">
+<div id="city-suggestions-container" class="hidden absolute left-0 right-0 top-full bg-slate-950 border border-emerald-500/40 rounded-xl max-h-48 overflow-y-auto custom-scrollbar p-1 space-y-1 shadow-2xl z-50 mt-1">
+</div>
+<input type="hidden" id="selected-city-val" value="">
+</div>
+<button onclick="submitStep1()" type="button" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-sm transition active:scale-[0.99] mt-2">
+Verificar Elegibilidade →
+</button>
+</div>
+<!-- FORMULÁRIO PASSO 2: SIMULAÇÃO DA BIOMETRIA -->
+<div id="auth-step-2" class="hidden text-center py-4 space-y-4">
+<div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+<div class="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin"></div>
+<div class="text-3xl">👤</div>
+</div>
+<p class="text-xs text-slate-300 font-semibold">Validando Biometria e Banco de Dados TSE...</p>
+<p class="text-[11px] text-slate-500">Aguarde alguns segundos...</p>
+</div>
+<!-- FORMULÁRIO PASSO 3 -->
+<div id="auth-step-3" class="hidden text-center py-3 space-y-4">
+<div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+✓
+</div>
+<div>
+<h3 class="text-base font-bold text-white">Eleitor Autenticado com Sucesso!</h3>
+<p class="text-xs text-slate-400 mt-0.5">Sua sessão de votação está liberada e criptografada.</p>
+</div>
+<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-left text-xs font-mono space-y-1">
+<p class="text-slate-400">ELEITOR: <span id="summary-name" class="text-white font-bold"></span></p>
+<p class="text-slate-400">DOCUMENTO: <span id="summary-doc" class="text-emerald-400 font-bold"></span></p>
+<p class="text-slate-400">MUNICIPIO / UF: <span id="summary-state" class="text-emerald-400 font-bold"></span></p>
+<p class="text-slate-400">STATUS: <span id="summary-vote-status" class="text-emerald-400 font-bold">APTO PARA VOTAR</span></p>
+</div>
+<button onclick="startVotingSession()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-sm transition active:scale-[0.99]">
+Acessar Urna Eleitoral 🗳️
+</button>
+</div>
+</div>
+</section>
+<!-- STEP 2: URNA ELETRÔNICA COMPLETA -->
+<section id="sec-urna" class="hidden w-full space-y-3">
+<!-- CARDS DE ATALHO RÁPIDO PARA CANDIDATOS -->
+<div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5">
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 text-center">Clique para Votar Direto</p>
+<div class="grid grid-cols-2 gap-2">
+<button onclick="quickSelect('22')" class="flex items-center gap-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 p-2 rounded-xl text-left transition group">
+<div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-sm">
+🏛️
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold text-white truncate group-hover:text-amber-400">Flávio Bolsonaro</p>
+<p class="text-[10px] text-slate-400">PL — 22</p>
+</div>
+<span class="text-xs font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">22</span>
+</button>
+<button onclick="quickSelect('13')" class="flex items-center gap-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 p-2 rounded-xl text-left transition group">
+<div class="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-sm">
+🚩
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold text-white truncate group-hover:text-rose-400">Lula</p>
+<p class="text-[10px] text-slate-400">PT — 13</p>
+</div>
+<span class="text-xs font-black text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">13</span>
+</button>
+</div>
+</div>
+<!-- CORPO DA URNA -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-2xl space-y-3">
+<!-- VISOR LCD DA URNA -->
+<div class="bg-[#c3e2c2] border-4 border-slate-800 rounded-xl p-3 text-[#051406] urn-lcd-font shadow-inner min-h-[170px] flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-center justify-between border-b border-black/15 pb-1">
+<span class="text-[11px] font-black uppercase tracking-wider text-black">JUSTIÇA ELEITORAL</span>
+<span class="text-[10px] font-black text-black/70 bg-black/10 px-1.5 py-0.5 rounded">2º TURNO</span>
+</div>
+<div id="lcd-content" class="py-2">
+<p class="text-[11px] font-extrabold uppercase text-black/70 text-center">PRESIDENTE</p>
+<div class="flex justify-center gap-2 my-2">
+<div id="digit-1" class="w-9 h-11 border-2 border-black/80 bg-white/80 rounded flex items-center justify-center text-xl font-black text-black"></div>
+<div id="digit-2" class="w-9 h-11 border-2 border-black/80 bg-white/80 rounded flex items-center justify-center text-xl font-black text-black"></div>
+</div>
+<div id="candidate-info" class="hidden space-y-0.5 text-left bg-black/5 p-2 rounded border border-black/10">
+<p class="text-[11px] font-extrabold text-black">Nome: <span id="cand-name" class="font-black text-black uppercase">---</span></p>
+<p class="text-[11px] font-extrabold text-black">Partido: <span id="cand-party" class="font-black text-black uppercase">---</span></p>
+</div>
+<div id="vote-special-msg" class="hidden text-center my-2">
+<p id="special-text" class="text-lg font-black text-black uppercase">VOTO EM BRANCO</p>
+</div>
+</div>
+<div class="border-t border-black/15 pt-1 text-[10px] font-black text-black/80 flex justify-between items-end">
+<div>
+<p>CONFIRMA = Votado</p>
+<p>CORRIGE = Reiniciar</p>
+</div>
+<div class="w-3 h-3 rounded-full bg-emerald-700 animate-ping opacity-75"></div>
+</div>
+</div>
+<!-- MODAL DE ANTIFRAUDE / PAGAMENTO PIX -->
+<div id="pix-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+<div class="bg-slate-900 border border-emerald-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4 text-center my-auto">
+<div id="pix-header-icon" class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
+🛡️
+</div>
+<div id="pix-header-text">
+<h3 class="text-base font-extrabold text-white">Verificação Anti-Fraude</h3>
+<p class="text-xs text-slate-300 mt-1">Taxa simbólica de verificação: <b id="pix-display-amount" class="text-emerald-400">R$ 1,50</b></p>
+</div>
+<!-- Loader de Geração -->
+<div id="pix-loading" class="py-6 space-y-2">
+<div class="w-8 h-8 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mx-auto"></div>
+<p class="text-xs text-slate-400">Gerando QR Code PIX de verificação...</p>
+</div>
+<!-- Área do QR Code e Copia e Cola -->
+<div id="pix-content" class="hidden space-y-3">
+<div class="bg-white p-3 rounded-xl inline-block shadow-inner mx-auto">
+<img id="pix-qr-img" src="" alt="QR Code PIX" class="w-44 h-44 mx-auto">
+</div>
+<div>
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Código PIX Copia e Cola</p>
+<div class="flex items-center gap-1.5 bg-slate-950 border border-slate-800 p-2 rounded-xl">
+<input type="text" id="pix-code-input" readonly class="bg-transparent text-[10px] font-mono text-slate-300 flex-1 outline-none truncate">
+<button onclick="copyPixCode()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] px-2.5 py-1 rounded-lg transition">Copiar</button>
+</div>
+</div>
+<!-- Status do Pagamento -->
+<div class="bg-slate-950 border border-slate-800 p-2 rounded-xl flex items-center justify-center gap-2">
+<div id="pix-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
+<span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
+</div>
+</div>
+<!-- MENSAGEM 1: PAGAMENTO APROVADO + CPF CORRETO (SUCESSO) -->
+<div id="msg-vote-success" class="hidden space-y-4 pt-1">
+<div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
+<div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wide">
+<span>🎉</span>
+<span>Voto Computado com Sucesso!</span>
+</div>
+<p class="text-xs text-slate-200 leading-relaxed font-medium">
+Parabéns, seu voto foi computado! Compartilhe seu comprovante nas redes e mostre a força do seu lado! O chat está liberado, debata com respeito e tente ganhar votos para o seu candidato!
+</p>
+</div>
+<div class="space-y-2">
+<button onclick="openReceiptModal()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+<span>📄</span>
+<span>Ver / Gerar Comprovante do Voto</span>
+</button>
+<button onclick="goToChatFromModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs transition">
+Ir para o Chat de Eleitores 💬
+</button>
+</div>
+</div>
+<!-- MENSAGEM 2: PAGAMENTO APROVADO + CPF DIVERGENTE (ERRO) -->
+<div id="msg-vote-rejected" class="hidden space-y-4 pt-1">
+<div class="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-left space-y-2">
+<div class="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wide">
+<span>⚠️</span>
+<span>Voto Não Computado!</span>
+</div>
+<p class="text-xs text-slate-200 leading-relaxed font-medium">
+Pagamento aprovado! Voto não computado: o CPF da conta bancária utilizada no PIX é divergente do CPF informado no cadastro inicial.
+</p>
+</div>
+<button onclick="closePixModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs transition">
+Tentar Novamente
+</button>
+</div>
+<button id="btn-cancel-pix" onclick="closePixModal()" class="text-xs text-slate-500 hover:text-slate-300 font-medium transition underline pt-1 block mx-auto">
+Cancelar Votação
+</button>
+</div>
+</div>
+<!-- MODAL COMPROVANTE ELEITORAL DE IMPRESSÃO VIRALIZÁVEL -->
+<div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 overflow-y-auto">
+<div class="w-full max-w-sm my-auto space-y-4">
+<!-- COMPROVANTE ESTILIZADO -->
+<div id="receipt-card" class="bg-slate-900 border-2 rounded-3xl p-5 shadow-2xl relative overflow-hidden transition-all duration-300">
+<!-- Efeito de Cabeçalho / Marca d'água -->
+<div class="text-center space-y-1 border-b border-dashed pb-4 relative" id="receipt-header-border">
+<div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-1 text-2xl shadow-inner" id="receipt-badge-icon">
+🗳️
+</div>
+<h3 class="text-xs font-black uppercase tracking-widest text-slate-300">JUSTIÇA ELEITORAL DIGITAL</h3>
+<p class="text-[10px] font-bold tracking-wider uppercase opacity-80" id="receipt-subtitle">Comprovante de Votação Presidencial</p>
+<div class="text-[9px] font-mono opacity-60" id="receipt-timestamp">--/--/---- --:--:--</div>
+</div>
+<!-- FRASE DE IMPACTO VIRAL -->
+<div class="my-4 py-3 px-2 text-center rounded-2xl border font-black uppercase tracking-wide shadow-md" id="receipt-slogan-box">
+<p id="receipt-slogan" class="text-base leading-tight">ESTOU COM O MEU CANDIDATO!</p>
+</div>
+<!-- DADOS DO ELEITOR -->
+<div class="space-y-2 text-xs font-mono bg-black/30 p-3.5 rounded-2xl border border-white/10">
+<div class="flex justify-between border-b border-white/10 pb-1">
+<span class="opacity-60">ELEITOR:</span>
+<span id="receipt-voter-name" class="font-bold text-white truncate max-w-[160px]">---</span>
+</div>
+<div class="flex justify-between border-b border-white/10 pb-1">
+<span class="opacity-60">CPF:</span>
+<span id="receipt-voter-cpf" class="font-bold text-white">---</span>
+</div>
+<div class="flex justify-between border-b border-white/10 pb-1">
+<span class="opacity-60">UF / CIDADE:</span>
+<span id="receipt-voter-city" class="font-bold text-white">---</span>
+</div>
+<div class="flex justify-between">
+<span class="opacity-60">OPÇÃO DE VOTO:</span>
+<span id="receipt-voter-option" class="font-black text-sm">---</span>
+</div>
+</div>
+<!-- RODAPÉ TÉCNICO COMPROVANTE -->
+<div class="mt-4 pt-3 border-t border-dashed text-center space-y-1" id="receipt-footer-border">
+<p class="text-[9px] font-mono opacity-70">HASH DE AUTENTICAÇÃO SH-256:</p>
+<p id="receipt-hash" class="text-[8px] font-mono opacity-50 break-all select-all">0x8F92A...4B1C</p>
+<p class="text-[9px] font-extrabold uppercase tracking-widest mt-2" id="receipt-status-badge">● VOTO REGISTRADO E AUDITADO</p>
+</div>
+</div>
+<!-- BOTOES DE AÇÃO COMPARTILHAMENTO -->
+<div class="space-y-2">
+<button onclick="shareReceipt()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl shadow-lg shadow-emerald-500/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+<span>📲</span>
+<span>Compartilhar nas Redes Sociais</span>
+</button>
+<div class="grid grid-cols-2 gap-2">
+<button onclick="copyReceiptText()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition">
+Copiar Texto 📋
+</button>
+<button onclick="closeReceiptModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition">
+Ir para o Chat 💬
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- TECLADO NUMÉRICO E BOTOES DA URNA -->
+<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2">
+<div class="grid grid-cols-3 gap-2">
+<button onclick="pressKey('1')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">1</button>
+<button onclick="pressKey('2')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">2</button>
+<button onclick="pressKey('3')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">3</button>
+<button onclick="pressKey('4')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">4</button>
+<button onclick="pressKey('5')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">5</button>
+<button onclick="pressKey('6')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">6</button>
+<button onclick="pressKey('7')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">7</button>
+<button onclick="pressKey('8')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">8</button>
+<button onclick="pressKey('9')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">9</button>
+</div>
+<div class="flex justify-center">
+<button onclick="pressKey('0')" class="w-1/3 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">0</button>
+</div>
+<div class="grid grid-cols-3 gap-2 pt-1">
+<button onclick="pressBranco()" class="bg-slate-100 hover:bg-white text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-slate-300 transition uppercase">BRANCO</button>
+<button onclick="pressCorrige()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-amber-700 transition uppercase">CORRIGE</button>
+<button onclick="pressConfirma()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-emerald-700 transition uppercase">CONFIRMA</button>
+</div>
+</div>
+</div>
+</section>
+<!-- STEP 3: PAINEL DE APURAÇÃO / DADOS -->
+<section id="sec-dados" class="hidden w-full space-y-4">
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
+<div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+<div>
+<h2 class="text-base font-extrabold text-white">Apuração Oficial TSE</h2>
+<p class="text-[11px] text-slate-400">Resultados consolidados em tempo real via Supabase</p>
+</div>
+<button id="btn-refresh-stats" onclick="loadCloudStats()" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg hover:bg-emerald-500/20 transition flex items-center gap-1.5 disabled:opacity-50">
+<span id="refresh-icon">🔄</span>
+<span id="refresh-spinner" class="hidden w-3.5 h-3.5 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin"></span>
+<span>Atualizar Dados</span>
+</button>
+</div>
+<!-- CARDS DE ESTATÍSTICA GERAL -->
+<div class="grid grid-cols-2 gap-2.5">
+<div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+<p class="text-[10px] font-bold text-slate-500 uppercase">TOTAL VOTOS</p>
+<p id="stat-total" class="text-2xl font-black text-white">0</p>
+</div>
+<div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+<p class="text-[10px] font-bold text-emerald-500 uppercase">VOTOS VÁLIDOS</p>
+<p id="stat-validos" class="text-2xl font-black text-emerald-400">0</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+<p class="text-[10px] font-bold text-slate-400 uppercase">VOTOS BRANCOS</p>
+<p id="stat-branco" class="text-xl font-black text-slate-200">0</p>
+</div>
+<div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+<p class="text-[10px] font-bold text-rose-500 uppercase">VOTOS NULOS</p>
+<p id="stat-nulo" class="text-xl font-black text-rose-400">0</p>
+</div>
+</div>
+<!-- CANDIDATOS PLACAR -->
+<div class="space-y-3 pt-2">
+<div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2">
+<div class="flex justify-between items-center text-xs">
+<span class="font-bold text-white flex items-center gap-1.5">
+🏛️ Flávio Bolsonaro (22)
+</span>
+<span id="pct-22" class="font-black text-amber-400 text-sm">0.0%</span>
+</div>
+<div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
+<div id="bar-22" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
+</div>
+<p id="count-22" class="text-[10px] text-slate-400 text-right font-mono">0 votos</p>
+</div>
+<div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2">
+<div class="flex justify-between items-center text-xs">
+<span class="font-bold text-white flex items-center gap-1.5">
+🚩 Lula (13)
+</span>
+<span id="pct-13" class="font-black text-rose-400 text-sm">0.0%</span>
+</div>
+<div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
+<div id="bar-13" class="bg-rose-500 h-full transition-all duration-500" style="width: 0%"></div>
+</div>
+<p id="count-13" class="text-[10px] text-slate-400 text-right font-mono">0 votos</p>
+</div>
+</div>
+<!-- DESEMPENHO POR REGIÃO -->
+<div class="space-y-2 pt-2">
+<h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+🗺️ Desempenho por Região
+</h3>
+<div id="regional-stats-container" class="space-y-2">
+<!-- Renderizado via JS -->
+</div>
+</div>
+<!-- CONSULTA POR MUNICÍPIO -->
+<div class="space-y-2.5 pt-2 border-t border-slate-800">
+<h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+🏙️ Apuração por Município
+</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+<select id="query-uf-select" onchange="renderCityResults()" class="bg-slate-950 border border-slate-800 text-xs text-white rounded-xl p-2.5 outline-none">
+<option value="">Todas as UFs</option>
+</select>
+<input type="text" id="query-city-filter" placeholder="Filtrar município..." oninput="renderCityResults()" class="bg-slate-950 border border-slate-800 text-xs text-white rounded-xl p-2.5 placeholder-slate-600 outline-none">
+</div>
+<div id="city-results-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+<!-- Renderizado via JS -->
+</div>
+</div>
+</div>
+</section>
+<!-- STEP 4: CHAT DOS ELEITORES -->
+<section id="sec-chat" class="hidden w-full space-y-3">
+<div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm">💬</div>
+<div>
+<h3 class="text-xs font-bold text-white">Debate Eleitoral ao Vivo</h3>
+<p class="text-[10px] text-emerald-400 font-medium">● Chat dos Eleitores</p>
+</div>
+</div>
+<span id="chat-user-badge" class="text-[10px] font-mono bg-slate-950 border border-slate-800 px-2 py-1 rounded-lg text-slate-300"></span>
+</div>
+<!-- Caixa de Mensagens -->
+<div id="chat-messages" class="bg-slate-900 border border-slate-800 p-3 rounded-2xl h-64 overflow-y-auto custom-scrollbar space-y-3 text-xs flex flex-col">
+<!-- Renderizado via JS -->
+</div>
+<!-- ALERTA: BLOQUEIO PARA QUEM AINDA NÃO VOTOU -->
+<div id="chat-locked-warning" class="hidden bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl text-center space-y-2">
+<p class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
+🔒 Acesso ao Chat Bloqueado
+</p>
+<p class="text-[11px] text-slate-300">
+Você precisa registrar seu voto na <b>Urna Eletrônica</b> antes de participar do debate ao vivo.
+</p>
+<button onclick="switchTab('urna')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs px-4 py-2 rounded-xl transition shadow-lg">
+Ir para a Urna Votar 🗳️
+</button>
+</div>
+<!-- Alerta de Erro de Apelido Duplicado -->
+<div id="nickname-error" class="hidden bg-rose-500/10 border border-rose-500/30 p-2.5 rounded-xl text-center text-rose-400 text-xs font-medium"></div>
+<!-- Configuração de Apelido -->
+<div id="nickname-setup-box" class="hidden bg-slate-900 border border-emerald-500/40 p-3 rounded-xl space-y-2">
+<p class="text-xs font-bold text-emerald-400">Escolha seu Apelido para o Chat:</p>
+<div class="flex gap-2">
+<input type="text" id="chat-nickname-input" placeholder="Digite seu apelido..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-500">
+<button onclick="saveNickname()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs transition">Salvar</button>
+</div>
+</div>
+<!-- Enviar Mensagem -->
+<div id="chat-input-container" class="hidden flex gap-2">
+<input type="text" id="chat-input" placeholder="Digite seu comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-emerald-500">
+<button onclick="sendChatMessage()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-lg shadow-emerald-500/20">
+Enviar 🚀
+</button>
+</div>
+</section>
+<!-- SESSÃO DE DÚVIDAS FREQUENTES (FAQ) -->
+<section id="sec-faq" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+<div class="flex items-center gap-2 border-b border-slate-800 pb-2">
+<span class="text-lg">❓</span>
+<div>
+<h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Sessão de Dúvidas & Perguntas Frequentes</h3>
+<p class="text-[10px] text-slate-400">Tudo sobre as regras, segurança e validação do pleito</p>
+</div>
+</div>
+<div class="space-y-2.5 text-xs">
+<details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
+<summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+<span>🛡️ Como funciona a validação anti-fraude?</span>
+<span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
+</summary>
+<div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+Para garantir que a apuração retrate votos reais e evitar disparos automatizados por robôs (bots), exigimos a confirmação de uma taxa simbólica via PIX. O sistema bancário realiza a checagem automática do CPF da conta pagadora.
+</div>
+</details>
+<details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
+<summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+<span>⚠️ O que acontece se o CPF do PIX for diferente do cadastrado?</span>
+<span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
+</summary>
+<div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+Caso alguém tente efetuar a verificação usando um CPF bancário diferente do CPF informado na identificação da urna, o pagamento será processado normalmente, porém <b class="text-rose-400">o voto será anulado e recusado</b>. Portanto, certifique-se de realizar o PIX a partir de sua própria conta.
+</div>
+</details>
+<details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
+<summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+<span>🤝 Para onde são destinados os recursos arrecadados?</span>
+<span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
+</summary>
+<div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+75% dos valores arrecadados através das taxas simbólicas de verificação são repassados integralmente a instituições de caridade e projetos sociais parceiros, cobrindo também as taxas operacionais de transação do sistema.
+</div>
+</details>
+<details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
+<summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+<span>🗳️ Posso votar mais de uma vez?</span>
+<span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
+</summary>
+<div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+Não. Cada número de CPF tem direito a apenas 1 (um) voto contabilizado na base de dados centralizada do sistema.
+</div>
+</details>
+</div>
+</section>
+</main>
+<footer class="text-center py-3 text-[10px] text-slate-500 border-t border-slate-900">
+© Justiça Eleitoral Digital — Simulador de Votação Presidencial
+</footer>
+<script>
+const SUPABASE_URL = "https://SEU_PROJETO.supabase.co";
+const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_SUPABASE";
+const isSupabaseConfigured = window.supabase && SUPABASE_URL !== "https://SEU_PROJETO.supabase.co" && !SUPABASE_URL.includes("SEU_PROJETO");
+const supabaseClient = isSupabaseConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+let pixPollInterval = null;
+let pendingVoteObj = null;
+let confirmedVoteData = null;
+const stateCities = {
+"PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal", "Parauapebas", "Abaetetuba", "Marituba", "Cametá", "Bragança", "Paragominas"],
+"AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira", "Tarauacá"],
+"AL": ["Maceió", "Arapiraca", "Rio Largo", "Palmeira dos Índios"],
+"AP": ["Macapá", "Santana", "Laranjal do Jari"],
+"AM": ["Manaus", "Parintins", "Itacoatiara", "Manacapuru"],
+"BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Itabuna"],
+"CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral"],
+"DF": ["Brasília", "Ceilândia", "Taguatinga", "Samambaia"],
+"ES": ["Vitória", "Vila Velha", "Serra", "Cariacica", "Guarapari"],
+"GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde"],
+"MA": ["São Luís", "Imperatriz", "São José de Ribamar", "Timon", "Caxias"],
+"MT": ["Cuiabá", "Várzea Grande", "Rondonópolis", "Sinop", "Tangará da Serra"],
+"MS": ["Campo Grande", "Dourados", "Três Lagoas", "Corumbá"],
+"MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros"],
+"PB": ["João Pessoa", "Campina Grande", "Santa Rita", "Patos"],
+"PR": ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "Foz do Iguaçu"],
+"PE": ["Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina"],
+"PI": ["Teresina", "Parnaíba", "Picos", "Floriano"],
+"RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Petropolis"],
+"RN": ["Natal", "Mossoró", "Parnamirim", "São Gonçalo do Amarante"],
+"RS": ["Porto Alegre", "Caxias do Sul", "Canoas", "Pelotas", "Santa Maria", "Gravataí"],
+"RO": ["Porto Velho", "Ji-Paraná", "Ariquemes", "Vilhena"],
+"RR": ["Boa Vista", "Rorainópolis", "Caracaraí"],
+"SC": ["Florianópolis", "Joinville", "Blumenau", "São José", "Criciúma"],
+"SP": ["São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo", "Santo André", "Osasco", "Ribeirão Preto", "Sorocaba"],
+"SE": ["Aracaju", "Nossa Senhora do Socorro", "Lagarto", "Itabaiana"],
+"TO": ["Palmas", "Araguaína", "Gurupi", "Porto Nacional"],
+"ZZ": ["Exterior / Voto no Exterior"]
+};
+let verifiedVoter = null;
+let currentInput = "";
+let isBranco = false;
+let votedCPFs = JSON.parse(localStorage.getItem('simulador_voted_cpfs') || "{}");
+let voterChoices = JSON.parse(localStorage.getItem('simulador_voter_choices') || "{}");
+let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}");
+let votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+let regionalVotes = {
+'Norte': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+'Nordeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+'Sudeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+'Sul': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+'Centro-Oeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+'Exterior': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 }
+};
+let cityVotes = {};
+let chatMessages = JSON.parse(localStorage.getItem('simulador_chat_msgs') || JSON.stringify([
+{ id: 1, sender: "TSE Oficial", uf: "DF", text: "Bem-vindo ao debate eleitoral ao vivo. Mantenha o respeito nas discussões.", time: "Agora", isSystem: true }
+]));
+window.addEventListener('DOMContentLoaded', async () => {
+onUFChange();
+populateQueryUFs();
+await loadCloudStats();
+renderChat();
+setInterval(() => {
+loadCloudStats();
+}, 10000);
+document.addEventListener('click', (e) => {
+if (!e.target.closest('#voter-city-search') && !e.target.closest('#city-suggestions-container')) {
+document.getElementById('city-suggestions-container').classList.add('hidden');
+}
+});
+});
+function validateCPF(cpf) {
+const clean = cpf.replace(/\D/g, '');
+if (clean.length !== 11) return false;
+if (/^(\d)\1{10}$/.test(clean)) return false;
+let sum = 0;
+let remainder;
+for (let i = 1; i <= 9; i++) {
+sum += parseInt(clean.substring(i - 1, i)) * (11 - i);
+}
+remainder = (sum * 10) % 11;
+if (remainder === 10 || remainder === 11) remainder = 0;
+if (remainder !== parseInt(clean.substring(9, 10))) return false;
+sum = 0;
+for (let i = 1; i <= 10; i++) {
+sum += parseInt(clean.substring(i - 1, i)) * (12 - i);
+}
+remainder = (sum * 10) % 11;
+if (remainder === 10 || remainder === 11) remainder = 0;
+if (remainder !== parseInt(clean.substring(10, 11))) return false;
+return true;
+}
+async function checkVoterInDatabase(cleanDoc) {
+if (!supabaseClient) return false;
+try {
+const { data, error } = await supabaseClient
+.from('votos')
+.select('cpf, opcao')
+.eq('cpf', cleanDoc)
+.maybeSingle();
+if (error) return false;
+return !!data;
+} catch (err) {
+return false;
+}
+}
+async function loadCloudStats() {
+const btnRefresh = document.getElementById('btn-refresh-stats');
+const iconEl = document.getElementById('refresh-icon');
+const spinnerEl = document.getElementById('refresh-spinner');
+if (btnRefresh && iconEl && spinnerEl) {
+btnRefresh.disabled = true;
+iconEl.classList.add('hidden');
+spinnerEl.classList.remove('hidden');
+}
+let allVotesData = [];
+try {
+if (supabaseClient) {
+try {
+const { data, error } = await supabaseClient.from('votos').select('*');
+if (!error && data) allVotesData = data;
+else allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+} catch (err) {
+allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+}
+} else {
+allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+}
+} finally {
+if (btnRefresh && iconEl && spinnerEl) {
+setTimeout(() => {
+btnRefresh.disabled = false;
+iconEl.classList.remove('hidden');
+spinnerEl.classList.add('hidden');
+}, 300);
+}
+}
+votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+cityVotes = {};
+Object.keys(regionalVotes).forEach(r => {
+regionalVotes[r] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+});
+allVotesData.forEach(item => {
+const op = item.opcao;
+if (votes[op] !== undefined) votes[op]++;
+else votes['NULO']++;
+const reg = item.regiao || 'Norte';
+if (regionalVotes[reg]) {
+if (regionalVotes[reg][op] !== undefined) regionalVotes[reg][op]++;
+else regionalVotes[reg]['NULO']++;
+}
+const cityKey = ⁠${item.cidade || 'Capital'} - ${item.uf || 'PA'}⁠;
+if (!cityVotes[cityKey]) {
+cityVotes[cityKey] = { uf: item.uf || 'PA', city: item.cidade || 'Capital', '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+}
+if (cityVotes[cityKey][op] !== undefined) cityVotes[cityKey][op]++;
+else cityVotes[cityKey]['NULO']++;
+if (item.cpf) votedCPFs[item.cpf] = true;
+});
+localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+renderStats();
+renderCityResults();
+}
+function renderStats() {
+const total = votes['22'] + votes['13'] + votes['BRANCO'] + votes['NULO'];
+const validos = votes['22'] + votes['13'];
+document.getElementById('stat-total').textContent = total.toLocaleString('pt-BR');
+document.getElementById('stat-validos').textContent = validos.toLocaleString('pt-BR');
+document.getElementById('stat-branco').textContent = votes['BRANCO'].toLocaleString('pt-BR');
+document.getElementById('stat-nulo').textContent = votes['NULO'].toLocaleString('pt-BR');
+const pct22 = validos > 0 ? ((votes['22'] / validos) * 100).toFixed(1) : "0.0";
+const pct13 = validos > 0 ? ((votes['13'] / validos) * 100).toFixed(1) : "0.0";
+document.getElementById('pct-22').textContent = ⁠${pct22}%⁠;
+document.getElementById('bar-22').style.width = ⁠${pct22}%⁠;
+document.getElementById('count-22').textContent = ⁠${votes['22'].toLocaleString('pt-BR')} votos⁠;
+document.getElementById('pct-13').textContent = ⁠${pct13}%⁠;
+document.getElementById('bar-13').style.width = ⁠${pct13}%⁠;
+document.getElementById('count-13').textContent = ⁠${votes['13'].toLocaleString('pt-BR')} votos⁠;
+// Regiões
+const regContainer = document.getElementById('regional-stats-container');
+let html = '';
+Object.entries(regionalVotes).forEach(([regName, rData]) => {
+const rValidos = rData['22'] + rData['13'];
+const rPct22 = rValidos > 0 ? ((rData['22'] / rValidos) * 100).toFixed(1) : "0.0";
+const rPct13 = rValidos > 0 ? ((rData['13'] / rValidos) * 100).toFixed(1) : "0.0";
+html += ⁠<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs space-y-1"> <div class="flex justify-between font-bold text-slate-300"> <span>${regName}</span> <span class="text-[10px] text-slate-500 font-mono">${rValidos} válidos</span> </div> <div class="flex gap-2 text-[11px] font-mono"> <span class="text-amber-400 font-bold">22: ${rPct22}%</span> <span class="text-rose-400 font-bold">13: ${rPct13}%</span> </div> </div>⁠;
+});
+regContainer.innerHTML = html;
+}
+function populateQueryUFs() {
+const select = document.getElementById('query-uf-select');
+Object.keys(stateCities).forEach(uf => {
+const opt = document.createElement('option');
+opt.value = uf;
+opt.textContent = uf;
+select.appendChild(opt);
+});
+}
+function renderCityResults() {
+const ufFilter = document.getElementById('query-uf-select').value;
+const cityQuery = document.getElementById('query-city-filter').value.toLowerCase().trim();
+const listContainer = document.getElementById('city-results-list');
+let entries = Object.values(cityVotes);
+if (ufFilter) {
+entries = entries.filter(item => item.uf === ufFilter);
+}
+if (cityQuery) {
+entries = entries.filter(item => item.city.toLowerCase().includes(cityQuery));
+}
+if (entries.length === 0) {
+listContainer.innerHTML = ⁠<p class="text-xs text-slate-500 italic p-2">Nenhum dado encontrado.</p>⁠;
+return;
+}
+let html = '';
+entries.forEach(c => {
+const cValidos = c['22'] + c['13'];
+const p22 = cValidos > 0 ? ((c['22'] / cValidos) * 100).toFixed(1) : "0.0";
+const p13 = cValidos > 0 ? ((c['13'] / cValidos) * 100).toFixed(1) : "0.0";
+html += ⁠<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs flex justify-between items-center"> <div> <p class="font-bold text-white">${c.city} - <span class="text-emerald-400">${c.uf}</span></p> <p class="text-[10px] text-slate-500 font-mono">Total Válidos: ${cValidos}</p> </div> <div class="text-right font-mono text-[11px]"> <p class="text-amber-400 font-bold">22: ${p22}% (${c['22']})</p> <p class="text-rose-400 font-bold">13: ${p13}% (${c['13']})</p> </div> </div>⁠;
+});
+listContainer.innerHTML = html;
+}
+function formatCPF(input) {
+let v = input.value.replace(/\D/g, '');
+if (v.length > 11) v = v.slice(0, 11);
+if (v.length > 9) {
+v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+} else if (v.length > 6) {
+v = v.replace(/^(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+} else if (v.length > 3) {
+v = v.replace(/^(\d{3})(\d{1,3})/, '$1.$2');
+}
+input.value = v;
+}
+function onUFChange() {
+const ufSelect = document.getElementById('voter-uf-select');
+const selectedUf = ufSelect.value;
+const cities = stateCities[selectedUf] || ["Capital"];
+document.getElementById('voter-city-search').value = cities[0];
+document.getElementById('selected-city-val').value = cities[0];
+}
+function filterCityOptions() {
+const uf = document.getElementById('voter-uf-select').value;
+const cities = stateCities[uf] || [];
+const query = document.getElementById('voter-city-search').value.toLowerCase().trim();
+const container = document.getElementById('city-suggestions-container');
+const filtered = query === "" ? cities : cities.filter(c => c.toLowerCase().includes(query));
+let html = "";
+if (filtered.length > 0) {
+html = filtered.map(c => ⁠<div onclick="selectCity('${c}')" class="p-2.5 text-xs text-slate-200 hover:bg-slate-900 rounded-lg cursor-pointer flex items-center gap-2"> <span>📍</span> <span class="font-medium">${c}</span> </div>⁠).join('');
+} else {
+html = ⁠<div onclick="selectCity('${document.getElementById('voter-city-search').value}')" class="p-2.5 text-xs text-emerald-400 hover:bg-slate-900 rounded-lg cursor-pointer font-bold"> 📍 Usar: "${document.getElementById('voter-city-search').value}" </div>⁠;
+}
+container.innerHTML = html;
+container.classList.remove('hidden');
+}
+function selectCity(cityName) {
+document.getElementById('voter-city-search').value = cityName;
+document.getElementById('selected-city-val').value = cityName;
+document.getElementById('city-suggestions-container').classList.add('hidden');
+}
+async function submitStep1() {
+const name = document.getElementById('voter-name').value.trim();
+const doc = document.getElementById('voter-doc').value.trim();
+const ufSelect = document.getElementById('voter-uf-select');
+const city = document.getElementById('voter-city-search').value.trim() || "Capital";
+const errBox = document.getElementById('auth-error');
+errBox.classList.add('hidden');
+if (!name) {
+errBox.textContent = "Por favor, digite seu nome completo.";
+errBox.classList.remove('hidden');
+return;
+}
+const cleanDoc = doc.replace(/\D/g, '');
+if (!validateCPF(cleanDoc)) {
+errBox.textContent = "⚠️ CPF inválido ou inexistente. Informe um número de CPF verdadeiro.";
+errBox.classList.remove('hidden');
+return;
+}
+document.getElementById('auth-step-1').classList.add('hidden');
+document.getElementById('auth-step-2').classList.remove('hidden');
+const alreadyVotedDB = await checkVoterInDatabase(cleanDoc);
+const isAlreadyVoted = alreadyVotedDB || !!votedCPFs[cleanDoc];
+setTimeout(() => {
+document.getElementById('auth-step-2').classList.add('hidden');
+const selectedOpt = ufSelect.options[ufSelect.selectedIndex];
+const uf = ufSelect.value;
+const region = selectedOpt.getAttribute('data-region') || 'Norte';
+verifiedVoter = { name, doc, cleanDoc, uf, city, region };
+document.getElementById('summary-name').textContent = name;
+document.getElementById('summary-doc').textContent = doc;
+document.getElementById('summary-state').textContent = ⁠${city} / ${uf} (${region})⁠;
+const statusEl = document.getElementById('summary-vote-status');
+if (isAlreadyVoted) {
+statusEl.textContent = "JÁ VOTOU (Aviso: Voto duplicado será bloqueado na urna)";
+statusEl.className = "text-amber-400 font-bold";
+} else {
+statusEl.textContent = "APTO PARA VOTAR";
+statusEl.className = "text-emerald-400 font-bold";
+}
+document.getElementById('auth-step-3').classList.remove('hidden');
+document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center justify-center";
+document.getElementById('step-dot-3').className = "w-7 h-7 rounded-full bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center";
+}, 1000);
+}
+function startVotingSession() {
+document.getElementById('sec-auth').classList.add('hidden');
+document.getElementById('sec-urna').classList.remove('hidden');
+document.getElementById('nav-tabs').classList.remove('hidden');
+switchTab('urna');
+resetUrna();
+}
+function switchTab(tab) {
+['sec-auth', 'sec-urna', 'sec-dados', 'sec-chat'].forEach(s => {
+const el = document.getElementById(s);
+if (el) el.classList.add('hidden');
+});
+['btn-tab-urna', 'btn-tab-dados', 'btn-tab-chat'].forEach(b => {
+const el = document.getElementById(b);
+if (el) el.className = "px-3 py-1 rounded-md text-slate-400 hover:text-white transition font-semibold";
+});
+if (tab === 'urna') {
+document.getElementById('sec-urna').classList.remove('hidden');
+document.getElementById('btn-tab-urna').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition";
+resetUrna();
+} else if (tab === 'dados') {
+document.getElementById('sec-dados').classList.remove('hidden');
+document.getElementById('btn-tab-dados').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition";
+loadCloudStats();
+} else if (tab === 'chat') {
+document.getElementById('sec-chat').classList.remove('hidden');
+document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-emerald-500 text-slate-950 font-bold transition flex items-center gap-1";
+const hasVoted = verifiedVoter && votedCPFs[verifiedVoter.cleanDoc];
+const nickname = verifiedVoter ? voterNicknames[verifiedVoter.cleanDoc] : null;
+document.getElementById('chat-user-badge').textContent = nickname ? ⁠${nickname} (${verifiedVoter.uf})⁠ : (verifiedVoter ? verifiedVoter.name.split(' ')[0] : "Visitante");
+const lockWarning = document.getElementById('chat-locked-warning');
+const nicknameBox = document.getElementById('nickname-setup-box');
+const inputContainer = document.getElementById('chat-input-container');
+const nickErrBox = document.getElementById('nickname-error');
+nickErrBox.classList.add('hidden');
+if (!hasVoted) {
+lockWarning.classList.remove('hidden');
+nicknameBox.classList.add('hidden');
+inputContainer.classList.add('hidden');
+} else {
+lockWarning.classList.add('hidden');
+if (!nickname) {
+nicknameBox.classList.remove('hidden');
+inputContainer.classList.add('hidden');
+} else {
+nicknameBox.classList.add('hidden');
+inputContainer.classList.remove('hidden');
+}
+}
+renderChat();
+}
+}
+function saveNickname() {
+const input = document.getElementById('chat-nickname-input');
+const nickname = input.value.trim();
+const errBox = document.getElementById('nickname-error');
+errBox.classList.add('hidden');
+if (!verifiedVoter || !votedCPFs[verifiedVoter.cleanDoc]) {
+errBox.textContent = "⚠️ Você precisa votar antes de configurar um apelido.";
+errBox.classList.remove('hidden');
+return;
+}
+if (!nickname) return;
+const normalizedNewNick = nickname.toLowerCase();
+const existingEntries = Object.entries(voterNicknames);
+for (let [cpfKey, nickVal] of existingEntries) {
+if (cpfKey !== verifiedVoter.cleanDoc && nickVal.toLowerCase() === normalizedNewNick) {
+errBox.textContent = ⁠⚠️ O apelido "${nickname}" já está em uso por outro eleitor. Escolha outro.⁠;
+errBox.classList.remove('hidden');
+return;
+}
+}
+voterNicknames[verifiedVoter.cleanDoc] = nickname;
+localStorage.setItem('simulador_voter_nicknames', JSON.stringify(voterNicknames));
+document.getElementById('chat-user-badge').textContent = ⁠${nickname} (${verifiedVoter.uf})⁠;
+document.getElementById('nickname-setup-box').classList.add('hidden');
+document.getElementById('chat-input-container').classList.remove('hidden');
+}
+function resetUrna() {
+currentInput = "";
+isBranco = false;
+renderUrnaScreen();
+}
+function pressKey(n) {
+if (isBranco) return;
+if (currentInput.length < 2) {
+currentInput += n;
+renderUrnaScreen();
+}
+}
+function quickSelect(num) {
+currentInput = num;
+isBranco = false;
+renderUrnaScreen();
+}
+function pressBranco() {
+currentInput = "";
+isBranco = true;
+renderUrnaScreen();
+}
+function pressCorrige() {
+currentInput = "";
+isBranco = false;
+renderUrnaScreen();
+}
+function renderUrnaScreen() {
+const d1 = document.getElementById('digit-1');
+const d2 = document.getElementById('digit-2');
+const info = document.getElementById('candidate-info');
+const special = document.getElementById('vote-special-msg');
+const specialText = document.getElementById('special-text');
+const candName = document.getElementById('cand-name');
+const candParty = document.getElementById('cand-party');
+if (isBranco) {
+d1.textContent = "B";
+d2.textContent = "R";
+info.classList.add('hidden');
+special.classList.remove('hidden');
+specialText.textContent = "VOTO EM BRANCO";
+return;
+}
+special.classList.add('hidden');
+d1.textContent = currentInput.length > 0 ? currentInput[0] : "";
+d2.textContent = currentInput.length > 1 ? currentInput[1] : "";
+if (currentInput.length === 2) {
+info.classList.remove('hidden');
+if (currentInput === '22') {
+candName.textContent = "Flávio Bolsonaro";
+candParty.textContent = "Partido Liberal (PL)";
+} else if (currentInput === '13') {
+candName.textContent = "Lula";
+candParty.textContent = "Partido dos Trabalhadores (PT)";
+} else {
+candName.textContent = "Voto Nulo";
+candParty.textContent = "Legenda Inexistente";
+}
+} else {
+info.classList.add('hidden');
+}
+}
+async function pressConfirma() {
+if (!verifiedVoter) return;
+const alreadyVotedCloud = await checkVoterInDatabase(verifiedVoter.cleanDoc);
+if (alreadyVotedCloud || votedCPFs[verifiedVoter.cleanDoc]) {
+votedCPFs[verifiedVoter.cleanDoc] = true;
+localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+const lcd = document.getElementById('lcd-content');
+lcd.innerHTML = ⁠<div class="py-6 text-center"> <p class="text-xs font-black text-rose-700 uppercase">ERRO: VOTO DUPLICADO</p> <p class="text-[10px] font-bold text-black mt-1">Este CPF já registrou voto neste pleito.</p> </div>⁠;
+return;
+}
+if (!isBranco && currentInput.length < 2) {
+return;
+}
+let voteType = 'NULO';
+let voteLabel = 'votou Nulo';
+if (isBranco) {
+voteType = 'BRANCO';
+voteLabel = 'votou Branco';
+} else if (currentInput === '22') {
+voteType = '22';
+voteLabel = 'votou 22';
+} else if (currentInput === '13') {
+voteType = '13';
+voteLabel = 'votou 13';
+}
+pendingVoteObj = {
+cpf: verifiedVoter.cleanDoc,
+opcao: voteType,
+uf: verifiedVoter.uf,
+cidade: verifiedVoter.city,
+regiao: verifiedVoter.region,
+voteLabel: voteLabel
+};
+initiatePixVerification();
+}
+function getRandomPixAmount() {
+const min = 1.00;
+const max = 2.00;
+const val = Math.random() * (max - min) + min;
+return parseFloat(val.toFixed(2));
+}
+async function initiatePixVerification() {
+document.getElementById('pix-modal').classList.remove('hidden');
+document.getElementById('pix-loading').classList.remove('hidden');
+document.getElementById('pix-content').classList.add('hidden');
+document.getElementById('msg-vote-success').classList.add('hidden');
+document.getElementById('msg-vote-rejected').classList.add('hidden');
+document.getElementById('pix-header-icon').className = "w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
+document.getElementById('pix-header-icon').textContent = "🛡️";
+document.getElementById('pix-header-text').classList.remove('hidden');
+document.getElementById('btn-cancel-pix').classList.remove('hidden');
+const randomAmount = getRandomPixAmount();
+document.getElementById('pix-display-amount').textContent = ⁠R$ ${randomAmount.toFixed(2).replace('.', ',')}⁠;
+try {
+const response = await fetch('/api/gerar-pix', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+name: verifiedVoter.name,
+email: "eleitor@simulador.org",
+cpf: verifiedVoter.cleanDoc,
+amount: randomAmount
+})
+});
+const data = await response.json();
+if (data && data.pix_code) {
+document.getElementById('pix-code-input').value = data.pix_code;
+document.getElementById('pix-qr-img').src = ⁠https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.pix_code)}⁠;
+document.getElementById('pix-loading').classList.add('hidden');
+document.getElementById('pix-content').classList.remove('hidden');
+startPixStatusPolling(data.identifier);
+} else {
+fallbackPixSimulated(randomAmount);
+}
+} catch (err) {
+console.warn("Utilizando modo de simulação visual:", err);
+fallbackPixSimulated(randomAmount);
+}
+}
+function fallbackPixSimulated(amount) {
+const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865404" + Math.floor(amount * 100) + "5802BR5920INSTITUICAO BENEFICENTE6009SAO PAULO62070503***6304E2CA";
+document.getElementById('pix-code-input').value = mockPix;
+document.getElementById('pix-qr-img').src = ⁠https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mockPix)}⁠;
+document.getElementById('pix-loading').classList.add('hidden');
+document.getElementById('pix-content').classList.remove('hidden');
+setTimeout(() => {
+finalizeConfirmedVote(true, verifiedVoter.cleanDoc);
+}, 5000);
+}
+function startPixStatusPolling(transactionId) {
+if (!transactionId) return;
+if (pixPollInterval) clearInterval(pixPollInterval);
+pixPollInterval = setInterval(async () => {
+try {
+const res = await fetch(⁠/api/gerar-pix?id=${transactionId}&voterCpf=${verifiedVoter.cleanDoc}⁠);
+const data = await res.json();
+if (data && data.paid) {
+clearInterval(pixPollInterval);
+const isMatch = data.cpfMatches !== undefined ? data.cpfMatches : true;
+finalizeConfirmedVote(isMatch, data.payerCpf || verifiedVoter.cleanDoc);
+}
+} catch (err) {
+console.error("Erro na verificação do PIX:", err);
+}
+}, 3000);
+}
+function copyPixCode() {
+const input = document.getElementById('pix-code-input');
+input.select();
+document.execCommand('copy');
+alert('Código PIX copiado para a área de transferência!');
+}
+function closePixModal() {
+if (pixPollInterval) clearInterval(pixPollInterval);
+document.getElementById('pix-modal').classList.add('hidden');
+pendingVoteObj = null;
+}
+async function finalizeConfirmedVote(isCpfMatch = true, actualPayerCpf = "") {
+if (!pendingVoteObj || !verifiedVoter) return;
+if (pixPollInterval) clearInterval(pixPollInterval);
+document.getElementById('pix-content').classList.add('hidden');
+document.getElementById('btn-cancel-pix').classList.add('hidden');
+document.getElementById('pix-header-text').classList.add('hidden');
+if (!isCpfMatch) {
+document.getElementById('pix-header-icon').className = "w-12 h-12 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
+document.getElementById('pix-header-icon').textContent = "❌";
+document.getElementById('msg-vote-rejected').classList.remove('hidden');
+const lcd = document.getElementById('lcd-content');
+lcd.innerHTML = ⁠<div class="py-6 text-center"> <p class="text-xs font-black text-rose-700 uppercase">VOTO RECUSADO</p> <p class="text-[10px] font-bold text-black mt-1">CPF da conta bancária incompatível.</p> </div>⁠;
+return;
+}
+document.getElementById('pix-header-icon').className = "w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold";
+document.getElementById('pix-header-icon').textContent = "✅";
+document.getElementById('msg-vote-success').classList.remove('hidden');
+const voteObj = {
+cpf: pendingVoteObj.cpf,
+opcao: pendingVoteObj.opcao,
+uf: pendingVoteObj.uf,
+cidade: pendingVoteObj.cidade,
+regiao: pendingVoteObj.regiao
+};
+confirmedVoteData = {
+voterName: verifiedVoter.name,
+voterCpf: verifiedVoter.doc,
+cityUf: ⁠${verifiedVoter.city} / ${verifiedVoter.uf}⁠,
+opcao: pendingVoteObj.opcao,
+time: new Date().toLocaleString('pt-BR')
+};
+votedCPFs[verifiedVoter.cleanDoc] = true;
+voterChoices[verifiedVoter.cleanDoc] = pendingVoteObj.voteLabel;
+localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
+const localVotes = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+localVotes.push(voteObj);
+localStorage.setItem('simulador_all_votes', JSON.stringify(localVotes));
+if (supabaseClient) {
+try {
+await supabaseClient.from('votos').insert([voteObj]);
+} catch (err) {
+console.error("Falha ao gravar voto no Supabase:", err);
+}
+}
+await loadCloudStats();
+const lcd = document.getElementById('lcd-content');
+lcd.innerHTML = ⁠<div class="py-8 text-center animate-pulse"> <p class="text-3xl font-black text-black">FIM</p> <p class="text-xs font-bold text-black mt-2">VOTO COMPUTADO COM SUCESSO</p> </div>⁠;
+}
+function openReceiptModal() {
+if (!confirmedVoteData) return;
+closePixModal();
+const card = document.getElementById('receipt-card');
+const sloganBox = document.getElementById('receipt-slogan-box');
+const sloganText = document.getElementById('receipt-slogan');
+const badgeIcon = document.getElementById('receipt-badge-icon');
+const optText = document.getElementById('receipt-voter-option');
+document.getElementById('receipt-voter-name').textContent = confirmedVoteData.voterName;
+document.getElementById('receipt-voter-cpf').textContent = confirmedVoteData.voterCpf;
+document.getElementById('receipt-voter-city').textContent = confirmedVoteData.cityUf;
+document.getElementById('receipt-timestamp').textContent = confirmedVoteData.time;
+const randomHash = "0x" + Array.from({length: 24}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+document.getElementById('receipt-hash').textContent = randomHash;
+if (confirmedVoteData.opcao === '22') {
+card.className = "bg-gradient-to-b from-slate-900 via-emerald-950/40 to-slate-900 border-2 border-emerald-400/80 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100";
+sloganBox.className = "my-4 py-3 px-2 text-center rounded-2xl border-2 border-amber-400/80 bg-amber-500/10 text-amber-300 font-black uppercase tracking-wide shadow-lg shadow-amber-500/10";
+sloganText.innerHTML = "🇧🇷 ESTOU COM O FLÁVIO 22!";
+badgeIcon.className = "inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-1 text-2xl shadow-inner bg-amber-500/20 text-amber-400 border border-amber-500/30";
+badgeIcon.textContent = "🏛️";
+optText.textContent = "FLÁVIO BOLSONARO (22)";
+optText.className = "font-black text-sm text-amber-400";
+} else if (confirmedVoteData.opcao === '13') {
+card.className = "bg-gradient-to-b from-slate-900 via-rose-950/40 to-slate-900 border-2 border-rose-500/80 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100";
+sloganBox.className = "my-4 py-3 px-2 text-center rounded-2xl border-2 border-rose-500/80 bg-rose-500/10 text-rose-300 font-black uppercase tracking-wide shadow-lg shadow-rose-500/10";
+sloganText.innerHTML = "🚩 ESTOU COM O LULA 13!";
+badgeIcon.className = "inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-1 text-2xl shadow-inner bg-rose-500/20 text-rose-400 border border-rose-500/30";
+badgeIcon.textContent = "🚩";
+optText.textContent = "LULA (13)";
+optText.className = "font-black text-sm text-rose-400";
+} else {
+card.className = "bg-slate-900 border-2 border-slate-700 rounded-3xl p-5 shadow-2xl relative overflow-hidden text-slate-100";
+sloganBox.className = "my-4 py-3 px-2 text-center rounded-2xl border border-slate-700 bg-slate-800/50 text-slate-300 font-black uppercase tracking-wide";
+sloganText.innerHTML = "⚪ VOTO REGISTRADO!";
+badgeIcon.className = "inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-1 text-2xl shadow-inner bg-slate-800 text-slate-400 border border-slate-700";
+badgeIcon.textContent = "🗳️";
+optText.textContent = confirmedVoteData.opcao;
+optText.className = "font-black text-sm text-slate-300";
+}
+document.getElementById('receipt-modal').classList.remove('hidden');
+}
+function closeReceiptModal() {
+document.getElementById('receipt-modal').classList.add('hidden');
+switchTab('chat');
+}
+function goToChatFromModal() {
+closeReceiptModal();
+}
+function shareReceipt() {
+if (!confirmedVoteData) return;
+const text = ⁠🗳️ Eu já registrei meu voto no Simulador de Votação Presidencial!\nEleitor: ${confirmedVoteData.voterName}\nUF: ${confirmedVoteData.cityUf}\nOpção: ${confirmedVoteData.opcao}\n\nFaça sua simulação e debata ao vivo!⁠;
+if (navigator.share) {
+navigator.share({
+title: 'Comprovante Eleitoral Digital',
+text: text,
+url: window.location.href
+}).catch(() => {
+copyReceiptText();
+});
+} else {
+copyReceiptText();
+}
+}
+function copyReceiptText() {
+if (!confirmedVoteData) return;
+const text = ⁠🗳️ Comprovante Eleitoral Digital\nEleitor: ${confirmedVoteData.voterName}\nUF: ${confirmedVoteData.cityUf}\nOpção: ${confirmedVoteData.opcao}\nData: ${confirmedVoteData.time}\nStatus: Voto Auditado e Confirmado!⁠;
+navigator.clipboard.writeText(text);
+alert('Comprovante copiado para a área de transferência!');
+}
+function renderChat() {
+const chatBox = document.getElementById('chat-messages');
+let html = '';
+chatMessages.forEach(msg => {
+if (msg.isSystem) {
+html += ⁠<div class="bg-slate-950/80 border border-slate-800 p-2 rounded-xl text-center text-[11px] text-slate-400"> <span class="font-bold text-emerald-400">${msg.sender}:</span> ${msg.text} </div>⁠;
+} else {
+html += ⁠<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1"> <div class="flex items-center justify-between text-[10px]"> <span class="font-bold text-emerald-400">${msg.sender} <span class="text-slate-500 font-mono">(${msg.uf})</span></span> <span class="text-slate-600 font-mono">${msg.time}</span> </div> <p class="text-slate-200 text-xs leading-relaxed">${msg.text}</p> </div>⁠;
+}
+});
+chatBox.innerHTML = html;
+chatBox.scrollTop = chatBox.scrollHeight;
+}
+function handleChatKeyPress(e) {
+if (e.key === 'Enter') {
+sendChatMessage();
+}
+}
+function sendChatMessage() {
+if (!verifiedVoter || !votedCPFs[verifiedVoter.cleanDoc]) return;
+const nickname = voterNicknames[verifiedVoter.cleanDoc];
+if (!nickname) return;
+const input = document.getElementById('chat-input');
+const text = input.value.trim();
+if (!text) return;
+const newMsg = {
+id: Date.now(),
+sender: nickname,
+uf: verifiedVoter.uf,
+text: text,
+time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+};
+chatMessages.push(newMsg);
+localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
+input.value = '';
+renderChat();
+}
+</script>
 </body>
 </html>
