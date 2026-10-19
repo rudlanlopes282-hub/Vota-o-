@@ -47,6 +47,10 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: #10b981;
     }
+    input:disabled, select:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between antialiased selection:bg-emerald-500 selection:text-white">
@@ -89,7 +93,7 @@
             🔐
           </div>
           <h2 class="text-xl font-extrabold text-white">Portal de Identificação Eleitoral</h2>
-          <p class="text-xs text-slate-400 mt-1">Validação segura com chave de dispositivo</p>
+          <p class="text-xs text-slate-400 mt-1">Validação segura com geolocalização travada</p>
         </div>
 
         <!-- Indicador de Passos -->
@@ -113,14 +117,14 @@
 
           <div>
             <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Eleitor</label>
-            <input type="text" id="voter-doc" inputmode="numeric" pattern="[0-9]*" maxlength="14" placeholder="000.000.000-00" oninput="formatCPF(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono transition">
+            <input type="text" id="voter-doc" inputmode="numeric" pattern="[0-9]*" maxlength="14" placeholder="000.000.000-00" oninput="onCPFInput(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono transition">
+            <p id="cpf-status-hint" class="text-[10px] text-emerald-400 mt-0.5 hidden font-semibold">ℹ️ CPF já cadastrado neste dispositivo. Localização travada.</p>
           </div>
 
           <!-- SENHA / PIN DE SEGURANÇA PESSOAL -->
           <div>
             <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-1">PIN / Senha de Acesso (4 dígitos)</label>
             <input type="password" id="voter-pin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" class="w-full bg-slate-950 border border-emerald-500/40 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono transition text-center tracking-widest text-lg">
-            <p class="text-[10px] text-slate-500 mt-1">Necessário para impedir que outras pessoas usem seu CPF.</p>
           </div>
 
           <!-- SELEÇÃO DE ESTADO (UF) -->
@@ -619,11 +623,11 @@
       <div class="space-y-2.5 text-xs">
         <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
           <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-            <span>🛡️ Como o sistema impede roubo de identidade por CPF?</span>
+            <span>🛡️ Como o sistema protege a localização do eleitor?</span>
             <span class="text-emerald-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-            A aplicação exige a combinação de CPF, PIN pessoal de 4 dígitos e um Token criptográfico exclusivo gerado no dispositivo do eleitor.
+            Assim que o eleitor se cadastra e vota pela primeira vez, a localização (Estado e Cidade) fica permanentemente travada para aquele CPF no dispositivo, impedindo alterações posteriores.
           </div>
         </details>
       </div>
@@ -690,6 +694,7 @@
     let voterChoices = JSON.parse(localStorage.getItem('simulador_voter_choices') || "{}");
     let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}");
     let voterDevicePins = JSON.parse(localStorage.getItem('simulador_voter_pins') || "{}");
+    let voterLocations = JSON.parse(localStorage.getItem('simulador_voter_locations') || "{}");
 
     let votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
     let regionalVotes = {
@@ -707,7 +712,6 @@
     ]));
 
     window.addEventListener('DOMContentLoaded', async () => {
-      loadSavedLocation();
       populateQueryUFs();
       await loadCloudStats();
       renderChat();
@@ -723,24 +727,32 @@
       });
     });
 
-    function loadSavedLocation() {
-      const savedUf = localStorage.getItem('simulador_saved_uf');
-      const savedCity = localStorage.getItem('simulador_saved_city');
-
+    function onCPFInput(input) {
+      formatCPF(input);
+      const cleanDoc = input.value.replace(/\D/g, '');
+      const hint = document.getElementById('cpf-status-hint');
       const ufSelect = document.getElementById('voter-uf-select');
-      if (savedUf && stateCities[savedUf]) {
-        ufSelect.value = savedUf;
-      }
-
-      const cities = stateCities[ufSelect.value] || ["Capital"];
       const cityInput = document.getElementById('voter-city-search');
-      
-      if (savedCity && cities.includes(savedCity)) {
-        cityInput.value = savedCity;
-        document.getElementById('selected-city-val').value = savedCity;
+
+      if (cleanDoc.length === 11) {
+        if (voterLocations[cleanDoc]) {
+          const loc = voterLocations[cleanDoc];
+          ufSelect.value = loc.uf;
+          cityInput.value = loc.city;
+          document.getElementById('selected-city-val').value = loc.city;
+
+          ufSelect.disabled = true;
+          cityInput.disabled = true;
+          hint.classList.remove('hidden');
+        } else {
+          ufSelect.disabled = false;
+          cityInput.disabled = false;
+          hint.classList.add('hidden');
+        }
       } else {
-        cityInput.value = cities[0];
-        document.getElementById('selected-city-val').value = cities[0];
+        ufSelect.disabled = false;
+        cityInput.disabled = false;
+        hint.classList.add('hidden');
       }
     }
 
@@ -875,7 +887,10 @@
     }
 
     function filterCityOptions() {
-      const uf = document.getElementById('voter-uf-select').value;
+      const ufSelect = document.getElementById('voter-uf-select');
+      if (ufSelect.disabled) return;
+
+      const uf = ufSelect.value;
       const cities = stateCities[uf] || [];
       const query = document.getElementById('voter-city-search').value.toLowerCase().trim();
       const container = document.getElementById('city-suggestions-container');
@@ -947,9 +962,11 @@
         localStorage.setItem('simulador_voter_pins', JSON.stringify(voterDevicePins));
       }
 
-      // Salva automaticamente o estado e cidade para os próximos acessos
-      localStorage.setItem('simulador_saved_uf', ufSelect.value);
-      localStorage.setItem('simulador_saved_city', city);
+      // Salva a localização fixa vinculada ao CPF
+      if (!voterLocations[cleanDoc]) {
+        voterLocations[cleanDoc] = { uf: ufSelect.value, city: city };
+        localStorage.setItem('simulador_voter_locations', JSON.stringify(voterLocations));
+      }
 
       document.getElementById('auth-step-1').classList.add('hidden');
       document.getElementById('auth-step-2').classList.remove('hidden');
@@ -960,15 +977,15 @@
       setTimeout(() => {
         document.getElementById('auth-step-2').classList.add('hidden');
 
-        const selectedOpt = ufSelect.options[ufSelect.selectedIndex];
-        const uf = ufSelect.value;
-        const region = selectedOpt.getAttribute('data-region') || 'Norte';
+        const lockedLoc = voterLocations[cleanDoc] || { uf: ufSelect.value, city: city };
+        const selectedOpt = ufSelect.querySelector(`option[value="${lockedLoc.uf}"]`);
+        const region = selectedOpt ? selectedOpt.getAttribute('data-region') : 'Norte';
 
-        verifiedVoter = { name, doc, cleanDoc, pin, uf, city, region, token: deviceSessionToken };
+        verifiedVoter = { name, doc, cleanDoc, pin, uf: lockedLoc.uf, city: lockedLoc.city, region, token: deviceSessionToken };
 
         document.getElementById('summary-name').textContent = name;
         document.getElementById('summary-doc').textContent = doc;
-        document.getElementById('summary-state').textContent = `${city} / ${uf} (${region})`;
+        document.getElementById('summary-state').textContent = `${lockedLoc.city} / ${lockedLoc.uf} (${region})`;
 
         const statusEl = document.getElementById('summary-vote-status');
 
@@ -983,7 +1000,7 @@
             confirmedVoteData = {
               voterName: name,
               voterCpf: doc,
-              cityUf: `${dbRecord.cidade || city} / ${dbRecord.uf || uf}`,
+              cityUf: `${dbRecord.cidade || lockedLoc.city} / ${dbRecord.uf || lockedLoc.uf}`,
               opcao: dbRecord.opcao,
               time: dbRecord.created_at ? new Date(dbRecord.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')
             };
