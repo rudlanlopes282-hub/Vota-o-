@@ -973,7 +973,6 @@
           statusEl.textContent = "JÁ VOTOU (Aviso: Voto duplicado será bloqueado na urna)";
           statusEl.className = "text-amber-400 font-bold";
 
-          // Recupera dados salvos localmente ou da nuvem para preparar o comprovante se necessário
           const savedReceipt = localStorage.getItem('simulador_receipt_' + cleanDoc);
           if (savedReceipt) {
             confirmedVoteData = JSON.parse(savedReceipt);
@@ -1175,22 +1174,22 @@
         votedCPFs[verifiedVoter.cleanDoc] = true;
         localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
 
-        // Se ainda não tiver os dados do comprovante em memória, preenche
-        if (!confirmedVoteData) {
-          const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
-          if (savedReceipt) {
-            confirmedVoteData = JSON.parse(savedReceipt);
-          } else if (dbRecord) {
-            confirmedVoteData = {
-              voterName: verifiedVoter.name,
-              voterCpf: verifiedVoter.doc,
-              cityUf: `${dbRecord.cidade || verifiedVoter.city} / ${dbRecord.uf || verifiedVoter.uf}`,
-              opcao: dbRecord.opcao,
-              time: dbRecord.created_at ? new Date(dbRecord.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')
-            };
-          }
+        let userOption = dbRecord?.opcao || voterChoices[verifiedVoter.cleanDoc] || 'Votado';
+
+        const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
+        if (savedReceipt) {
+          confirmedVoteData = JSON.parse(savedReceipt);
+        } else {
+          confirmedVoteData = {
+            voterName: verifiedVoter.name,
+            voterCpf: verifiedVoter.doc,
+            cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
+            opcao: userOption,
+            time: new Date().toLocaleString('pt-BR')
+          };
+          localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
         }
-        
+
         const lcd = document.getElementById('lcd-content');
         lcd.innerHTML = `
           <div class="py-3 text-center space-y-2">
@@ -1381,7 +1380,6 @@
         time: new Date().toLocaleString('pt-BR')
       };
 
-      // Salva localmente caso o usuário feche a aba
       localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
 
       votedCPFs[verifiedVoter.cleanDoc] = true;
@@ -1412,9 +1410,25 @@
       `;
     }
 
-    function openReceiptModal() {
+    async function openReceiptModal() {
+      if (!confirmedVoteData && verifiedVoter) {
+        const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
+        if (savedReceipt) {
+          confirmedVoteData = JSON.parse(savedReceipt);
+        } else {
+          const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
+          confirmedVoteData = {
+            voterName: verifiedVoter.name,
+            voterCpf: verifiedVoter.doc,
+            cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
+            opcao: dbRecord?.opcao || '22',
+            time: new Date().toLocaleString('pt-BR')
+          };
+        }
+      }
+
       if (!confirmedVoteData) {
-        alert("Comprovante indisponível no momento.");
+        alert("Não foi possível carregar os dados do eleitor.");
         return;
       }
 
