@@ -523,7 +523,7 @@
 
       </section>
 
-      <!-- BOTÃO DE VER COMPROVANTE ENTRE A URNA E A SEÇÃO DE DÚVIDAS (EXIBIDO APENAS SE JÁ VOTOU) -->
+      <!-- BOTÃO DE VER COMPROVANTE ENTRE A URNA E A SEÇÃO DE DÚVIDAS (EXIBIDO AUTOMATICAMENTE SE JÁ VOTOU) -->
       <div id="post-vote-receipt-container" class="hidden w-full">
         <button onclick="openReceiptModal()" class="w-full bg-slate-900 hover:bg-slate-800 border border-blue-500/40 p-3 rounded-2xl flex items-center justify-between shadow-lg transition group">
           <div class="flex items-center gap-2.5">
@@ -1110,12 +1110,23 @@
       }, 1000);
     }
 
-    function startVotingSession() {
+    async function startVotingSession() {
       document.getElementById('sec-auth').classList.add('hidden');
       document.getElementById('sec-urna').classList.remove('hidden');
       document.getElementById('nav-tabs').classList.remove('hidden');
       switchTab('urna');
       resetUrna();
+
+      // Verifica imediatamente ao entrar na cabine se este usuário já votou
+      if (verifiedVoter) {
+        const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
+        const isAlreadyVoted = !!dbRecord || !!votedCPFs[verifiedVoter.cleanDoc];
+        if (isAlreadyVoted) {
+          document.getElementById('post-vote-receipt-container').classList.remove('hidden');
+        } else {
+          document.getElementById('post-vote-receipt-container').classList.add('hidden');
+        }
+      }
     }
 
     function switchTab(tab) {
@@ -1316,7 +1327,7 @@
           </div>
         `;
 
-        // Exibe o botão de comprovante entre a urna e as dúvidas para quem já votou
+        // Exibe o botão de comprovante entre a urna e as dúvidas
         document.getElementById('post-vote-receipt-container').classList.remove('hidden');
         return;
       }
