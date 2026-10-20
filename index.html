@@ -425,16 +425,31 @@
             </div>
           </div>
 
-          <!-- MODAL COMPROVANTE FORMATO TIKTOK / REELS (9:16) COM FOTO DE FUNDO REAL -->
+          <!-- MODAL COMPROVANTE SIMPLES / COM OPÇÃO DE ADQUIRIR O CARD COM FOTO -->
           <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 overflow-y-auto">
             <div class="w-full max-w-xs my-auto space-y-3">
               
-              <!-- CARTAZ PROPORÇÃO 9:16 COM BACKGROUND DE IMAGEM -->
-              <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-end p-4 pb-14 text-white bg-cover bg-center">
+              <!-- CARTAZ PROPORÇÃO 9:16 SIMPLES (SEM FOTO) -->
+              <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-between p-5 text-white bg-[#090d16]">
                 
+                <div class="space-y-1 text-center pt-2">
+                  <p class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡</p>
+                  <p class="text-xs font-bold text-slate-300">PAINEL BRASIL • ELEIÇÕES 2026</p>
+                </div>
+
+                <div class="my-auto text-center space-y-3">
+                  <div class="w-16 h-16 bg-slate-900 border border-slate-700 rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-inner">
+                    🏛️
+                  </div>
+                  <div class="space-y-1">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">PRESIDENTE</p>
+                    <p id="receipt-option-text" class="text-lg font-black text-emerald-400">FLÁVIO — 22</p>
+                  </div>
+                </div>
+
                 <!-- SOBREPOSIÇÃO DE DADOS DO ELEITOR NA PARTE INFERIOR -->
                 <div class="relative z-10 space-y-2 bg-black/75 backdrop-blur-md p-3.5 rounded-2xl border border-white/20 shadow-2xl text-center">
-                  <p class="text-[9px] uppercase tracking-widest opacity-75 font-bold">Participante Registrado(a)</p>
+                  <p class="text-[9px] uppercase tracking-widest opacity-75 font-bold">PARTICIPANTE REGISTRADO(A)</p>
                   
                   <!-- NOME COM BOTÃO DE PRIVACIDADE -->
                   <div class="flex items-center justify-center gap-2">
@@ -450,6 +465,12 @@
                 </div>
 
               </div>
+
+              <!-- BOTÃO PARA ADQUIRIR O CARD COM FOTO (PIX) -->
+              <button onclick="openApoiadorModalFromReceipt()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+                <span>🎨</span>
+                <span>Adquirir Card com Foto do Candidato (Pix R$ 2,00)</span>
+              </button>
 
               <!-- BOTÕES DE AÇÃO -->
               <div class="space-y-2">
@@ -1357,12 +1378,17 @@
     }
 
     function openApoiadorModal() {
+      document.getElementById('receipt-modal').classList.add('hidden');
       document.getElementById('pix-modal').classList.remove('hidden');
       document.getElementById('pix-options-box').classList.remove('hidden');
       document.getElementById('pix-loading').classList.add('hidden');
       document.getElementById('pix-content').classList.add('hidden');
       document.getElementById('msg-vote-success').classList.add('hidden');
       document.getElementById('btn-cancel-pix').classList.remove('hidden');
+    }
+
+    function openApoiadorModalFromReceipt() {
+      openApoiadorModal();
     }
 
     async function requestPixCheckout(amountValue) {
@@ -1493,7 +1519,6 @@
       downloadBtn.href = canvas.toDataURL('image/png');
     }
 
-    // Variáveis de privacidade para o comprovante
     let privacyHiddenName = false;
     let privacyHiddenLocation = false;
 
@@ -1539,19 +1564,17 @@
 
       const nameText = document.getElementById('receipt-voter-name');
       const locationText = document.getElementById('receipt-voter-location');
-      const receiptCard = document.getElementById('receipt-card');
+      const optionText = document.getElementById('receipt-option-text');
 
       nameText.textContent = privacyHiddenName ? "🔒 [DADO OCULTO]" : confirmedVoteData.voterName;
       locationText.textContent = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : confirmedVoteData.cityUf;
 
-      // Busca as imagens diretamente na raiz do repositório
       if (confirmedVoteData.opcao === '22') {
-        receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
+        optionText.textContent = "FLÁVIO — 22";
       } else if (confirmedVoteData.opcao === '13') {
-        receiptCard.style.backgroundImage = "url('comprovante-13.jpg')";
+        optionText.textContent = "LULA — 13";
       } else {
-        receiptCard.style.backgroundImage = "none";
-        receiptCard.style.backgroundColor = "#090d16";
+        optionText.textContent = "VOTO EM BRANCO/NULO";
       }
 
       document.getElementById('receipt-modal').classList.remove('hidden');
@@ -1725,7 +1748,7 @@
       if (!text) return;
 
       const uf = verifiedVoter.uf;
-      const voteLabel = voterChoices[verifiedVoter.cleanDoc] / "votou";
+      const voteLabel = voterChoices[verifiedVoter.cleanDoc] || "votou";
 
       chatMessages.push({
         id: Date.now(),
