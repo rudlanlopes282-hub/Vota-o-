@@ -406,12 +406,12 @@
                 </div>
 
                 <!-- CANVAS OCORRENDO EM SEGUNDO PLANO -->
-                <canvas id="cardCanvas" width="800" height="800" class="hidden"></canvas>
+                <canvas id="cardCanvas" width="800" height="1422" class="hidden"></canvas>
 
                 <div class="space-y-2">
                   <a id="downloadCardBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2" download="meu-card-apoiador.png">
                     <span>📥</span>
-                    <span>Baixar Card de Apoiador</span>
+                    <span>Baixar Card de Apoiador 9:16</span>
                   </a>
                   <button onclick="goToChatFromModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
                     Entrar no Chat VIP de Debate 💬
@@ -425,58 +425,53 @@
             </div>
           </div>
 
-          <!-- MODAL COMPROVANTE VIRAL ESTILO CARTAZ -->
-          <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 overflow-y-auto">
-            <div class="w-full max-w-sm my-auto space-y-4">
+          <!-- MODAL COMPROVANTE FORMATO TIKTOK / REELS (9:16) COM FOTO DO CANDIDATO E SOBREPOSIÇÃO -->
+          <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 overflow-y-auto">
+            <div class="w-full max-w-xs my-auto space-y-3">
               
-              <!-- CARD DO COMPROVANTE ESTILIZADO -->
-              <div id="receipt-card" class="w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 p-5 text-white space-y-4 transition-all duration-300">
+              <!-- CARTAZ PROPORÇÃO 9:16 (STORY / TIKTOK / REELS) -->
+              <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 flex flex-col justify-between p-4 text-white">
                 
-                <!-- AVISO DE ARTE ILUSTRATIVA NO TOPO -->
-                <div class="text-[9px] font-black uppercase tracking-widest text-center opacity-70 border-b pb-2" id="receipt-top-banner">
-                  ⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡
-                </div>
+                <!-- BACKGROUND DEGRADÊ / ARTE CANDIDATO -->
+                <div id="receipt-bg-overlay" class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/95 z-0 pointer-events-none"></div>
 
-                <!-- CABEÇALHO DO COMPROVANTE -->
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <span class="text-xl">📊</span>
-                    <div>
-                      <h4 class="text-xs font-black uppercase tracking-wider">Painel Brasil</h4>
-                      <p class="text-[9px] opacity-75 font-bold">Eleições 2026 • 2º Turno</p>
-                    </div>
+                <!-- TOPO: AVISO ILUSTRATIVO + LOGO -->
+                <div class="relative z-10 space-y-1 text-center">
+                  <p class="text-[8px] font-black uppercase tracking-widest opacity-80" id="receipt-top-banner">
+                    ⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡
+                  </p>
+                  <div class="flex items-center justify-center gap-1.5 pt-1">
+                    <span class="text-sm">📊</span>
+                    <span class="text-[10px] font-black uppercase tracking-wider">Painel Brasil • Eleições 2026</span>
                   </div>
-                  <span id="receipt-badge-turn" class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold border">VOTO COMPUTADO</span>
                 </div>
 
-                <!-- CONTEÚDO VISUAL DINÂMICO (CANDIDATO) -->
-                <div id="receipt-dynamic-box" class="p-4 rounded-2xl text-center space-y-2 shadow-inner border">
-                  <div id="receipt-badge-icon" class="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-lg"></div>
+                <!-- CENTRO: FOTO OU IDENTIDADE DO CANDIDATO & NÚMERO -->
+                <div class="relative z-10 text-center space-y-2 my-auto">
+                  <div id="receipt-candidate-avatar" class="w-20 h-20 rounded-2xl mx-auto flex items-center justify-center text-4xl shadow-2xl border-2">
+                    🏛️
+                  </div>
                   <div>
-                    <p class="text-[10px] uppercase font-bold tracking-widest opacity-80" id="receipt-cargo-label">Presidente</p>
-                    <p id="receipt-candidate-title" class="text-base font-black uppercase tracking-wide"></p>
+                    <p class="text-[10px] uppercase font-bold tracking-widest opacity-75" id="receipt-cargo-label">PRESIDENTE</p>
+                    <p id="receipt-candidate-title" class="text-lg font-black uppercase tracking-wide drop-shadow-md"></p>
                   </div>
                 </div>
 
-                <!-- DADOS DO PARTICIPANTE COM BOTÕES DE OCULTAR (OLHINHO 👁️) -->
-                <div class="space-y-2 text-xs font-mono p-3.5 rounded-2xl border shadow-inner text-center relative" id="receipt-user-box">
-                  <p class="text-[9px] uppercase tracking-widest opacity-75 font-bold">Participante Registrado(a)</p>
+                <!-- BASE: DADOS DO ELEITOR SOBREPOSTOS COM O BOTÃO DE OLHO (👁️) -->
+                <div class="relative z-10 space-y-2 bg-black/60 backdrop-blur-md p-3 rounded-2xl border shadow-xl text-center" id="receipt-user-box">
+                  <p class="text-[8px] uppercase tracking-widest opacity-70 font-bold">Participante Registrado(a)</p>
                   
                   <!-- NOME COM BOTÃO DE PRIVACIDADE -->
                   <div class="flex items-center justify-center gap-2">
-                    <p class="text-sm font-black uppercase" id="receipt-voter-name">---</p>
-                    <button onclick="togglePrivacy('name')" class="text-xs opacity-70 hover:opacity-100 transition" title="Ocultar/Mostrar Nome">👁️</button>
+                    <p class="text-xs font-black uppercase tracking-wide truncate max-w-[180px]" id="receipt-voter-name">---</p>
+                    <button onclick="togglePrivacy('name')" class="text-xs opacity-80 hover:opacity-100 transition p-1" title="Ocultar/Mostrar Nome">👁️</button>
                   </div>
 
                   <!-- LOCALIDADE COM BOTÃO DE PRIVACIDADE -->
                   <div class="flex items-center justify-center gap-2">
                     <p id="receipt-voter-location" class="text-[10px] font-bold">---</p>
-                    <button onclick="togglePrivacy('location')" class="text-xs opacity-70 hover:opacity-100 transition" title="Ocultar/Mostrar Local">👁️</button>
+                    <button onclick="togglePrivacy('location')" class="text-xs opacity-80 hover:opacity-100 transition p-1" title="Ocultar/Mostrar Local">👁️</button>
                   </div>
-                </div>
-
-                <div class="text-[9px] text-center opacity-60 font-mono">
-                  Brasil Sempre em Frente • Democracia e Respeito
                 </div>
 
               </div>
@@ -1492,37 +1487,32 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.fillStyle = '#131c2e';
-      ctx.fillRect(30, 30, 740, 740);
+      ctx.fillRect(40, 40, 720, 1342);
 
-      ctx.strokeStyle = opcaoVoto === '13' ? '#f43f5e' : '#f59e0b';
-      ctx.lineWidth = 8;
-      ctx.strokeRect(40, 40, 720, 720);
+      ctx.strokeStyle = opcaoVoto === '13' ? '#f43f5e' : '#10b981';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(50, 50, 700, 1322);
 
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 36px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('PAINEL BRASIL • PESQUISA 2026', 400, 110);
-
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '24px Arial';
-      ctx.fillText('EU JÁ REGISTREI MEU VOTO EM:', 400, 260);
+      ctx.fillText('PAINEL BRASIL • 2026', 400, 130);
 
       let candText = opcaoVoto === '22' ? 'FLÁVIO BOLSONARO (22)' : (opcaoVoto === '13' ? 'LULA (13)' : opcaoVoto);
-      ctx.fillStyle = opcaoVoto === '13' ? '#f43f5e' : '#f59e0b';
-      ctx.font = 'bold 46px Arial';
-      ctx.fillText(candText, 400, 340);
+      ctx.fillStyle = opcaoVoto === '13' ? '#f43f5e' : '#10b981';
+      ctx.font = 'bold 54px Arial';
+      ctx.fillText(candText, 400, 700);
+
+      const displayName = privacyHiddenName ? "[Anônimo]" : nomeUsuario;
+      const displayLoc = privacyHiddenLocation ? "[Local Oculto]" : localidade;
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 28px Arial';
-      ctx.fillText(`Apoiador: ${nomeUsuario}`, 400, 480);
+      ctx.font = 'bold 34px Arial';
+      ctx.fillText(`Participante: ${displayName}`, 400, 1150);
 
       ctx.fillStyle = '#38bdf8';
-      ctx.font = '22px Arial';
-      ctx.fillText(`📍 ${localidade}`, 400, 520);
-
-      ctx.fillStyle = '#64748b';
-      ctx.font = 'italic 20px Arial';
-      ctx.fillText('Vote você também e acompanhe a pesquisa em tempo real!', 400, 700);
+      ctx.font = '28px Arial';
+      ctx.fillText(`📍 ${displayLoc}`, 400, 1210);
 
       const downloadBtn = document.getElementById('downloadCardBtn');
       downloadBtn.href = canvas.toDataURL('image/png');
@@ -1574,50 +1564,42 @@
 
       const nameText = document.getElementById('receipt-voter-name');
       const locationText = document.getElementById('receipt-voter-location');
-      const badgeIcon = document.getElementById('receipt-badge-icon');
+      const badgeIcon = document.getElementById('receipt-candidate-avatar');
       const candidateTitle = document.getElementById('receipt-candidate-title');
       const receiptCard = document.getElementById('receipt-card');
-      const dynamicBox = document.getElementById('receipt-dynamic-box');
-      const userBox = document.getElementById('receipt-user-box');
       const topBanner = document.getElementById('receipt-top-banner');
-      const badgeTurn = document.getElementById('receipt-badge-turn');
+      const userBox = document.getElementById('receipt-user-box');
 
       nameText.textContent = privacyHiddenName ? "🔒 [DADO OCULTO]" : confirmedVoteData.voterName;
       locationText.textContent = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : confirmedVoteData.cityUf;
 
       if (confirmedVoteData.opcao === '22') {
-        // Estilo Neon Verde / Campanha 22
-        receiptCard.className = "w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 border-emerald-500/60 bg-gradient-to-b from-slate-900 via-slate-950 to-black p-5 text-white space-y-4 shadow-emerald-500/10";
-        topBanner.className = "text-[9px] font-black uppercase tracking-widest text-center text-emerald-400 border-b border-emerald-500/30 pb-2";
-        badgeTurn.className = "text-[10px] bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 px-2 py-0.5 rounded-full font-mono font-bold";
-        dynamicBox.className = "p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/40 text-center space-y-2 shadow-inner";
-        badgeIcon.className = "w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400";
+        // Estilo Vertical Reels 9:16 - Flávio Bolsonaro (Verde Neon)
+        receiptCard.className = "w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-emerald-500/80 bg-gradient-to-b from-emerald-950 via-slate-950 to-black flex flex-col justify-between p-4 text-white shadow-emerald-500/20";
+        topBanner.className = "text-[8px] font-black uppercase tracking-widest text-center text-emerald-400";
+        badgeIcon.className = "w-20 h-20 rounded-2xl mx-auto flex items-center justify-center text-3xl font-bold shadow-2xl bg-emerald-500/20 border-2 border-emerald-500/60 text-emerald-400";
         badgeIcon.textContent = "🏛️";
-        candidateTitle.textContent = "22 — Flávio Bolsonaro";
-        candidateTitle.className = "text-base font-black uppercase tracking-wide text-emerald-400";
-        userBox.className = "space-y-2 text-xs font-mono p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-950/10 shadow-inner text-center relative";
+        candidateTitle.textContent = "FLÁVIO — 22";
+        candidateTitle.className = "text-lg font-black uppercase tracking-wide text-emerald-400 drop-shadow-lg";
+        userBox.className = "relative z-10 space-y-1.5 bg-emerald-950/40 backdrop-blur-md p-3 rounded-2xl border border-emerald-500/40 shadow-xl text-center";
       } else if (confirmedVoteData.opcao === '13') {
-        // Estilo Neon Vermelho / Campanha 13
-        receiptCard.className = "w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 border-rose-500/60 bg-gradient-to-b from-slate-900 via-slate-950 to-black p-5 text-white space-y-4 shadow-rose-500/10";
-        topBanner.className = "text-[9px] font-black uppercase tracking-widest text-center text-rose-400 border-b border-rose-500/30 pb-2";
-        badgeTurn.className = "text-[10px] bg-rose-500/20 border border-rose-500/40 text-rose-400 px-2 py-0.5 rounded-full font-mono font-bold";
-        dynamicBox.className = "p-4 rounded-2xl bg-rose-950/20 border border-rose-500/40 text-center space-y-2 shadow-inner";
-        badgeIcon.className = "w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-lg bg-rose-500/20 border border-rose-500/40 text-rose-400";
+        // Estilo Vertical Reels 9:16 - Lula (Vermelho Neon)
+        receiptCard.className = "w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-rose-500/80 bg-gradient-to-b from-rose-950 via-slate-950 to-black flex flex-col justify-between p-4 text-white shadow-rose-500/20";
+        topBanner.className = "text-[8px] font-black uppercase tracking-widest text-center text-rose-400";
+        badgeIcon.className = "w-20 h-20 rounded-2xl mx-auto flex items-center justify-center text-3xl font-bold shadow-2xl bg-rose-500/20 border-2 border-rose-500/60 text-rose-400";
         badgeIcon.textContent = "🚩";
-        candidateTitle.textContent = "13 — Lula";
-        candidateTitle.className = "text-base font-black uppercase tracking-wide text-rose-400";
-        userBox.className = "space-y-2 text-xs font-mono p-3.5 rounded-2xl border border-rose-500/30 bg-rose-950/10 shadow-inner text-center relative";
+        candidateTitle.textContent = "LULA — 13";
+        candidateTitle.className = "text-lg font-black uppercase tracking-wide text-rose-400 drop-shadow-lg";
+        userBox.className = "relative z-10 space-y-1.5 bg-rose-950/40 backdrop-blur-md p-3 rounded-2xl border border-rose-500/40 shadow-xl text-center";
       } else {
-        // Estilo Neutro (Branco/Nulo)
-        receiptCard.className = "w-full rounded-3xl shadow-2xl relative overflow-hidden border-2 border-blue-500/40 bg-gradient-to-b from-slate-900 to-slate-950 p-5 text-white space-y-4";
-        topBanner.className = "text-[9px] font-black uppercase tracking-widest text-center text-blue-400 border-b border-blue-500/30 pb-2";
-        badgeTurn.className = "text-[10px] bg-blue-500/20 border border-blue-500/40 text-blue-400 px-2 py-0.5 rounded-full font-mono font-bold";
-        dynamicBox.className = "p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-center space-y-2 shadow-inner";
-        badgeIcon.className = "w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-lg bg-slate-800 border border-slate-700 text-slate-300";
+        // Neutro
+        receiptCard.className = "w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-blue-500/60 bg-gradient-to-b from-slate-900 via-slate-950 to-black flex flex-col justify-between p-4 text-white";
+        topBanner.className = "text-[8px] font-black uppercase tracking-widest text-center text-blue-400";
+        badgeIcon.className = "w-20 h-20 rounded-2xl mx-auto flex items-center justify-center text-3xl font-bold shadow-2xl bg-slate-800 border-2 border-slate-700 text-slate-300";
         badgeIcon.textContent = "📊";
         candidateTitle.textContent = confirmedVoteData.opcao;
-        candidateTitle.className = "text-base font-black uppercase tracking-wide text-slate-200";
-        userBox.className = "space-y-2 text-xs font-mono p-3.5 rounded-2xl border border-slate-800 bg-black/40 shadow-inner text-center relative";
+        candidateTitle.className = "text-lg font-black uppercase tracking-wide text-slate-200";
+        userBox.className = "relative z-10 space-y-1.5 bg-slate-900/80 backdrop-blur-md p-3 rounded-2xl border border-slate-800 shadow-xl text-center";
       }
 
       document.getElementById('receipt-modal').classList.remove('hidden');
