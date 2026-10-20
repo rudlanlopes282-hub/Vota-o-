@@ -425,45 +425,20 @@
             </div>
           </div>
 
-          <!-- MODAL COMPROVANTE FORMATO TIKTOK / REELS (9:16) COM FOTO DO CANDIDATO E SOBREPOSIÇÃO -->
+          <!-- MODAL COMPROVANTE FORMATO TIKTOK / REELS (9:16) COM FOTO DE FUNDO REAL -->
           <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 overflow-y-auto">
             <div class="w-full max-w-xs my-auto space-y-3">
               
-              <!-- CARTAZ PROPORÇÃO 9:16 (STORY / TIKTOK / REELS) -->
-              <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 flex flex-col justify-between p-4 text-white">
+              <!-- CARTAZ PROPORÇÃO 9:16 COM BACKGROUND DE IMAGEM -->
+              <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-end p-5 text-white bg-cover bg-center">
                 
-                <!-- BACKGROUND DEGRADÊ / ARTE CANDIDATO -->
-                <div id="receipt-bg-overlay" class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/95 z-0 pointer-events-none"></div>
-
-                <!-- TOPO: AVISO ILUSTRATIVO + LOGO -->
-                <div class="relative z-10 space-y-1 text-center">
-                  <p class="text-[8px] font-black uppercase tracking-widest opacity-80" id="receipt-top-banner">
-                    ⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡
-                  </p>
-                  <div class="flex items-center justify-center gap-1.5 pt-1">
-                    <span class="text-sm">📊</span>
-                    <span class="text-[10px] font-black uppercase tracking-wider">Painel Brasil • Eleições 2026</span>
-                  </div>
-                </div>
-
-                <!-- CENTRO: FOTO OU IDENTIDADE DO CANDIDATO & NÚMERO -->
-                <div class="relative z-10 text-center space-y-2 my-auto">
-                  <div id="receipt-candidate-avatar" class="w-20 h-20 rounded-2xl mx-auto flex items-center justify-center text-4xl shadow-2xl border-2">
-                    🏛️
-                  </div>
-                  <div>
-                    <p class="text-[10px] uppercase font-bold tracking-widest opacity-75" id="receipt-cargo-label">PRESIDENTE</p>
-                    <p id="receipt-candidate-title" class="text-lg font-black uppercase tracking-wide drop-shadow-md"></p>
-                  </div>
-                </div>
-
-                <!-- BASE: DADOS DO ELEITOR SOBREPOSTOS COM O BOTÃO DE OLHO (👁️) -->
-                <div class="relative z-10 space-y-2 bg-black/60 backdrop-blur-md p-3 rounded-2xl border shadow-xl text-center" id="receipt-user-box">
-                  <p class="text-[8px] uppercase tracking-widest opacity-70 font-bold">Participante Registrado(a)</p>
+                <!-- SOBREPOSIÇÃO DE DADOS DO ELEITOR NA PARTE INFERIOR -->
+                <div class="relative z-10 space-y-2 bg-black/75 backdrop-blur-md p-3.5 rounded-2xl border border-white/20 shadow-2xl text-center">
+                  <p class="text-[9px] uppercase tracking-widest opacity-75 font-bold">Participante Registrado(a)</p>
                   
                   <!-- NOME COM BOTÃO DE PRIVACIDADE -->
                   <div class="flex items-center justify-center gap-2">
-                    <p class="text-xs font-black uppercase tracking-wide truncate max-w-[180px]" id="receipt-voter-name">---</p>
+                    <p class="text-xs font-black uppercase tracking-wide truncate max-w-[190px]" id="receipt-voter-name">---</p>
                     <button onclick="togglePrivacy('name')" class="text-xs opacity-80 hover:opacity-100 transition p-1" title="Ocultar/Mostrar Nome">👁️</button>
                   </div>
 
@@ -1564,42 +1539,19 @@
 
       const nameText = document.getElementById('receipt-voter-name');
       const locationText = document.getElementById('receipt-voter-location');
-      const badgeIcon = document.getElementById('receipt-candidate-avatar');
-      const candidateTitle = document.getElementById('receipt-candidate-title');
       const receiptCard = document.getElementById('receipt-card');
-      const topBanner = document.getElementById('receipt-top-banner');
-      const userBox = document.getElementById('receipt-user-box');
 
       nameText.textContent = privacyHiddenName ? "🔒 [DADO OCULTO]" : confirmedVoteData.voterName;
       locationText.textContent = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : confirmedVoteData.cityUf;
 
+      // Busca as imagens diretamente na raiz do repositório
       if (confirmedVoteData.opcao === '22') {
-        // Estilo Vertical Reels 9:16 - Flávio Bolsonaro (Verde Neon)
-        receiptCard.className = "w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-emerald-500/80 bg-gradient-to-b from-emerald-950 via-slate-950 to-black flex flex-col justify-between p-4 text-white shadow-emerald-500/20";
-        topBanner.className = "text-[8px] font-black uppercase tracking-widest text-center text-emerald-400";
-        badgeIcon.className = "w-20 h-20 rounded-2xl mx-auto flex items-center justify-center text-3xl font-bold shadow-2xl bg-emerald-500/20 border-2 border-emerald-500/60 text-emerald-400";
-        badgeIcon.textContent = "🏛️";
-        candidateTitle.textContent = "FLÁVIO — 22";
-        candidateTitle.className = "text-lg font-black uppercase tracking-wide text-emerald-400 drop-shadow-lg";
-        userBox.className = "relative z-10 space-y-1.5 bg-emerald-950/40 backdrop-blur-md p-3 rounded-2xl border border-emerald-500/40 shadow-xl text-center";
+        receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
       } else if (confirmedVoteData.opcao === '13') {
-        // Estilo Vertical Reels 9:16 - Lula (Vermelho Neon)
-        receiptCard.className = "w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-rose-500/80 bg-gradient-to-b from-rose-950 via-slate-950 to-black flex flex-col justify-between p-4 text-white shadow-rose-500/20";
-        topBanner.className = "text-[8px] font-black uppercase tracking-widest text-center text-rose-400";
-        badgeIcon.className = "w-20 h-20 rounded-2xl mx-auto flex items-center justify-center text-3xl font-bold shadow-2xl bg-rose-500/20 border-2 border-rose-500/60 text-rose-400";
-        badgeIcon.textContent = "🚩";
-        candidateTitle.textContent = "LULA — 13";
-        candidateTitle.className = "text-lg font-black uppercase tracking-wide text-rose-400 drop-shadow-lg";
-        userBox.className = "relative z-10 space-y-1.5 bg-rose-950/40 backdrop-blur-md p-3 rounded-2xl border border-rose-500/40 shadow-xl text-center";
+        receiptCard.style.backgroundImage = "url('comprovante-13.jpg')";
       } else {
-        // Neutro
-        receiptCard.className = "w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-blue-500/60 bg-gradient-to-b from-slate-900 via-slate-950 to-black flex flex-col justify-between p-4 text-white";
-        topBanner.className = "text-[8px] font-black uppercase tracking-widest text-center text-blue-400";
-        badgeIcon.className = "w-20 h-20 rounded-2xl mx-auto flex items-center justify-center text-3xl font-bold shadow-2xl bg-slate-800 border-2 border-slate-700 text-slate-300";
-        badgeIcon.textContent = "📊";
-        candidateTitle.textContent = confirmedVoteData.opcao;
-        candidateTitle.className = "text-lg font-black uppercase tracking-wide text-slate-200";
-        userBox.className = "relative z-10 space-y-1.5 bg-slate-900/80 backdrop-blur-md p-3 rounded-2xl border border-slate-800 shadow-xl text-center";
+        receiptCard.style.backgroundImage = "none";
+        receiptCard.style.backgroundColor = "#090d16";
       }
 
       document.getElementById('receipt-modal').classList.remove('hidden');
@@ -1773,7 +1725,7 @@
       if (!text) return;
 
       const uf = verifiedVoter.uf;
-      const voteLabel = voterChoices[verifiedVoter.cleanDoc] || "votou";
+      const voteLabel = voterChoices[verifiedVoter.cleanDoc] / "votou";
 
       chatMessages.push({
         id: Date.now(),
