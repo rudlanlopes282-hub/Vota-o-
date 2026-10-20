@@ -429,15 +429,15 @@
           <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 overflow-y-auto">
             <div class="w-full max-w-xs my-auto space-y-3">
               
-              <!-- CARTAZ PROPORÇÃO 9:16 SIMPLES (SEM FOTO) -->
-              <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-between p-5 text-white bg-[#090d16]">
+              <!-- CARTAZ PROPORÇÃO 9:16 SIMPLES OU COM FOTO (DINÂMICO) -->
+              <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-between p-5 text-white bg-[#090d16]" style="background-size: cover; background-position: center;">
                 
                 <div class="space-y-1 text-center pt-2">
-                  <p class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡</p>
+                  <p id="receipt-top-badge" class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡</p>
                   <p class="text-xs font-bold text-slate-300">PAINEL BRASIL • ELEIÇÕES 2026</p>
                 </div>
 
-                <div class="my-auto text-center space-y-3">
+                <div id="receipt-center-box" class="my-auto text-center space-y-3">
                   <div class="w-16 h-16 bg-slate-900 border border-slate-700 rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-inner">
                     🏛️
                   </div>
@@ -466,8 +466,8 @@
 
               </div>
 
-              <!-- BOTÃO PARA ADQUIRIR O CARD COM FOTO E APOIAR A CAUSA -->
-              <button onclick="openApoiadorModalFromReceipt()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+              <!-- BOTÃO PARA ADQUIRIR O CARD COM FOTO (EXIBIDO APENAS SE NÃO PAGOU) -->
+              <button id="btn-buy-card-receipt" onclick="openApoiadorModalFromReceipt()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
                 <span>🎨</span>
                 <span>Adquirir Card com Foto e Apoiar a Causa</span>
               </button>
@@ -522,6 +522,22 @@
         </div>
 
       </section>
+
+      <!-- BOTÃO DE VER COMPROVANTE ENTRE A URNA E A SEÇÃO DE DÚVIDAS (EXIBIDO APENAS SE JÁ VOTOU) -->
+      <div id="post-vote-receipt-container" class="hidden w-full">
+        <button onclick="openReceiptModal()" class="w-full bg-slate-900 hover:bg-slate-800 border border-blue-500/40 p-3 rounded-2xl flex items-center justify-between shadow-lg transition group">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 text-base">
+              📄
+            </div>
+            <div class="text-left">
+              <p class="text-xs font-extrabold text-white group-hover:text-blue-400 transition">Ver Comprovante de Participação</p>
+              <p class="text-[10px] text-slate-400">Acesse sua comprovação auditada e card exclusivo</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-blue-400">&rarr;</span>
+        </button>
+      </div>
 
       <!-- STEP 3: PAINEL DE PLACAR / DADOS -->
       <section id="sec-dados" class="hidden w-full space-y-4">
@@ -761,6 +777,7 @@
     let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}");
     let voterDevicePins = JSON.parse(localStorage.getItem('simulador_voter_pins') || "{}");
     let voterLocations = JSON.parse(localStorage.getItem('simulador_voter_locations') || "{}");
+    let paidSupporters = JSON.parse(localStorage.getItem('simulador_paid_supporters') || "{}");
 
     let votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
     let regionalVotes = {
@@ -1292,15 +1309,15 @@
             <p class="text-xs font-black text-rose-700 uppercase">AVISO: VOTO DUPLICADO</p>
             <p class="text-[10px] font-bold text-black">Este CPF já registrou participação nesta pesquisa.</p>
             <div class="pt-1 flex flex-col gap-1.5 px-2">
-              <button onclick="openReceiptModal()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-1.5 px-2 rounded text-[10px] uppercase shadow">
-                📄 Ver Comprovante
-              </button>
               <button onclick="switchTab('chat')" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-1 px-2 rounded text-[9px] uppercase">
                 💬 Ir para o Debate
               </button>
             </div>
           </div>
         `;
+
+        // Exibe o botão de comprovante entre a urna e as dúvidas para quem já votou
+        document.getElementById('post-vote-receipt-container').classList.remove('hidden');
         return;
       }
 
@@ -1366,6 +1383,9 @@
           <p class="text-xs font-bold text-black mt-2">VOTO COMPUTADO COM SUCESSO</p>
         </div>
       `;
+
+      // Exibe o botão de comprovante entre a urna e as dúvidas após votar
+      document.getElementById('post-vote-receipt-container').classList.remove('hidden');
 
       openApoiadorModal();
     }
@@ -1473,6 +1493,11 @@
     function finalizePixSuccess() {
       if (pixPollInterval) clearInterval(pixPollInterval);
 
+      if (verifiedVoter) {
+        paidSupporters[verifiedVoter.cleanDoc] = true;
+        localStorage.setItem('simulador_paid_supporters', JSON.stringify(paidSupporters));
+      }
+
       document.getElementById('pix-content').classList.add('hidden');
       document.getElementById('btn-cancel-pix').classList.add('hidden');
       document.getElementById('msg-vote-success').classList.remove('hidden');
@@ -1565,16 +1590,45 @@
       const nameText = document.getElementById('receipt-voter-name');
       const locationText = document.getElementById('receipt-voter-location');
       const optionText = document.getElementById('receipt-option-text');
+      const receiptCard = document.getElementById('receipt-card');
+      const buyBtn = document.getElementById('btn-buy-card-receipt');
+      const topBadge = document.getElementById('receipt-top-badge');
+      const centerBox = document.getElementById('receipt-center-box');
 
       nameText.textContent = privacyHiddenName ? "🔒 [DADO OCULTO]" : confirmedVoteData.voterName;
       locationText.textContent = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : confirmedVoteData.cityUf;
 
-      if (confirmedVoteData.opcao === '22') {
-        optionText.textContent = "FLÁVIO — 22";
-      } else if (confirmedVoteData.opcao === '13') {
-        optionText.textContent = "LULA — 13";
+      const hasPaid = verifiedVoter && paidSupporters[verifiedVoter.cleanDoc];
+
+      if (hasPaid) {
+        // JÁ PAGOU: Exibe o card com foto e a opção de compartilhar, ocultando o botão de comprar
+        buyBtn.classList.add('hidden');
+        topBadge.textContent = "⚡ COMPROVANTE OFICIAL DE APOIADOR ⚡";
+        
+        if (confirmedVoteData.opcao === '22') {
+          receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
+        } else if (confirmedVoteData.opcao === '13') {
+          receiptCard.style.backgroundImage = "url('comprovante-13.jpg')";
+        } else {
+          receiptCard.style.backgroundImage = "none";
+          receiptCard.style.backgroundColor = "#090d16";
+        }
+        centerBox.classList.add('hidden');
       } else {
-        optionText.textContent = "VOTO EM BRANCO/NULO";
+        // NÃO PAGOU: Exibe o comprovante simples e o botão para adquirir
+        buyBtn.classList.remove('hidden');
+        topBadge.textContent = "⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡";
+        receiptCard.style.backgroundImage = "none";
+        receiptCard.style.backgroundColor = "#090d16";
+        centerBox.classList.remove('hidden');
+
+        if (confirmedVoteData.opcao === '22') {
+          optionText.textContent = "FLÁVIO — 22";
+        } else if (confirmedVoteData.opcao === '13') {
+          optionText.textContent = "LULA — 13";
+        } else {
+          optionText.textContent = "VOTO EM BRANCO/NULO";
+        }
       }
 
       document.getElementById('receipt-modal').classList.remove('hidden');
