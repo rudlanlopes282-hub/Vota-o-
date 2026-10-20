@@ -6,6 +6,8 @@
   <title>Painel Brasil — Pesquisa & Voto Independente</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- SCRIPT CLOUDFLARE TURNSTILE -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
@@ -180,6 +182,11 @@
             </div>
 
             <input type="hidden" id="selected-city-val" value="">
+          </div>
+
+          <!-- WIDGET CLOUDFLARE TURNSTILE -->
+          <div class="my-3 flex justify-center">
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAAFcbW-OkldDEkMm2" data-theme="dark"></div>
           </div>
 
           <button onclick="submitStep1()" type="button" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 text-sm transition active:scale-[0.99] mt-2">
@@ -953,6 +960,14 @@
 
       errBox.classList.add('hidden');
 
+      // VALIDAÇÃO DO CLOUDFLARE TURNSTILE
+      const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]')?.value;
+      if (!turnstileResponse) {
+        errBox.textContent = "⚠️ Por favor, confirme que você é humano resolvendo a verificação do Turnstile.";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
       if (!name) {
         errBox.textContent = "Por favor, digite seu nome completo.";
         errBox.classList.remove('hidden');
@@ -1203,7 +1218,6 @@
       }
     }
 
-    // 1. CONFIRMAÇÃO DO VOTO GRATUITO NO BANCO DE DADOS
     async function pressConfirma() {
       if (!verifiedVoter) return;
 
@@ -1275,7 +1289,6 @@
         device_token: verifiedVoter.token
       };
 
-      // REGISTRAR VOTO NO BANCO DE DADOS (GRATUITO)
       confirmedVoteData = {
         voterName: verifiedVoter.name,
         voterCpf: verifiedVoter.doc,
@@ -1304,7 +1317,6 @@
 
       await loadCloudStats();
 
-      // Mudar tela da Urna para "FIM"
       const lcd = document.getElementById('lcd-content');
       lcd.innerHTML = `
         <div class="py-8 text-center animate-pulse">
@@ -1313,11 +1325,9 @@
         </div>
       `;
 
-      // Exibir Modal de Conversão para Kit Apoiador
       openApoiadorModal();
     }
 
-    // Função para gerar valor aleatório aceito pela SyncPay (entre R$ 1,01 e R$ 1,99)
     function gerarValorMenorSyncPay() {
       const min = 1.01;
       const max = 1.99;
@@ -1334,7 +1344,6 @@
       document.getElementById('btn-cancel-pix').classList.remove('hidden');
     }
 
-    // Solicitante do PIX via SyncPay
     async function requestPixCheckout(amountValue) {
       document.getElementById('pix-options-box').classList.add('hidden');
       document.getElementById('pix-loading').classList.remove('hidden');
@@ -1414,7 +1423,6 @@
       document.getElementById('pix-modal').classList.add('hidden');
     }
 
-    // 2. CONCLUIR PIX: GERAR O CARD AUTOMÁTICO E LIBERAR O CHAT
     function finalizePixSuccess() {
       if (pixPollInterval) clearInterval(pixPollInterval);
 
@@ -1422,20 +1430,16 @@
       document.getElementById('btn-cancel-pix').classList.add('hidden');
       document.getElementById('msg-vote-success').classList.remove('hidden');
 
-      // Desenhar o Card no HTML5 Canvas
       renderCardCanvas(verifiedVoter.name, confirmedVoteData.opcao, `${verifiedVoter.city} / ${verifiedVoter.uf}`);
     }
 
-    // GERADOR DO CARD DE APOIADOR VIA HTML5 CANVAS
     function renderCardCanvas(nomeUsuario, opcaoVoto, localidade) {
       const canvas = document.getElementById('cardCanvas');
       const ctx = canvas.getContext('2d');
 
-      // Fundo Escuro Moderno
       ctx.fillStyle = '#090d16';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Moldura Interna
       ctx.fillStyle = '#131c2e';
       ctx.fillRect(30, 30, 740, 740);
 
@@ -1443,24 +1447,20 @@
       ctx.lineWidth = 8;
       ctx.strokeRect(40, 40, 720, 720);
 
-      // Cabeçalho
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 36px Arial';
       ctx.textAlign = 'center';
       ctx.fillText('PAINEL BRASIL • PESQUISA 2026', 400, 110);
 
-      // Slogan
       ctx.fillStyle = '#94a3b8';
       ctx.font = '24px Arial';
       ctx.fillText('EU JÁ REGISTREI MEU VOTO EM:', 400, 260);
 
-      // Candidato Destacado
       let candText = opcaoVoto === '22' ? 'FLÁVIO BOLSONARO (22)' : (opcaoVoto === '13' ? 'LULA (13)' : opcaoVoto);
       ctx.fillStyle = opcaoVoto === '13' ? '#f43f5e' : '#f59e0b';
       ctx.font = 'bold 46px Arial';
       ctx.fillText(candText, 400, 340);
 
-      // Participante
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 28px Arial';
       ctx.fillText(`Apoiador: ${nomeUsuario}`, 400, 480);
@@ -1469,12 +1469,10 @@
       ctx.font = '22px Arial';
       ctx.fillText(`📍 ${localidade}`, 400, 520);
 
-      // Rodapé Viral
       ctx.fillStyle = '#64748b';
       ctx.font = 'italic 20px Arial';
       ctx.fillText('Vote você também e acompanhe a pesquisa em tempo real!', 400, 700);
 
-      // Atualizar o Link de Download
       const downloadBtn = document.getElementById('downloadCardBtn');
       downloadBtn.href = canvas.toDataURL('image/png');
     }
