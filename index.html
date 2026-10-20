@@ -176,7 +176,7 @@
             <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               2. Cidade / Município
             </label>
-            <input type="text" id="voter-city-search" placeholder="Digite sua cidade..." oninput="filterCityOptions()" onfocus="filterCityOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
+            <input type="text" id="voter-city-search" placeholder="Digite sua cidade..." oninput="filterCityOptions()" onfocus="this.value=''; filterCityOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
             
             <div id="city-suggestions-container" class="hidden absolute left-0 right-0 top-full bg-slate-950 border border-blue-500/40 rounded-xl max-h-48 overflow-y-auto custom-scrollbar p-1 space-y-1 shadow-2xl z-50 mt-1">
             </div>
