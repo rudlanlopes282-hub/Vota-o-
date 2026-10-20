@@ -92,14 +92,46 @@
       </p>
     </div>
 
-    <!-- STEP 1: ETAPA DE VERIFICAÇÃO / AUTENTICAÇÃO DO PARTICIPANTE -->
-    <section id="sec-auth" class="w-full">
+    <!-- TELA PRÉ-AUTENTICAÇÃO: BARREIRA CLOUDFLARE TURNSTILE INICIAL -->
+    <section id="sec-cloudflare-gate" class="w-full">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden text-center space-y-5">
+        <div class="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div class="inline-flex p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-3xl">
+          🛡️
+        </div>
+
+        <div class="space-y-1.5">
+          <h2 class="text-xl font-extrabold text-white">Verificação de Segurança</h2>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Para garantir a integridade da pesquisa e proteger contra robôs automatizados, confirme a verificação abaixo para acessar a plataforma.
+          </p>
+        </div>
+
+        <!-- Alerta de Erro do Gate -->
+        <div id="gate-error" class="hidden p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl font-medium"></div>
+
+        <!-- WIDGET CLOUDFLARE TURNSTILE (PRÉ-TELA) -->
+        <div class="flex justify-center py-2">
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAAFcbW-OkldDEkMm2" data-theme="dark" data-callback="onTurnstileSuccess"></div>
+        </div>
+
+        <div class="pt-2">
+          <p class="text-[10px] text-slate-500">
+            Aguardando a conclusão da verificação de segurança...
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 1: ETAPA DE VERIFICAÇÃO / AUTENTICAÇÃO DO PARTICIPANTE (INICIALMENTE OCULTA) -->
+    <section id="sec-auth" class="w-full hidden">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
         <div class="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
         <div class="text-center mb-5">
           <div class="inline-flex p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-2xl mb-2">
-            🛡️
+            👤
           </div>
           <h2 class="text-xl font-extrabold text-white">Identificação do Participante</h2>
           <p class="text-xs text-slate-400 mt-1">Validação segura e controle de voto único por dispositivo</p>
@@ -182,11 +214,6 @@
             </div>
 
             <input type="hidden" id="selected-city-val" value="">
-          </div>
-
-          <!-- WIDGET CLOUDFLARE TURNSTILE -->
-          <div class="my-3 flex justify-center">
-            <div class="cf-turnstile" data-sitekey="0x4AAAAAAFcbW-OkldDEkMm2" data-theme="dark"></div>
           </div>
 
           <button onclick="submitStep1()" type="button" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 text-sm transition active:scale-[0.99] mt-2">
@@ -754,6 +781,14 @@
       });
     });
 
+    // Função executada automaticamente ao resolver o Turnstile na tela de entrada
+    function onTurnstileSuccess(token) {
+      if (token) {
+        document.getElementById('sec-cloudflare-gate').classList.add('hidden');
+        document.getElementById('sec-auth').classList.remove('hidden');
+      }
+    }
+
     function onCPFInput(input) {
       formatCPF(input);
       const cleanDoc = input.value.replace(/\D/g, '');
@@ -912,7 +947,7 @@
       
       const cityInput = document.getElementById('voter-city-search');
       cityInput.value = cities[0];
-      cityInput.dataset.touched = ""; // Reseta o toque ao trocar o estado para atualizar a sugestão inicial
+      cityInput.dataset.touched = ""; 
       
       document.getElementById('selected-city-val').value = cities[0];
     }
@@ -963,14 +998,6 @@
       const errBox = document.getElementById('auth-error');
 
       errBox.classList.add('hidden');
-
-      // VALIDAÇÃO DO CLOUDFLARE TURNSTILE
-      const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]')?.value;
-      if (!turnstileResponse) {
-        errBox.textContent = "⚠️ Por favor, confirme que você é humano resolvendo a verificação do Turnstile.";
-        errBox.classList.remove('hidden');
-        return;
-      }
 
       if (!name) {
         errBox.textContent = "Por favor, digite seu nome completo.";
