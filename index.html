@@ -102,7 +102,8 @@
             </p>
           </div>
         </div>
-        <div id="nav-tabs" class="flex bg-slate-800 p-1 rounded-lg text-xs font-semibold hidden">
+        <!-- Abas ativadas por padrão para permitir navegação após desbloqueio -->
+        <div id="nav-tabs" class="flex bg-slate-800 p-1 rounded-lg text-xs font-semibold">
           <button id="btn-tab-urna" onclick="switchTab('urna')" class="px-3 py-1 rounded-md bg-blue-600 text-white transition font-bold">Votar</button>
           <button id="btn-tab-dados" onclick="switchTab('dados')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition">Placar</button>
           <button id="btn-tab-chat" onclick="switchTab('chat')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition flex items-center gap-1">
@@ -472,7 +473,7 @@
                 <span>Adquirir Card com Foto e Apoiar a Causa</span>
               </button>
 
-              <!-- BOTÕES DE AÇÃO -->
+              <!-- BOTÕES DE AÇÃO DO COMPROVANTE -->
               <div class="space-y-2">
                 <button onclick="shareReceipt()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-2xl shadow-lg shadow-blue-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
                   <span>📲</span>
@@ -1114,11 +1115,9 @@
     async function startVotingSession() {
       document.getElementById('sec-auth').classList.add('hidden');
       document.getElementById('sec-urna').classList.remove('hidden');
-      document.getElementById('nav-tabs').classList.remove('hidden');
       switchTab('urna');
       resetUrna();
 
-      // Verifica imediatamente ao entrar na cabine se este usuário já votou
       if (verifiedVoter) {
         const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
         const isAlreadyVoted = !!dbRecord || !!votedCPFs[verifiedVoter.cleanDoc];
@@ -1153,7 +1152,6 @@
         document.getElementById('sec-chat').classList.remove('hidden');
         document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition flex items-center gap-1";
         
-        // BLOQUEIO DO CHAT SOMENTE PARA QUEM FEZ O PIX
         const isPaidSupporter = verifiedVoter && paidSupporters[verifiedVoter.cleanDoc];
         const nickname = verifiedVoter ? voterNicknames[verifiedVoter.cleanDoc] : null;
         
@@ -1329,7 +1327,6 @@
           </div>
         `;
 
-        // Exibe o botão de comprovante entre a urna e as dúvidas
         document.getElementById('post-vote-receipt-container').classList.remove('hidden');
         return;
       }
@@ -1397,7 +1394,6 @@
         </div>
       `;
 
-      // Exibe o botão de comprovante entre a urna e as dúvidas após votar
       document.getElementById('post-vote-receipt-container').classList.remove('hidden');
 
       openApoiadorModal();
@@ -1495,7 +1491,6 @@
       const input = document.getElementById('pix-code-input');
       input.select();
       document.execCommand('copy');
-      alert('Código PIX copiado para a área de transferência!');
     }
 
     function closePixModal() {
@@ -1594,7 +1589,6 @@
       }
 
       if (!confirmedVoteData) {
-        alert("Não foi possível carregar os dados.");
         return;
       }
 
@@ -1614,7 +1608,6 @@
       const hasPaid = verifiedVoter && paidSupporters[verifiedVoter.cleanDoc];
 
       if (hasPaid) {
-        // JÁ PAGOU: Exibe o card com foto e a opção de compartilhar, ocultando o botão de comprar
         buyBtn.classList.add('hidden');
         topBadge.textContent = "⚡ COMPROVANTE OFICIAL DE APOIADOR ⚡";
         
@@ -1628,7 +1621,6 @@
         }
         centerBox.classList.add('hidden');
       } else {
-        // NÃO PAGOU: Exibe o comprovante simples e o botão para adquirir
         buyBtn.classList.remove('hidden');
         topBadge.textContent = "⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡";
         receiptCard.style.backgroundImage = "none";
@@ -1687,7 +1679,6 @@
       const shareText = `${slogan}\nParticipante: ${displayName}\nComprovante emitido pelo Painel Brasil!`;
 
       navigator.clipboard.writeText(shareText);
-      alert('Texto do comprovante copiado!');
     }
 
     function renderStats() {
