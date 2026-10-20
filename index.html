@@ -731,6 +731,11 @@
     let pendingVoteObj = null;
     let confirmedVoteData = null;
 
+    let privacyState = {
+      name: false,
+      location: false
+    };
+
     let deviceSessionToken = localStorage.getItem('simulador_device_token');
     if (!deviceSessionToken) {
       deviceSessionToken = 'tok_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -1117,7 +1122,6 @@
       switchTab('urna');
       resetUrna();
 
-      // Verifica imediatamente ao entrar na cabine se este usuário já votou
       if (verifiedVoter) {
         const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
         const isAlreadyVoted = !!dbRecord || !!votedCPFs[verifiedVoter.cleanDoc];
@@ -1327,7 +1331,6 @@
           </div>
         `;
 
-        // Exibe o botão de comprovante entre a urna e as dúvidas
         document.getElementById('post-vote-receipt-container').classList.remove('hidden');
         return;
       }
@@ -1395,7 +1398,6 @@
         </div>
       `;
 
-      // Exibe o botão de comprovante entre a urna e as dúvidas após votar
       document.getElementById('post-vote-receipt-container').classList.remove('hidden');
 
       openApoiadorModal();
@@ -1540,109 +1542,73 @@
       ctx.font = 'bold 54px Arial';
       ctx.fillText(candText, 400, 700);
 
-      const displayName = privacyHiddenName ? "[Anônimo]" : nomeUsuario;
-      const displayLoc = privacyHiddenLocation ? "[Local Oculto]" : localidade;
+      const displayName = privacyState.name ? 'PARTICIPANTE ANÔNIMO' : nomeUsuario.toUpperCase();
+      const displayLoc = privacyState.location ? 'LOCALIDADE OCULTA' : localidade.toUpperCase();
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 34px Arial';
-      ctx.fillText(`Participante: ${displayName}`, 400, 1150);
+      ctx.font = 'bold 28px Arial';
+      ctx.fillText(displayName, 400, 1200);
 
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = '28px Arial';
-      ctx.fillText(`📍 ${displayLoc}`, 400, 1210);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '22px Arial';
+      ctx.fillText(displayLoc, 400, 1250);
 
-      const downloadBtn = document.getElementById('downloadCardBtn');
-      downloadBtn.href = canvas.toDataURL('image/png');
-    }
-
-    let privacyHiddenName = false;
-    let privacyHiddenLocation = false;
-
-    function togglePrivacy(type) {
-      if (!confirmedVoteData) return;
-      const nameEl = document.getElementById('receipt-voter-name');
-      const locEl = document.getElementById('receipt-voter-location');
-
-      if (type === 'name') {
-        privacyHiddenName = !privacyHiddenName;
-        nameEl.textContent = privacyHiddenName ? "🔒 [DADO OCULTO]" : confirmedVoteData.voterName;
-        nameEl.classList.toggle('opacity-30', privacyHiddenName);
-      } else if (type === 'location') {
-        privacyHiddenLocation = !privacyHiddenLocation;
-        locEl.textContent = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : confirmedVoteData.cityUf;
-        locEl.classList.toggle('opacity-30', privacyHiddenLocation);
+      const btnDownload = document.getElementById('downloadCardBtn');
+      if (btnDownload) {
+        btnDownload.href = canvas.toDataURL('image/png');
       }
     }
 
-    async function openReceiptModal() {
+    function openReceiptModal() {
       if (!confirmedVoteData && verifiedVoter) {
         const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
-        if (savedReceipt) {
-          confirmedVoteData = JSON.parse(savedReceipt);
-        } else {
-          const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
-          confirmedVoteData = {
-            voterName: verifiedVoter.name,
-            voterCpf: verifiedVoter.doc,
-            cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-            opcao: dbRecord?.opcao || '22',
-            time: new Date().toLocaleString('pt-BR')
-          };
-        }
+        if (savedReceipt) confirmedVoteData = JSON.parse(savedReceipt);
       }
 
-      if (!confirmedVoteData) {
-        alert("Não foi possível carregar os dados.");
-        return;
-      }
-
-      closePixModal();
-
-      const nameText = document.getElementById('receipt-voter-name');
-      const locationText = document.getElementById('receipt-voter-location');
-      const optionText = document.getElementById('receipt-option-text');
-      const receiptCard = document.getElementById('receipt-card');
-      const buyBtn = document.getElementById('btn-buy-card-receipt');
-      const topBadge = document.getElementById('receipt-top-badge');
-      const centerBox = document.getElementById('receipt-center-box');
-
-      nameText.textContent = privacyHiddenName ? "🔒 [DADO OCULTO]" : confirmedVoteData.voterName;
-      locationText.textContent = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : confirmedVoteData.cityUf;
-
-      const hasPaid = verifiedVoter && paidSupporters[verifiedVoter.cleanDoc];
-
-      if (hasPaid) {
-        // JÁ PAGOU: Exibe o card com foto e a opção de compartilhar, ocultando o botão de comprar
-        buyBtn.classList.add('hidden');
-        topBadge.textContent = "⚡ COMPROVANTE OFICIAL DE APOIADOR ⚡";
-        
-        if (confirmedVoteData.opcao === '22') {
-          receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
-        } else if (confirmedVoteData.opcao === '13') {
-          receiptCard.style.backgroundImage = "url('comprovante-13.jpg')";
-        } else {
-          receiptCard.style.backgroundImage = "none";
-          receiptCard.style.backgroundColor = "#090d16";
-        }
-        centerBox.classList.add('hidden');
-      } else {
-        // NÃO PAGOU: Exibe o comprovante simples e o botão para adquirir
-        buyBtn.classList.remove('hidden');
-        topBadge.textContent = "⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡";
-        receiptCard.style.backgroundImage = "none";
-        receiptCard.style.backgroundColor = "#090d16";
-        centerBox.classList.remove('hidden');
-
-        if (confirmedVoteData.opcao === '22') {
-          optionText.textContent = "FLÁVIO — 22";
-        } else if (confirmedVoteData.opcao === '13') {
-          optionText.textContent = "LULA — 13";
-        } else {
-          optionText.textContent = "VOTO EM BRANCO/NULO";
-        }
-      }
+      if (!confirmedVoteData) return;
 
       document.getElementById('receipt-modal').classList.remove('hidden');
+
+      const isPaid = verifiedVoter && paidSupporters[verifiedVoter.cleanDoc];
+      const btnBuy = document.getElementById('btn-buy-card-receipt');
+      if (btnBuy) {
+        if (isPaid) btnBuy.classList.add('hidden');
+        else btnBuy.classList.remove('hidden');
+      }
+
+      updateReceiptUI();
+    }
+
+    function togglePrivacy(field) {
+      if (field === 'name') privacyState.name = !privacyState.name;
+      if (field === 'location') privacyState.location = !privacyState.location;
+      updateReceiptUI();
+    }
+
+    function updateReceiptUI() {
+      if (!confirmedVoteData) return;
+
+      const nameEl = document.getElementById('receipt-voter-name');
+      const locEl = document.getElementById('receipt-voter-location');
+      const optEl = document.getElementById('receipt-option-text');
+
+      if (nameEl) {
+        nameEl.textContent = privacyState.name ? '• • • • • • • • • •' : confirmedVoteData.voterName;
+      }
+      if (locEl) {
+        locEl.textContent = privacyState.location ? '• • • • / • •' : confirmedVoteData.cityUf;
+      }
+
+      let op = confirmedVoteData.opcao;
+      let text = op === '22' ? 'FLÁVIO BOLSONARO — 22' : (op === '13' ? 'LULA — 13' : 'VOTO ' + op);
+      if (optEl) {
+        optEl.textContent = text;
+        optEl.className = op === '13' ? 'text-lg font-black text-rose-500' : 'text-lg font-black text-emerald-400';
+      }
+
+      if (verifiedVoter && paidSupporters[verifiedVoter.cleanDoc]) {
+        renderCardCanvas(confirmedVoteData.voterName, op, confirmedVoteData.cityUf);
+      }
     }
 
     function closeReceiptModal() {
@@ -1651,28 +1617,16 @@
     }
 
     function goToChatFromModal() {
-      closePixModal();
+      document.getElementById('pix-modal').classList.add('hidden');
+      document.getElementById('receipt-modal').classList.add('hidden');
       switchTab('chat');
     }
 
-    async function shareReceipt() {
+    function shareReceipt() {
       if (!confirmedVoteData) return;
-
-      let slogan = confirmedVoteData.opcao === '22' ? "🇧🇷 Participando da pesquisa: Flávio 22!" : (confirmedVoteData.opcao === '13' ? "🚩 Participando da pesquisa: Lula 13!" : "📊 Voto registrado no Painel Brasil!");
-      const displayName = privacyHiddenName ? "[Anônimo]" : confirmedVoteData.voterName;
-
-      const shareText = `${slogan}\n\nAcabei de participar da Pesquisa Independente de Opinião Pública!\n\nParticipante: ${displayName}\nStatus: Participação Auditada.\n\nParticipe você também e deixe sua opinião no debate ao vivo!`;
-
+      const shareText = `Votei na pesquisa do Painel Brasil! Opção: ${confirmedVoteData.opcao}. Participe você também!`;
       if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'Comprovante de Participação - Painel Brasil',
-            text: shareText,
-            url: window.location.href
-          });
-        } catch (err) {
-          console.log("Compartilhamento cancelado:", err);
-        }
+        navigator.share({ title: 'Painel Brasil', text: shareText, url: window.location.href });
       } else {
         copyReceiptText();
       }
@@ -1680,130 +1634,156 @@
 
     function copyReceiptText() {
       if (!confirmedVoteData) return;
-      let slogan = confirmedVoteData.opcao === '22' ? "🇧🇷 Flávio 22!" : (confirmedVoteData.opcao === '13' ? "🚩 Lula 13!" : "📊 Voto registrado!");
-      const displayName = privacyHiddenName ? "[Anônimo]" : confirmedVoteData.voterName;
-      const shareText = `${slogan}\nParticipante: ${displayName}\nComprovante emitido pelo Painel Brasil!`;
-
-      navigator.clipboard.writeText(shareText);
+      const text = `Comprovante de Participação - Painel Brasil\nParticipante: ${privacyState.name ? 'Anônimo' : confirmedVoteData.voterName}\nVoto: ${confirmedVoteData.opcao}\nLocal: ${privacyState.location ? 'Oculto' : confirmedVoteData.cityUf}\nData: ${confirmedVoteData.time}`;
+      navigator.clipboard.writeText(text);
       alert('Texto do comprovante copiado!');
     }
 
     function renderStats() {
-      const valid = (votes['22'] || 0) + (votes['13'] || 0);
-      const total = valid + (votes['BRANCO'] || 0) + (votes['NULO'] || 0);
+      const total = votes['22'] + votes['13'] + votes['BRANCO'] + votes['NULO'];
+      const validos = votes['22'] + votes['13'];
 
       document.getElementById('stat-total').textContent = total;
-      document.getElementById('stat-validos').textContent = valid;
-      document.getElementById('stat-branco').textContent = votes['BRANCO'] || 0;
-      document.getElementById('stat-nulo').textContent = votes['NULO'] || 0;
+      document.getElementById('stat-validos').textContent = validos;
+      document.getElementById('stat-branco').textContent = votes['BRANCO'];
+      document.getElementById('stat-nulo').textContent = votes['NULO'];
 
-      const p22 = valid > 0 ? ((votes['22'] / valid) * 100).toFixed(1) : "0.0";
-      const p13 = valid > 0 ? ((votes['13'] / valid) * 100).toFixed(1) : "0.0";
+      const pct22 = validos > 0 ? ((votes['22'] / validos) * 100).toFixed(1) : "0.0";
+      const pct13 = validos > 0 ? ((votes['13'] / validos) * 100).toFixed(1) : "0.0";
 
-      document.getElementById('pct-22').textContent = `${p22}%`;
-      document.getElementById('bar-22').style.width = `${p22}%`;
-      document.getElementById('count-22').textContent = `${votes['22'] || 0} votos`;
+      document.getElementById('pct-22').textContent = pct22 + '%';
+      document.getElementById('bar-22').style.width = pct22 + '%';
+      document.getElementById('count-22').textContent = `${votes['22']} votos`;
 
-      document.getElementById('pct-13').textContent = `${p13}%`;
-      document.getElementById('bar-13').style.width = `${p13}%`;
-      document.getElementById('count-13').textContent = `${votes['13'] || 0} votos`;
+      document.getElementById('pct-13').textContent = pct13 + '%';
+      document.getElementById('bar-13').style.width = pct13 + '%';
+      document.getElementById('count-13').textContent = `${votes['13']} votos`;
 
       const regContainer = document.getElementById('regional-stats-container');
-      regContainer.innerHTML = Object.keys(regionalVotes).map(r => {
+      let regHtml = "";
+
+      Object.keys(regionalVotes).forEach(r => {
         const rv = regionalVotes[r];
-        const rValid = (rv['22'] || 0) + (rv['13'] || 0);
-        const rp22 = rValid > 0 ? Math.round((rv['22'] / rValid) * 100) : 0;
-        const rp13 = rValid > 0 ? Math.round((rv['13'] / rValid) * 100) : 0;
-        return `
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-            <div>
-              <p class="font-bold text-white">${r}</p>
-              <p class="text-[10px] text-slate-400">${rValid} votos válidos</p>
+        const rValidos = rv['22'] + rv['13'];
+        const rPct22 = rValidos > 0 ? ((rv['22'] / rValidos) * 100).toFixed(1) : "0.0";
+        const rPct13 = rValidos > 0 ? ((rv['13'] / rValidos) * 100).toFixed(1) : "0.0";
+
+        regHtml += `
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs space-y-1.5">
+            <div class="flex justify-between font-bold text-slate-300">
+              <span>${r}</span>
+              <span class="text-[10px] text-slate-500 font-mono">${rValidos} votos válidos</span>
             </div>
-            <div class="font-mono text-right text-[11px]">
-              <span class="text-amber-400">22: <b>${rp22}%</b></span> | 
-              <span class="text-rose-400">13: <b>${rp13}%</b></span>
+            <div class="grid grid-cols-2 gap-2 text-[11px]">
+              <div class="flex justify-between"><span class="text-amber-400">22:</span> <b>${rPct22}%</b></div>
+              <div class="flex justify-between"><span class="text-rose-400">13:</span> <b>${rPct13}%</b></div>
             </div>
           </div>
         `;
-      }).join('');
+      });
+
+      regContainer.innerHTML = regHtml;
     }
 
     function populateQueryUFs() {
       const select = document.getElementById('query-uf-select');
-      select.innerHTML = `<option value="">Todas as UFs</option>` + Object.keys(stateCities).map(u => `<option value="${u}">${u}</option>`).join('');
+      Object.keys(stateCities).forEach(uf => {
+        const opt = document.createElement('option');
+        opt.value = uf;
+        opt.textContent = uf;
+        select.appendChild(opt);
+      });
     }
 
     function renderCityResults() {
       const ufFilter = document.getElementById('query-uf-select').value;
-      const textFilter = document.getElementById('query-city-filter').value.toLowerCase();
-      const container = document.getElementById('city-results-list');
+      const cityFilter = document.getElementById('query-city-filter').value.toLowerCase().trim();
+      const listEl = document.getElementById('city-results-list');
 
-      const keys = Object.keys(cityVotes).filter(k => {
-        const d = cityVotes[k];
-        if (ufFilter && d.uf !== ufFilter) return false;
-        if (textFilter && !d.city.toLowerCase().includes(textFilter)) return false;
-        return true;
-      });
+      let keys = Object.keys(cityVotes);
+
+      if (ufFilter) {
+        keys = keys.filter(k => cityVotes[k].uf === ufFilter);
+      }
+      if (cityFilter) {
+        keys = keys.filter(k => cityVotes[k].city.toLowerCase().includes(cityFilter));
+      }
 
       if (keys.length === 0) {
-        container.innerHTML = `<div class="p-4 text-center text-xs text-slate-500 bg-slate-950 rounded-xl">Nenhum resultado municipal encontrado.</div>`;
+        listEl.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-3">Nenhum município registrado nesta busca.</p>`;
         return;
       }
 
-      container.innerHTML = keys.map(k => {
-        const d = cityVotes[k];
-        const valid = (d['22'] || 0) + (d['13'] || 0);
-        const p22 = valid > 0 ? ((d['22'] / valid) * 100).toFixed(0) : 0;
-        const p13 = valid > 0 ? ((d['13'] / valid) * 100).toFixed(0) : 0;
-        return `
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs space-y-1">
-            <div class="flex justify-between items-center">
-              <span class="font-bold text-white">${d.city} / ${d.uf}</span>
-              <span class="text-[10px] text-slate-400">${valid} votos</span>
+      let html = "";
+      keys.forEach(k => {
+        const item = cityVotes[k];
+        const totalCityValidos = item['22'] + item['13'];
+        const p22 = totalCityValidos > 0 ? ((item['22'] / totalCityValidos) * 100).toFixed(1) : "0.0";
+        const p13 = totalCityValidos > 0 ? ((item['13'] / totalCityValidos) * 100).toFixed(1) : "0.0";
+
+        html += `
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+            <div>
+              <p class="font-bold text-white">${item.city} <span class="text-[10px] text-blue-400">(${item.uf})</span></p>
+              <p class="text-[10px] text-slate-500 font-mono">${totalCityValidos} votos válidos</p>
             </div>
-            <div class="flex justify-between text-[11px] font-mono text-slate-300">
-              <span class="text-amber-400">🏛️ 22: <b>${d['22'] || 0}</b> (${p22}%)</span>
-              <span class="text-rose-400">🚩 13: <b>${d['13'] || 0}</b> (${p13}%)</span>
+            <div class="flex gap-3 text-[11px] font-bold">
+              <span class="text-amber-400">22: ${p22}%</span>
+              <span class="text-rose-400">13: ${p13}%</span>
             </div>
           </div>
         `;
-      }).join('');
+      });
+
+      listEl.innerHTML = html;
     }
 
     function renderChat() {
-      const chatBox = document.getElementById('chat-messages');
-      chatBox.innerHTML = chatMessages.map(m => {
-        const isVote13 = m.voteLabel && m.voteLabel.includes('13');
-        const badgeStyle = isVote13
-          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+      const container = document.getElementById('chat-messages');
+      let html = "";
 
-        return `
-        <div class="flex flex-col ${m.isSystem ? 'items-center text-center' : 'items-start'}">
-          ${m.isSystem ? `
-            <div class="bg-slate-950 border border-slate-800 text-slate-400 px-3 py-1.5 rounded-xl text-[11px]">
-              🤖 <b>${m.sender}:</b>${m.text}
+      chatMessages.forEach(msg => {
+        if (msg.isSystem) {
+          html += `
+            <div class="bg-blue-950/30 border border-blue-500/20 p-2 rounded-xl text-center text-[11px] text-blue-300">
+              🤖 <b>${msg.sender}:</b> ${msg.text}
             </div>
-          ` : `
-            <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl max-w-[90%] space-y-1">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="font-bold text-blue-400">${m.nickname}</span>
-                <span class="text-[9px] bg-slate-900 px-1.5 py-0.5 rounded text-slate-300 font-mono border border-slate-800">${m.uf}</span>
-                <span class="text-[9px] ${badgeStyle} px-1.5 py-0.5 rounded font-mono font-bold">${m.voteLabel}</span>
-                <span class="text-[9px] text-slate-500 ml-auto">${m.time}</span>
+          `;
+        } else {
+          const isMe = verifiedVoter && voterNicknames[verifiedVoter.cleanDoc] === msg.sender;
+          const choiceBadge = msg.choice ? `<span class="bg-slate-800 text-[9px] px-1.5 py-0.5 rounded text-slate-300 border border-slate-700">${msg.choice}</span>` : '';
+          const paidBadge = msg.isSupporter ? `<span class="bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-500/30">💎 VIP</span>` : '';
+
+          html += `
+            <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl space-y-1">
+              <div class="flex justify-between items-center text-[10px]">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-bold ${isMe ? 'text-blue-400' : 'text-slate-200'}">${msg.sender}</span>
+                  <span class="text-slate-500 font-mono">(${msg.uf})</span>
+                  ${choiceBadge}
+                  ${paidBadge}
+                </div>
+                <span class="text-slate-600 font-mono">${msg.time}</span>
               </div>
-              <p class="text-slate-200 text-xs">${m.text}</p>
+              <p class="text-slate-300 text-xs leading-relaxed">${msg.text}</p>
             </div>
-          `}
-        </div>
-      `;
-      }).join('');
-      chatBox.scrollTop = chatBox.scrollHeight;
+          `;
+        }
+      });
+
+      container.innerHTML = html;
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function handleChatKeyPress(e) {
+      if (e.key === 'Enter') sendChatMessage();
     }
 
     function sendChatMessage() {
       if (!verifiedVoter) return;
+
+      const hasVoted = votedCPFs[verifiedVoter.cleanDoc];
+      if (!hasVoted) return;
 
       const nickname = voterNicknames[verifiedVoter.cleanDoc];
       if (!nickname) return;
@@ -1812,28 +1792,25 @@
       const text = input.value.trim();
       if (!text) return;
 
-      const uf = verifiedVoter.uf;
-      const voteLabel = voterChoices[verifiedVoter.cleanDoc] || "votou";
+      const now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const choice = voterChoices[verifiedVoter.cleanDoc] || '';
+      const isSupporter = paidSupporters[verifiedVoter.cleanDoc] || false;
 
-      chatMessages.push({
+      const newMsg = {
         id: Date.now(),
-        nickname,
-        uf,
-        voteLabel,
-        text,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isSystem: false
-      });
+        sender: nickname,
+        uf: verifiedVoter.uf,
+        choice: choice,
+        isSupporter: isSupporter,
+        text: text,
+        time: now
+      };
 
+      chatMessages.push(newMsg);
       localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
+
       input.value = "";
       renderChat();
-    }
-
-    function handleChatKeyPress(e) {
-      if (e.key === 'Enter') {
-        sendChatMessage();
-      }
     }
   </script>
 </body>
