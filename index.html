@@ -523,7 +523,7 @@
 
       </section>
 
-      <!-- BOTÃO DE VER COMPROVANTE ENTRE A URNA E A SEÇÃO DE DÚVIDAS (EXIBIDO APENAS NA ABA DE VOTAÇÃO SE JÁ VOTOU) -->
+      <!-- BOTÃO DE VER COMPROVANTE ENTRE A URNA E A SEÇÃO DE DÚVIDAS (EXIBIDO AUTOMATICAMENTE SE JÁ VOTOU) -->
       <div id="post-vote-receipt-container" class="hidden w-full">
         <button onclick="openReceiptModal()" class="w-full bg-slate-900 hover:bg-slate-800 border border-blue-500/40 p-3 rounded-2xl flex items-center justify-between shadow-lg transition group">
           <div class="flex items-center gap-2.5">
@@ -679,22 +679,6 @@
             <input type="text" id="chat-nickname-input" placeholder="Digite seu apelido..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-blue-500">
             <button onclick="saveNickname()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-2 rounded-xl text-xs transition">Salvar</button>
           </div>
-        </div>
-
-        <!-- Bloqueio de Apoiador (Com o botão funcionando chamando openApoiadorModal) -->
-        <div id="chat-pix-support-box" class="hidden bg-slate-900 border border-emerald-500/40 p-4 rounded-xl text-center space-y-3">
-          <div class="inline-flex p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xl">
-            🎨
-          </div>
-          <div class="space-y-1">
-            <h4 class="text-xs font-extrabold text-white">Liberar Acesso ao Chat e Card com Foto</h4>
-            <p class="text-[11px] text-slate-300 leading-relaxed">
-              Para participar do debate ao vivo e desbloquear seu card exclusivo, apoie a causa com uma pequena contribuição via Pix.
-            </p>
-          </div>
-          <button onclick="openApoiadorModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99]">
-            Adquirir Card com Foto e Apoiar a Causa
-          </button>
         </div>
 
         <!-- Enviar Mensagem -->
@@ -1133,6 +1117,7 @@
       switchTab('urna');
       resetUrna();
 
+      // Verifica imediatamente ao entrar na cabine se este usuário já votou
       if (verifiedVoter) {
         const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
         const isAlreadyVoted = !!dbRecord || !!votedCPFs[verifiedVoter.cleanDoc];
@@ -1168,14 +1153,12 @@
         document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition flex items-center gap-1";
         
         const hasVoted = verifiedVoter && votedCPFs[verifiedVoter.cleanDoc];
-        const hasPaid = verifiedVoter && paidSupporters[verifiedVoter.cleanDoc];
         const nickname = verifiedVoter ? voterNicknames[verifiedVoter.cleanDoc] : null;
         
         document.getElementById('chat-user-badge').textContent = nickname ? `${nickname} (${verifiedVoter.uf})` : (verifiedVoter ? verifiedVoter.name.split(' ')[0] : "Visitante");
         
         const lockWarning = document.getElementById('chat-locked-warning');
         const nicknameBox = document.getElementById('nickname-setup-box');
-        const pixSupportBox = document.getElementById('chat-pix-support-box');
         const inputContainer = document.getElementById('chat-input-container');
         const nickErrBox = document.getElementById('nickname-error');
 
@@ -1184,24 +1167,15 @@
         if (!hasVoted) {
           lockWarning.classList.remove('hidden');
           nicknameBox.classList.add('hidden');
-          pixSupportBox.classList.add('hidden');
           inputContainer.classList.add('hidden');
         } else {
           lockWarning.classList.add('hidden');
-          
-          if (!hasPaid) {
-            nicknameBox.classList.add('hidden');
-            pixSupportBox.classList.remove('hidden');
+          if (!nickname) {
+            nicknameBox.classList.remove('hidden');
             inputContainer.classList.add('hidden');
           } else {
-            pixSupportBox.classList.add('hidden');
-            if (!nickname) {
-              nicknameBox.classList.remove('hidden');
-              inputContainer.classList.add('hidden');
-            } else {
-              nicknameBox.classList.add('hidden');
-              inputContainer.classList.remove('hidden');
-            }
+            nicknameBox.classList.add('hidden');
+            inputContainer.classList.remove('hidden');
           }
         }
 
@@ -1353,6 +1327,7 @@
           </div>
         `;
 
+        // Exibe o botão de comprovante entre a urna e as dúvidas
         document.getElementById('post-vote-receipt-container').classList.remove('hidden');
         return;
       }
@@ -1420,6 +1395,7 @@
         </div>
       `;
 
+      // Exibe o botão de comprovante entre a urna e as dúvidas após votar
       document.getElementById('post-vote-receipt-container').classList.remove('hidden');
 
       openApoiadorModal();
@@ -1636,6 +1612,7 @@
       const hasPaid = verifiedVoter && paidSupporters[verifiedVoter.cleanDoc];
 
       if (hasPaid) {
+        // JÁ PAGOU: Exibe o card com foto e a opção de compartilhar, ocultando o botão de comprar
         buyBtn.classList.add('hidden');
         topBadge.textContent = "⚡ COMPROVANTE OFICIAL DE APOIADOR ⚡";
         
@@ -1649,6 +1626,7 @@
         }
         centerBox.classList.add('hidden');
       } else {
+        // NÃO PAGOU: Exibe o comprovante simples e o botão para adquirir
         buyBtn.classList.remove('hidden');
         topBadge.textContent = "⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡";
         receiptCard.style.backgroundImage = "none";
