@@ -799,7 +799,6 @@
 
     function onCPFInput(input) {
       const cleanDoc = input.value.replace(/\D/g, '');
-      const hint = document.getElementById('cpf-status-hint');
       const ufSelect = document.getElementById('voter-uf-select');
       const cityInput = document.getElementById('voter-city-search');
 
@@ -815,7 +814,7 @@
 
     // VALIDAÇÃO FLEXÍVEL (PERMITE QUALQUER NÚMERO PARA TESTES)
     function validateCPF(cpf) {
-      const clean = cpf.replace(/\D/g, '');
+      const clean = (cpf || "").replace(/\D/g, '');
       return clean.length >= 2; 
     }
 
@@ -981,8 +980,6 @@
 
       document.getElementById('auth-step-1').classList.add('hidden');
       document.getElementById('auth-step-2').classList.remove('hidden');
-
-      const isAlreadyVoted = !!votedCPFs[cleanDoc];
 
       setTimeout(() => {
         document.getElementById('auth-step-2').classList.add('hidden');
@@ -1317,7 +1314,6 @@
       document.getElementById('std-receipt-option').textContent = confirmedVoteData.opcao === '22' ? 'FLÁVIO BOLSONARO (22)' : (confirmedVoteData.opcao === '13' ? 'LULA (13)' : 'VOTO EM BRANCO/NULO');
 
       if (isSupporterCard) {
-        // Exibe o card com a imagem de fundo do candidato (Kit Apoiador)
         standardInner.classList.add('hidden');
         supporterFooter.classList.remove('hidden');
 
@@ -1330,7 +1326,6 @@
           receiptCard.style.backgroundColor = "#090d16";
         }
       } else {
-        // Comprovante padrão normal (sem imagem de fundo do candidato)
         receiptCard.style.backgroundImage = "none";
         receiptCard.style.backgroundColor = "#090d16";
         supporterFooter.classList.add('hidden');
