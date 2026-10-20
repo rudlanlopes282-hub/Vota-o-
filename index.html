@@ -155,9 +155,8 @@
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Participante</label>
-              <input type="text" id="voter-doc" inputmode="numeric" pattern="[0-9]*" maxlength="14" placeholder="000.000.000-00" oninput="onCPFInput(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition">
-              <p id="cpf-status-hint" class="text-[10px] text-blue-400 mt-0.5 hidden font-semibold">ℹ️ CPF já cadastrado neste dispositivo. Localização travada.</p>
+              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Participante (Modo Teste Livre)</label>
+              <input type="text" id="voter-doc" inputmode="numeric" placeholder="Digite qualquer número..." oninput="onCPFInput(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition">
             </div>
 
             <!-- SENHA / PIN DE SEGURANÇA PESSOAL -->
@@ -348,26 +347,21 @@
                   <p>✔️ <b>Card Exclusivo de Apoiador</b> para compartilhar nas redes.</p>
                   <p>✔️ <b>Acesso Imediato ao Chat VIP</b> de debate em tempo real.</p>
                   <p class="text-[10px] text-slate-400 pt-1 border-t border-slate-900">
-                    💡 <i>100% da contribuição cobre os custos de tráfego pago do site.</i>
+                    💡 <i>Modo de Teste: Clique abaixo para simular a liberação instantânea.</i>
                   </p>
                 </div>
 
-                <!-- BOTÃO PRINCIPAL (R$ 2,00) -->
-                <button onclick="requestPixCheckout(2.00)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
-                  <span>🎨</span>
-                  <span>Gerar Kit Apoiador por R$ 2,00</span>
-                </button>
-
-                <!-- BOTÃO SECUNDÁRIO (R$ 1,01 a R$ 1,99) -->
-                <button onclick="requestPixCheckout(gerarValorMenorSyncPay())" class="w-full text-slate-400 hover:text-slate-200 font-semibold text-[11px] underline text-center block pt-1 transition">
-                  Não tem R$ 2,00? Gerar valor menor dinâmico &rarr;
+                <!-- BOTÃO PRINCIPAL (TESTE DIRETO SEM PAGAR) -->
+                <button onclick="finalizePixSuccess()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+                  <span>🚀</span>
+                  <span>[TESTE] Liberar Kit Apoiador Grátis</span>
                 </button>
               </div>
 
               <!-- Loader de Geração -->
               <div id="pix-loading" class="hidden py-6 space-y-2">
                 <div class="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-                <p class="text-xs text-slate-400">Gerando QR Code PIX via SyncPay...</p>
+                <p class="text-xs text-slate-400">Processando...</p>
               </div>
 
               <!-- Área do QR Code e Copia e Cola -->
@@ -398,10 +392,10 @@
                 <div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
                   <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wide">
                     <span>✅</span>
-                    <span>Pagamento Confirmado!</span>
+                    <span>Kit Apoiador Liberado!</span>
                   </div>
                   <p class="text-xs text-slate-200 leading-relaxed font-medium">
-                    Seu Kit Apoiador e o Acesso ao Chat VIP foram liberados!
+                    Seu card com fundo de campanha e o Chat VIP estão prontos.
                   </p>
                 </div>
 
@@ -409,10 +403,10 @@
                 <canvas id="cardCanvas" width="800" height="1422" class="hidden"></canvas>
 
                 <div class="space-y-2">
-                  <a id="downloadCardBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2" download="meu-card-apoiador.png">
-                    <span>📥</span>
-                    <span>Baixar Card de Apoiador 9:16</span>
-                  </a>
+                  <button onclick="openReceiptModal(true)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+                    <span>🖼️</span>
+                    <span>Ver Comprovante com Foto de Campanha</span>
+                  </button>
                   <button onclick="goToChatFromModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
                     Entrar no Chat VIP de Debate 💬
                   </button>
@@ -420,20 +414,40 @@
               </div>
 
               <button id="btn-cancel-pix" onclick="closePixModal()" class="text-xs text-slate-500 hover:text-slate-300 font-medium transition underline pt-1 block mx-auto">
-                Pular / Voltar ao Início
+                Pular / Ver Comprovante Padrão
               </button>
             </div>
           </div>
 
-          <!-- MODAL COMPROVANTE FORMATO TIKTOK / REELS (9:16) COM FOTO DE FUNDO REAL -->
+          <!-- MODAL COMPROVANTE FORMATO TIKTOK / REELS (9:16) -->
           <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 overflow-y-auto">
             <div class="w-full max-w-xs my-auto space-y-3">
               
-              <!-- CARTAZ PROPORÇÃO 9:16 COM BACKGROUND DE IMAGEM -->
-              <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-end p-4 pb-14 text-white bg-cover bg-center">
+              <!-- CARTAZ PROPORÇÃO 9:16 COM OU SEM BACKGROUND DE IMAGEM -->
+              <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-end p-4 pb-14 text-white bg-cover bg-center bg-[#090d16]">
                 
-                <!-- SOBREPOSIÇÃO DE DADOS DO ELEITOR NA PARTE INFERIOR -->
-                <div class="relative z-10 space-y-2 bg-black/75 backdrop-blur-md p-3.5 rounded-2xl border border-white/20 shadow-2xl text-center">
+                <!-- CONTEÚDO DO COMPROVANTE PADRÃO (SE NÃO FOR APOIADOR) -->
+                <div id="standard-receipt-inner" class="hidden flex-1 flex flex-col justify-between items-center text-center p-6">
+                  <div class="space-y-1 pt-2">
+                    <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Painel Brasil</p>
+                    <h3 class="text-lg font-black text-white">Comprovante de Votação</h3>
+                    <p class="text-[10px] text-slate-400">Simulação Eleitoral 2026</p>
+                  </div>
+
+                  <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl w-full space-y-2">
+                    <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Opção Registrada</p>
+                    <p id="std-receipt-option" class="text-xl font-black text-amber-400">---</p>
+                  </div>
+
+                  <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-2xl w-full space-y-1">
+                    <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Participante</p>
+                    <p class="text-xs font-bold text-white uppercase" id="std-receipt-name">---</p>
+                    <p class="text-[10px] text-blue-400" id="std-receipt-location">---</p>
+                  </div>
+                </div>
+
+                <!-- SOBREPOSIÇÃO DE DADOS DO ELEITOR NA PARTE INFERIOR (CASO APOIADOR COM FOTO) -->
+                <div id="supporter-receipt-footer" class="relative z-10 space-y-2 bg-black/75 backdrop-blur-md p-3.5 rounded-2xl border border-white/20 shadow-2xl text-center">
                   <p class="text-[9px] uppercase tracking-widest opacity-75 font-bold">Participante Registrado(a)</p>
                   
                   <!-- NOME COM BOTÃO DE PRIVACIDADE -->
@@ -447,6 +461,10 @@
                     <p id="receipt-voter-location" class="text-[10px] font-bold">---</p>
                     <button onclick="togglePrivacy('location')" class="text-xs opacity-80 hover:opacity-100 transition p-1" title="Ocultar/Mostrar Local">👁️</button>
                   </div>
+
+                  <p class="text-[8px] font-bold uppercase tracking-wider text-amber-400 pt-1 border-t border-white/10">
+                    Arte Ilustrativa — Não é Comprovante Oficial
+                  </p>
                 </div>
 
               </div>
@@ -670,7 +688,7 @@
               <span class="text-blue-400 group-open:rotate-180 transition-transform">▼</span>
             </summary>
             <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-              Após o primeiro registo com o CPF, a localização (Estado e Cidade) vinculada fica travada no dispositivo para garantir consistência e evitar fraudes na amostra da pesquisa.
+              Após o primeiro registo, a localização (Estado e Cidade) vinculada fica travada no dispositivo para garantir consistência e evitar fraudes na amostra da pesquisa.
             </div>
           </details>
         </div>
@@ -780,58 +798,25 @@
     }
 
     function onCPFInput(input) {
-      formatCPF(input);
       const cleanDoc = input.value.replace(/\D/g, '');
       const hint = document.getElementById('cpf-status-hint');
       const ufSelect = document.getElementById('voter-uf-select');
       const cityInput = document.getElementById('voter-city-search');
 
-      if (cleanDoc.length === 11) {
+      if (cleanDoc.length >= 3) {
         if (voterLocations[cleanDoc]) {
           const loc = voterLocations[cleanDoc];
           ufSelect.value = loc.uf;
           cityInput.value = loc.city;
           document.getElementById('selected-city-val').value = loc.city;
-
-          ufSelect.disabled = true;
-          cityInput.disabled = true;
-          hint.classList.remove('hidden');
-        } else {
-          ufSelect.disabled = false;
-          cityInput.disabled = false;
-          hint.classList.add('hidden');
         }
-      } else {
-        ufSelect.disabled = false;
-        cityInput.disabled = false;
-        hint.classList.add('hidden');
       }
     }
 
+    // VALIDAÇÃO FLEXÍVEL (PERMITE QUALQUER NÚMERO PARA TESTES)
     function validateCPF(cpf) {
       const clean = cpf.replace(/\D/g, '');
-      if (clean.length !== 11) return false;
-      if (/^(\d)\1{10}$/.test(clean)) return false;
-
-      let sum = 0;
-      let remainder;
-
-      for (let i = 1; i <= 9; i++) {
-        sum += parseInt(clean.substring(i - 1, i)) * (11 - i);
-      }
-      remainder = (sum * 10) % 11;
-      if (remainder === 10 || remainder === 11) remainder = 0;
-      if (remainder !== parseInt(clean.substring(9, 10))) return false;
-
-      sum = 0;
-      for (let i = 1; i <= 10; i++) {
-        sum += parseInt(clean.substring(i - 1, i)) * (12 - i);
-      }
-      remainder = (sum * 10) % 11;
-      if (remainder === 10 || remainder === 11) remainder = 0;
-      if (remainder !== parseInt(clean.substring(10, 11))) return false;
-
-      return true;
+      return clean.length >= 2; 
     }
 
     async function checkVoterInDatabase(cleanDoc) {
@@ -917,19 +902,6 @@
       renderCityResults();
     }
 
-    function formatCPF(input) {
-      let v = input.value.replace(/\D/g, '');
-      if (v.length > 11) v = v.slice(0, 11);
-      if (v.length > 9) {
-        v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-      } else if (v.length > 6) {
-        v = v.replace(/^(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
-      } else if (v.length > 3) {
-        v = v.replace(/^(\d{3})(\d{1,3})/, '$1.$2');
-      }
-      input.value = v;
-    }
-
     function onUFChange() {
       const ufSelect = document.getElementById('voter-uf-select');
       const selectedUf = ufSelect.value;
@@ -944,8 +916,6 @@
 
     function filterCityOptions() {
       const ufSelect = document.getElementById('voter-uf-select');
-      if (ufSelect.disabled) return;
-
       const uf = ufSelect.value;
       const cities = stateCities[uf] || [];
       const query = document.getElementById('voter-city-search').value.toLowerCase().trim();
@@ -995,39 +965,24 @@
         return;
       }
 
-      const cleanDoc = doc.replace(/\D/g, '');
+      const cleanDoc = doc.replace(/\D/g, '') || "123";
       
-      if (!validateCPF(cleanDoc)) {
-        errBox.textContent = "⚠️ CPF inválido ou inexistente. Informe um número de CPF verdadeiro.";
-        errBox.classList.remove('hidden');
-        return;
-      }
-
       if (!pin || pin.length < 4) {
         errBox.textContent = "⚠️ Digite um PIN de segurança com 4 dígitos para proteger sua conta.";
         errBox.classList.remove('hidden');
         return;
       }
 
-      if (voterDevicePins[cleanDoc] && voterDevicePins[cleanDoc] !== pin) {
-        errBox.textContent = "❌ PIN incorreto para este CPF! Este CPF já está associado a outro PIN de segurança.";
-        errBox.classList.remove('hidden');
-        return;
-      } else if (!voterDevicePins[cleanDoc]) {
-        voterDevicePins[cleanDoc] = pin;
-        localStorage.setItem('simulador_voter_pins', JSON.stringify(voterDevicePins));
-      }
+      voterDevicePins[cleanDoc] = pin;
+      localStorage.setItem('simulador_voter_pins', JSON.stringify(voterDevicePins));
 
-      if (!voterLocations[cleanDoc]) {
-        voterLocations[cleanDoc] = { uf: ufSelect.value, city: city };
-        localStorage.setItem('simulador_voter_locations', JSON.stringify(voterLocations));
-      }
+      voterLocations[cleanDoc] = { uf: ufSelect.value, city: city };
+      localStorage.setItem('simulador_voter_locations', JSON.stringify(voterLocations));
 
       document.getElementById('auth-step-1').classList.add('hidden');
       document.getElementById('auth-step-2').classList.remove('hidden');
 
-      const dbRecord = await checkVoterInDatabase(cleanDoc);
-      const isAlreadyVoted = !!dbRecord || !!votedCPFs[cleanDoc];
+      const isAlreadyVoted = !!votedCPFs[cleanDoc];
 
       setTimeout(() => {
         document.getElementById('auth-step-2').classList.add('hidden');
@@ -1036,40 +991,21 @@
         const selectedOpt = ufSelect.querySelector(`option[value="${lockedLoc.uf}"]`);
         const region = selectedOpt ? selectedOpt.getAttribute('data-region') : 'Norte';
 
-        verifiedVoter = { name, doc, cleanDoc, pin, uf: lockedLoc.uf, city: lockedLoc.city, region, token: deviceSessionToken };
+        verifiedVoter = { name, doc: doc || '123.456.789-00', cleanDoc, pin, uf: lockedLoc.uf, city: lockedLoc.city, region, token: deviceSessionToken };
 
         document.getElementById('summary-name').textContent = name;
-        document.getElementById('summary-doc').textContent = doc;
+        document.getElementById('summary-doc').textContent = verifiedVoter.doc;
         document.getElementById('summary-state').textContent = `${lockedLoc.city} / ${lockedLoc.uf} (${region})`;
 
         const statusEl = document.getElementById('summary-vote-status');
-
-        if (isAlreadyVoted) {
-          statusEl.textContent = "JÁ VOTOU (Sessão Segura Protegida)";
-          statusEl.className = "text-amber-400 font-bold";
-
-          const savedReceipt = localStorage.getItem('simulador_receipt_' + cleanDoc);
-          if (savedReceipt) {
-            confirmedVoteData = JSON.parse(savedReceipt);
-          } else if (dbRecord) {
-            confirmedVoteData = {
-              voterName: name,
-              voterCpf: doc,
-              cityUf: `${dbRecord.cidade || lockedLoc.city} / ${dbRecord.uf || lockedLoc.uf}`,
-              opcao: dbRecord.opcao,
-              time: dbRecord.created_at ? new Date(dbRecord.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')
-            };
-          }
-        } else {
-          statusEl.textContent = "APTO PARA VOTAR";
-          statusEl.className = "text-blue-400 font-bold";
-        }
+        statusEl.textContent = "APTO PARA VOTAR";
+        statusEl.className = "text-blue-400 font-bold";
 
         document.getElementById('auth-step-3').classList.remove('hidden');
 
         document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-blue-500/30 text-blue-400 font-bold text-xs flex items-center justify-center";
         document.getElementById('step-dot-3').className = "w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center";
-      }, 1000);
+      }, 800);
     }
 
     function startVotingSession() {
@@ -1148,17 +1084,6 @@
       }
 
       if (!nickname) return;
-
-      const normalizedNewNick = nickname.toLowerCase();
-      const existingEntries = Object.entries(voterNicknames);
-      
-      for (let [cpfKey, nickVal] of existingEntries) {
-        if (cpfKey !== verifiedVoter.cleanDoc && nickVal.toLowerCase() === normalizedNewNick) {
-          errBox.textContent = `⚠️ O apelido "${nickname}" já está em uso por outro participante.`;
-          errBox.classList.remove('hidden');
-          return;
-        }
-      }
 
       voterNicknames[verifiedVoter.cleanDoc] = nickname;
       localStorage.setItem('simulador_voter_nicknames', JSON.stringify(voterNicknames));
@@ -1242,47 +1167,6 @@
     async function pressConfirma() {
       if (!verifiedVoter) return;
 
-      const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
-      const isAlreadyVoted = !!dbRecord || votedCPFs[verifiedVoter.cleanDoc];
-
-      if (isAlreadyVoted) {
-        votedCPFs[verifiedVoter.cleanDoc] = true;
-        localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
-
-        let userOption = dbRecord?.opcao || voterChoices[verifiedVoter.cleanDoc] || 'Votado';
-
-        const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
-        if (savedReceipt) {
-          confirmedVoteData = JSON.parse(savedReceipt);
-        } else {
-          confirmedVoteData = {
-            voterName: verifiedVoter.name,
-            voterCpf: verifiedVoter.doc,
-            cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-            opcao: userOption,
-            time: new Date().toLocaleString('pt-BR')
-          };
-          localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
-        }
-
-        const lcd = document.getElementById('lcd-content');
-        lcd.innerHTML = `
-          <div class="py-3 text-center space-y-2">
-            <p class="text-xs font-black text-rose-700 uppercase">AVISO: VOTO DUPLICADO</p>
-            <p class="text-[10px] font-bold text-black">Este CPF já registrou participação nesta pesquisa.</p>
-            <div class="pt-1 flex flex-col gap-1.5 px-2">
-              <button onclick="openReceiptModal()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-1.5 px-2 rounded text-[10px] uppercase shadow">
-                📄 Ver Comprovante
-              </button>
-              <button onclick="switchTab('chat')" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-1 px-2 rounded text-[9px] uppercase">
-                💬 Ir para o Debate
-              </button>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
       if (!isBranco && currentInput.length < 2) {
         return;
       }
@@ -1331,9 +1215,7 @@
       if (supabaseClient) {
         try {
           await supabaseClient.from('votos').insert([pendingVoteObj]);
-        } catch (err) {
-          console.error("Falha ao gravar voto no Supabase:", err);
-        }
+        } catch (err) {}
       }
 
       await loadCloudStats();
@@ -1349,13 +1231,6 @@
       openApoiadorModal();
     }
 
-    function gerarValorMenorSyncPay() {
-      const min = 1.01;
-      const max = 1.99;
-      const valorAleatorio = (Math.random() * (max - min) + min).toFixed(2);
-      return parseFloat(valorAleatorio);
-    }
-
     function openApoiadorModal() {
       document.getElementById('pix-modal').classList.remove('hidden');
       document.getElementById('pix-options-box').classList.remove('hidden');
@@ -1365,135 +1240,26 @@
       document.getElementById('btn-cancel-pix').classList.remove('hidden');
     }
 
-    async function requestPixCheckout(amountValue) {
-      document.getElementById('pix-options-box').classList.add('hidden');
-      document.getElementById('pix-loading').classList.remove('hidden');
-      document.getElementById('pix-display-amount').textContent = `R$ ${amountValue.toFixed(2).replace('.', ',')}`;
-
-      try {
-        const response = await fetch('/api/gerar-pix', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: verifiedVoter.name,
-            email: "apoiador@painelbrasil.org",
-            cpf: verifiedVoter.cleanDoc,
-            amount: amountValue
-          })
-        });
-
-        const data = await response.json();
-
-        if (data && data.pix_code) {
-          document.getElementById('pix-code-input').value = data.pix_code;
-          document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.pix_code)}`;
-          
-          document.getElementById('pix-loading').classList.add('hidden');
-          document.getElementById('pix-content').classList.remove('hidden');
-
-          startPixStatusPolling(data.identifier);
-        } else {
-          fallbackPixSimulated(amountValue);
-        }
-      } catch (err) {
-        fallbackPixSimulated(amountValue);
-      }
-    }
-
-    function fallbackPixSimulated(amount) {
-      const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865404" + Math.floor(amount * 100) + "5802BR5920KIT APOIADOR PAINEL BRASIL6009SAO PAULO62070503***6304E2CA";
-      document.getElementById('pix-code-input').value = mockPix;
-      document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mockPix)}`;
-      
-      document.getElementById('pix-loading').classList.add('hidden');
-      document.getElementById('pix-content').classList.remove('hidden');
-
-      setTimeout(() => {
-        finalizePixSuccess();
-      }, 5000);
-    }
-
-    function startPixStatusPolling(transactionId) {
-      if (!transactionId) return;
-      if (pixPollInterval) clearInterval(pixPollInterval);
-
-      pixPollInterval = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/gerar-pix?id=${transactionId}&voterCpf=${verifiedVoter.cleanDoc}`);
-          const data = await res.json();
-
-          if (data && data.paid) {
-            clearInterval(pixPollInterval);
-            finalizePixSuccess();
-          }
-        } catch (err) {
-          console.error("Erro na verificação do PIX:", err);
-        }
-      }, 3000);
-    }
-
-    function copyPixCode() {
-      const input = document.getElementById('pix-code-input');
-      input.select();
-      document.execCommand('copy');
-      alert('Código PIX copiado para a área de transferência!');
-    }
-
     function closePixModal() {
-      if (pixPollInterval) clearInterval(pixPollInterval);
       document.getElementById('pix-modal').classList.add('hidden');
+      openReceiptModal(false); // Abre o comprovante padrão normal
     }
 
     function finalizePixSuccess() {
-      if (pixPollInterval) clearInterval(pixPollInterval);
+      document.getElementById('pix-options-box').classList.add('hidden');
+      document.getElementById('pix-loading').classList.remove('hidden');
 
-      document.getElementById('pix-content').classList.add('hidden');
-      document.getElementById('btn-cancel-pix').classList.add('hidden');
-      document.getElementById('msg-vote-success').classList.remove('hidden');
-
-      renderCardCanvas(verifiedVoter.name, confirmedVoteData.opcao, `${verifiedVoter.city} / ${verifiedVoter.uf}`);
+      setTimeout(() => {
+        document.getElementById('pix-loading').classList.add('hidden');
+        document.getElementById('btn-cancel-pix').classList.add('hidden');
+        document.getElementById('msg-vote-success').classList.remove('hidden');
+      }, 500);
     }
 
-    function renderCardCanvas(nomeUsuario, opcaoVoto, localidade) {
-      const canvas = document.getElementById('cardCanvas');
-      const ctx = canvas.getContext('2d');
-
-      ctx.fillStyle = '#090d16';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.fillStyle = '#131c2e';
-      ctx.fillRect(40, 40, 720, 1342);
-
-      ctx.strokeStyle = opcaoVoto === '13' ? '#f43f5e' : '#10b981';
-      ctx.lineWidth = 10;
-      ctx.strokeRect(50, 50, 700, 1322);
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 36px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('PAINEL BRASIL • 2026', 400, 130);
-
-      let candText = opcaoVoto === '22' ? 'FLÁVIO BOLSONARO (22)' : (opcaoVoto === '13' ? 'LULA (13)' : opcaoVoto);
-      ctx.fillStyle = opcaoVoto === '13' ? '#f43f5e' : '#10b981';
-      ctx.font = 'bold 54px Arial';
-      ctx.fillText(candText, 400, 700);
-
-      const displayName = privacyHiddenName ? "[Anônimo]" : nomeUsuario;
-      const displayLoc = privacyHiddenLocation ? "[Local Oculto]" : localidade;
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 34px Arial';
-      ctx.fillText(`Participante: ${displayName}`, 400, 1150);
-
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = '28px Arial';
-      ctx.fillText(`📍 ${displayLoc}`, 400, 1210);
-
-      const downloadBtn = document.getElementById('downloadCardBtn');
-      downloadBtn.href = canvas.toDataURL('image/png');
+    function copyPixCode() {
+      alert('Modo de teste ativado.');
     }
 
-    // Variáveis de privacidade para o comprovante
     let privacyHiddenName = false;
     let privacyHiddenLocation = false;
 
@@ -1513,18 +1279,17 @@
       }
     }
 
-    async function openReceiptModal() {
+    function openReceiptModal(isSupporterCard = false) {
       if (!confirmedVoteData && verifiedVoter) {
         const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
         if (savedReceipt) {
           confirmedVoteData = JSON.parse(savedReceipt);
         } else {
-          const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
           confirmedVoteData = {
             voterName: verifiedVoter.name,
             voterCpf: verifiedVoter.doc,
             cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-            opcao: dbRecord?.opcao || '22',
+            opcao: '22',
             time: new Date().toLocaleString('pt-BR')
           };
         }
@@ -1537,21 +1302,39 @@
 
       closePixModal();
 
+      const receiptCard = document.getElementById('receipt-card');
+      const standardInner = document.getElementById('standard-receipt-inner');
+      const supporterFooter = document.getElementById('supporter-receipt-footer');
+
       const nameText = document.getElementById('receipt-voter-name');
       const locationText = document.getElementById('receipt-voter-location');
-      const receiptCard = document.getElementById('receipt-card');
 
       nameText.textContent = privacyHiddenName ? "🔒 [DADO OCULTO]" : confirmedVoteData.voterName;
       locationText.textContent = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : confirmedVoteData.cityUf;
 
-      // Busca as imagens diretamente na raiz do repositório
-      if (confirmedVoteData.opcao === '22') {
-        receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
-      } else if (confirmedVoteData.opcao === '13') {
-        receiptCard.style.backgroundImage = "url('comprovante-13.jpg')";
+      document.getElementById('std-receipt-name').textContent = confirmedVoteData.voterName;
+      document.getElementById('std-receipt-location').textContent = confirmedVoteData.cityUf;
+      document.getElementById('std-receipt-option').textContent = confirmedVoteData.opcao === '22' ? 'FLÁVIO BOLSONARO (22)' : (confirmedVoteData.opcao === '13' ? 'LULA (13)' : 'VOTO EM BRANCO/NULO');
+
+      if (isSupporterCard) {
+        // Exibe o card com a imagem de fundo do candidato (Kit Apoiador)
+        standardInner.classList.add('hidden');
+        supporterFooter.classList.remove('hidden');
+
+        if (confirmedVoteData.opcao === '22') {
+          receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
+        } else if (confirmedVoteData.opcao === '13') {
+          receiptCard.style.backgroundImage = "url('comprovante-13.jpg')";
+        } else {
+          receiptCard.style.backgroundImage = "none";
+          receiptCard.style.backgroundColor = "#090d16";
+        }
       } else {
+        // Comprovante padrão normal (sem imagem de fundo do candidato)
         receiptCard.style.backgroundImage = "none";
         receiptCard.style.backgroundColor = "#090d16";
+        supporterFooter.classList.add('hidden');
+        standardInner.classList.remove('hidden');
       }
 
       document.getElementById('receipt-modal').classList.remove('hidden');
@@ -1582,9 +1365,7 @@
             text: shareText,
             url: window.location.href
           });
-        } catch (err) {
-          console.log("Compartilhamento cancelado:", err);
-        }
+        } catch (err) {}
       } else {
         copyReceiptText();
       }
@@ -1725,7 +1506,7 @@
       if (!text) return;
 
       const uf = verifiedVoter.uf;
-      const voteLabel = voterChoices[verifiedVoter.cleanDoc] / "votou";
+      const voteLabel = voterChoices[verifiedVoter.cleanDoc] || "votou";
 
       chatMessages.push({
         id: Date.now(),
