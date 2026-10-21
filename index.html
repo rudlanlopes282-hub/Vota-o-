@@ -382,7 +382,6 @@
                 <canvas id="cardCanvas" width="800" height="1422" class="hidden"></canvas>
 
                 <div class="space-y-2">
-                  <!-- BOTÃO CORRIGIDO: Redireciona diretamente para o Comprovante com Foto -->
                   <button onclick="openReceiptModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
                     <span>📥</span>
                     <span>VER E BAIXAR CARD DE APOIADOR 9:16</span>
@@ -1483,36 +1482,85 @@
       const ctx = canvas.getContext('2d');
 
       let bgImgSrc = "";
+      let accentColor = "#38bdf8"; 
+
       if (opcaoVoto === '22') {
         bgImgSrc = "comprovante-22.jpg";
+        accentColor = "#eab308"; // Amarelo/Dourado para 22
       } else if (opcaoVoto === '13') {
         bgImgSrc = "comprovante-13.jpg";
+        accentColor = "#ef4444"; // Vermelho para 13
       }
 
       const drawOverlayText = () => {
-        const displayName = privacyHiddenName ? "🔒 [DADO OCULTO]" : nomeUsuario;
-        const displayLoc = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : localidade;
+        const displayName = privacyHiddenName ? "DADO OCULTO" : nomeUsuario;
+        const displayLoc = privacyHiddenLocation ? "LOCAL OCULTO" : localidade;
 
-        ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+        // --- SELO DE VERIFICAÇÃO NO OMBRO ESQUERDO ---
+        const centerX = 210;
+        const centerY = 370;
+
+        ctx.save();
+
+        // 1. Fundo do Selo
+        ctx.fillStyle = "rgba(10, 15, 26, 0.88)";
         ctx.beginPath();
-        ctx.roundRect(100, 1100, 600, 220, 24);
+        ctx.arc(centerX, centerY, 95, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
-        ctx.lineWidth = 2;
+
+        // 2. Bordas
+        ctx.strokeStyle = accentColor;
+        ctx.lineWidth = 4;
         ctx.stroke();
 
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 22px Arial';
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 88, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 3. Cabeçalho do Selo
+        ctx.fillStyle = accentColor;
+        ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('PARTICIPANTE REGISTRADO(A)', 400, 1150);
+        ctx.fillText('✓ VERIFICADO', centerX, centerY - 50);
 
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText('PARTICIPANTE', centerX, centerY - 32);
+
+        // Divisória
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(centerX - 65, centerY - 24);
+        ctx.lineTo(centerX + 65, centerY - 24);
+        ctx.stroke();
+
+        // 4. Nome do Usuário
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 36px Arial';
-        ctx.fillText(displayName.toUpperCase(), 400, 1210);
+        ctx.font = 'bold 18px Arial';
+        let formattedName = displayName.toUpperCase();
+        if (formattedName.length > 14) {
+          formattedName = formattedName.substring(0, 12) + '..';
+        }
+        ctx.fillText(formattedName, centerX, centerY + 2);
 
-        ctx.fillStyle = '#38bdf8';
-        ctx.font = 'bold 28px Arial';
-        ctx.fillText(`📍 ${displayLoc}`, 400, 1270);
+        // 5. Localização
+        ctx.fillStyle = accentColor;
+        ctx.font = 'bold 14px Arial';
+        let formattedLoc = displayLoc.toUpperCase();
+        if (formattedLoc.length > 16) {
+          formattedLoc = formattedLoc.substring(0, 14) + '..';
+        }
+        ctx.fillText(`📍 ${formattedLoc}`, centerX, centerY + 26);
+
+        // 6. Rodapé do Selo
+        ctx.fillStyle = '#64748b';
+        ctx.font = 'bold 10px Arial';
+        ctx.fillText('PAINEL BRASIL', centerX, centerY + 52);
+
+        ctx.restore();
       };
 
       if (bgImgSrc) {
