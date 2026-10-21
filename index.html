@@ -7,25 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Plus Jakarta Sans', 'sans-serif'],
-            mono: ['Share Tech Mono', 'monospace'],
-          },
-          colors: {
-            urnBg: '#090d16',
-            urnPanel: '#131c2e',
-            urnLcd: '#c3e2c2',
-            urnLcdText: '#051406'
-          }
-        }
-      }
-    }
-  </script>
   <style>
     body {
       touch-action: manipulation;
@@ -1329,10 +1310,8 @@
     }
 
     function openApoiadorModal() {
-      // Esconde o comprovante simples e direciona para a aba de urna
       document.getElementById('receipt-modal').classList.add('hidden');
       
-      // Reseta e abre o modal do PIX de Apoiador
       document.getElementById('pix-modal').classList.remove('hidden');
       document.getElementById('pix-options-box').classList.remove('hidden');
       document.getElementById('pix-loading').classList.add('hidden');
@@ -1448,40 +1427,63 @@
     function renderCardCanvas(nomeUsuario, opcaoVoto, localidade) {
       const canvas = document.getElementById('cardCanvas');
       const ctx = canvas.getContext('2d');
-
-      ctx.fillStyle = '#090d16';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.fillStyle = '#131c2e';
-      ctx.fillRect(40, 40, 720, 1342);
-
-      ctx.strokeStyle = opcaoVoto === '13' ? '#f43f5e' : '#10b981';
-      ctx.lineWidth = 10;
-      ctx.strokeRect(50, 50, 700, 1322);
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 36px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('PAINEL BRASIL • 2026', 400, 130);
-
-      let candText = opcaoVoto === '22' ? 'FLÁVIO BOLSONARO (22)' : (opcaoVoto === '13' ? 'LULA (13)' : opcaoVoto);
-      ctx.fillStyle = opcaoVoto === '13' ? '#f43f5e' : '#10b981';
-      ctx.font = 'bold 54px Arial';
-      ctx.fillText(candText, 400, 700);
-
-      const displayName = privacyHiddenName ? "[Anônimo]" : nomeUsuario;
-      const displayLoc = privacyHiddenLocation ? "[Local Oculto]" : localidade;
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 34px Arial';
-      ctx.fillText(`Participante: ${displayName}`, 400, 1150);
-
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = '28px Arial';
-      ctx.fillText(`📍 ${displayLoc}`, 400, 1210);
-
       const downloadBtn = document.getElementById('downloadCardBtn');
-      downloadBtn.href = canvas.toDataURL('image/png');
+
+      let bgImgSrc = "";
+      if (opcaoVoto === '22') {
+        bgImgSrc = "comprovante-22.jpg";
+      } else if (opcaoVoto === '13') {
+        bgImgSrc = "comprovante-13.jpg";
+      }
+
+      const drawOverlayText = () => {
+        const displayName = privacyHiddenName ? "🔒 [DADO OCULTO]" : nomeUsuario;
+        const displayLoc = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : localidade;
+
+        // Fundo semitransparente escuro para destacar o texto sobre o comprovante
+        ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+        ctx.beginPath();
+        ctx.roundRect(100, 1100, 600, 220, 24);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 22px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('PARTICIPANTE REGISTRADO(A)', 400, 1150);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 36px Arial';
+        ctx.fillText(displayName.toUpperCase(), 400, 1210);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 28px Arial';
+        ctx.fillText(`📍 ${displayLoc}`, 400, 1270);
+
+        downloadBtn.href = canvas.toDataURL('image/png');
+      };
+
+      if (bgImgSrc) {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          drawOverlayText();
+        };
+        img.onerror = () => {
+          // Fallback caso a imagem não carregue localmente
+          ctx.fillStyle = '#090d16';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          drawOverlayText();
+        };
+        img.src = bgImgSrc;
+      } else {
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawOverlayText();
+      }
     }
 
     let privacyHiddenName = false;
@@ -1500,6 +1502,10 @@
         privacyHiddenLocation = !privacyHiddenLocation;
         locEl.textContent = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : confirmedVoteData.cityUf;
         locEl.classList.toggle('opacity-30', privacyHiddenLocation);
+      }
+
+      if (verifiedVoter) {
+        renderCardCanvas(verifiedVoter.name, confirmedVoteData.opcao, `${verifiedVoter.city} / ${verifiedVoter.uf}`);
       }
     }
 
