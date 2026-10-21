@@ -405,7 +405,7 @@
               
               <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-between p-4 text-white bg-[#090d16]" style="background-size: cover; background-position: center;">
                 
-                <!-- CABEÇALHO DO CARD (TEXTOS REMOVIDOS QUANDO POSSUI BACKGROUND DE CANDIDATO) -->
+                <!-- CABEÇALHO DO CARD -->
                 <div id="receipt-top-header" class="space-y-1 text-center pt-2 relative z-10">
                   <p id="receipt-top-badge" class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">⚡ COMPROVANTE AUDITADO ⚡</p>
                   <p class="text-[11px] font-bold text-slate-300">PAINEL BRASIL • ELEIÇÕES 2026</p>
@@ -422,7 +422,7 @@
                   </div>
                 </div>
 
-                <!-- SELO DE VERIFICAÇÃO COM OS DADOS DO PARTICIPANTE (POSICIONADO PARA NÃO TAMPAR O ROSTO) -->
+                <!-- SELO DE VERIFICAÇÃO COM OS DADOS DO PARTICIPANTE -->
                 <div id="receipt-seal-box" class="w-[170px] bg-slate-950/90 border-2 border-emerald-400 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 transition-all duration-300 mx-auto">
                   <p id="seal-header" class="text-[10px] font-black text-emerald-400 tracking-wider flex items-center justify-center gap-1">
                     <span>✓</span> <span>VERIFICADO</span>
@@ -447,7 +447,7 @@
 
               </div>
 
-              <!-- BOTÃO PARA ADQUIRIR O CARD COM FOTO (EXIBIDO APENAS SE NÃO PAGOU) -->
+              <!-- BOTÃO PARA ADQUIRIR O CARD COM FOTO -->
               <button id="btn-buy-card-receipt" onclick="openApoiadorModalFromReceipt()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
                 <span>🎨</span>
                 <span>Adquirir Card com Foto e Apoiar a Causa</span>
@@ -1685,8 +1685,6 @@
         // ==========================================
         buyBtn.classList.add('hidden');
         centerBox.classList.add('hidden');
-
-        // REMOVE COMPLETAMENTE OS TEXTOS SUPERIORES DO HTML
         topHeader.classList.add('hidden');
 
         if (confirmedVoteData.opcao === '22') {
@@ -1699,17 +1697,17 @@
         }
 
         /* 
-         * POSICIONAMENTO E COMPACTAÇÃO DO SELO NO MODO PAGO:
-         * Ajustado exatamente para a área marcada na imagem (ombro / lapela à esquerda, um pouco mais abaixo)
+         * POSICIONAMENTO DO SELO DENTRO DO CÍRCULO DA IMAGEM:
+         * Posicionado no canto superior esquerdo para encaixar perfeitamente no círculo verde do selo impresso na arte.
          */
-        sealBox.className = "absolute top-[38%] left-[2%] w-[115px] bg-slate-950/90 border border-amber-500/50 rounded-xl p-1.5 text-center shadow-2xl backdrop-blur-md z-20 transition-all duration-300";
+        sealBox.className = "absolute top-[18px] left-[18px] w-[88px] h-[88px] bg-transparent border-0 rounded-full flex flex-col items-center justify-center text-center p-1 z-20 transition-all duration-300";
         
-        document.getElementById('seal-header').className = 'text-[9px] font-black text-emerald-400 tracking-wider flex items-center justify-center gap-1';
-        document.getElementById('seal-subtitle').className = 'text-[7px] font-semibold text-slate-400 uppercase tracking-widest';
-        document.getElementById('seal-divider').className = 'my-1 border-b border-white/20';
-        document.getElementById('receipt-voter-name').className = 'text-[9px] font-bold uppercase text-white truncate max-w-[80px]';
-        document.getElementById('receipt-voter-location').className = 'text-[8px] font-medium text-emerald-400 truncate max-w-[85px]';
-        document.getElementById('seal-footer-tag').className = 'text-[7px] text-slate-400 uppercase font-bold tracking-widest mt-0.5';
+        document.getElementById('seal-header').className = 'hidden';
+        document.getElementById('seal-subtitle').className = 'text-[6px] font-extrabold text-white/90 uppercase tracking-tight leading-none mb-0.5';
+        document.getElementById('seal-divider').className = 'hidden';
+        document.getElementById('receipt-voter-name').className = 'text-[9px] font-black uppercase text-white truncate max-w-[76px] leading-tight';
+        document.getElementById('receipt-voter-location').className = 'text-[7px] font-bold text-amber-300 truncate max-w-[76px] leading-tight mt-0.5';
+        document.getElementById('seal-footer-tag').className = 'text-[5px] text-white/80 uppercase font-black tracking-tighter mt-0.5';
 
       } else {
         // ==========================================
@@ -1717,7 +1715,6 @@
         // ==========================================
         buyBtn.classList.remove('hidden');
         centerBox.classList.remove('hidden');
-
         topHeader.classList.remove('hidden');
 
         receiptCard.style.backgroundImage = "none";
