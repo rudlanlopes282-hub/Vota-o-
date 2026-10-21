@@ -1309,10 +1309,10 @@
     }
 
     function openApoiadorModal() {
-      // Garante que o modal do comprovante fecha e muda para a aba de voto para visualização correta
+      // Esconde o comprovante simples e direciona para a aba de urna
       document.getElementById('receipt-modal').classList.add('hidden');
-      switchTab('urna');
       
+      // Reseta e abre o modal do PIX de Apoiador
       document.getElementById('pix-modal').classList.remove('hidden');
       document.getElementById('pix-options-box').classList.remove('hidden');
       document.getElementById('pix-loading').classList.add('hidden');
@@ -1322,7 +1322,7 @@
     }
 
     function openApoiadorModalFromReceipt() {
-      // Direciona para a aba de Votação e abre a caixa do PIX
+      closeReceiptModal();
       switchTab('urna');
       openApoiadorModal();
     }
@@ -1553,7 +1553,6 @@
 
     function closeReceiptModal() {
       document.getElementById('receipt-modal').classList.add('hidden');
-      switchTab('chat');
     }
 
     function goToChatFromModal() {
