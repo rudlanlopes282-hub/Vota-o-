@@ -1716,9 +1716,6 @@
       }
 
       if (isPaid) {
-        // ==========================================
-        // COMPROVANTE PAGO / APOIADOR (COM ARTE)
-        // ==========================================
         buyBtn.classList.add('hidden');
         centerBox.classList.add('hidden');
         topHeader.classList.add('hidden');
@@ -1733,9 +1730,6 @@
           receiptCard.style.backgroundColor = "#090d16";
         }
 
-        /* 
-         * POSICIONAMENTO AJUSTÁVEL DO SELO DENTRO DO CARD TEMPLATE
-         */
         sealBox.className = "absolute w-[92px] h-[92px] bg-transparent border-0 rounded-full flex flex-col items-center justify-center text-center p-1 z-20 transition-all duration-100 pointer-events-auto";
         sealBox.style.left = sealPosLeft + 'px';
         sealBox.style.top = sealPosTop + 'px';
@@ -1748,9 +1742,6 @@
         document.getElementById('seal-footer-tag').className = 'text-[5px] text-white/80 uppercase font-black tracking-tighter mt-0.5';
 
       } else {
-        // ==========================================
-        // COMPROVANTE GRATUITO (SEM ARTE DE FUNDO)
-        // ==========================================
         buyBtn.classList.remove('hidden');
         centerBox.classList.remove('hidden');
         topHeader.classList.remove('hidden');
@@ -1796,19 +1787,59 @@
 
     function copyReceiptText() {
       if (!confirmedVoteData) return;
-      const text = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData.opcao}\nParticipante: ${confirmedVoteData.voterName} (${confirmedVoteData.cityUf})\n\nVote você também no Painel Brasil!`;
+      const text = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData.opcao}\nParticipante: ${confirmedVoteData.voterName} (${confirmedVoteData.cityUf})\n\nVote você também no Painel Brasil!\nhttps://vota-ae.vercel.app`;
       navigator.clipboard.writeText(text);
       alert('Texto do comprovante copiado com sucesso!');
     }
 
-    function shareReceipt() {
+    async function shareReceipt() {
       const card = document.getElementById('receipt-card');
-      html2canvas(card, { scale: 2, useCORS: true }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `comprovante-${(confirmedVoteData ? confirmedVoteData.voterName : 'participante').toLowerCase().replace(/\s+/g, '-')}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      });
+      try {
+        const canvas = await html2canvas(card, { 
+          scale: 2, 
+          useCORS: true,
+          allowTaint: true 
+        });
+
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            alert('Erro ao gerar a imagem do card.');
+            return;
+          }
+
+          const fileName = `comprovante-${(confirmedVoteData ? confirmedVoteData.voterName : 'participante').toLowerCase().replace(/\s+/g, '-')}.png`;
+          const file = new File([blob], fileName, { type: 'image/png' });
+
+          const textShare = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData ? confirmedVoteData.opcao : 'N/A'}\nParticipante: ${confirmedVoteData ? confirmedVoteData.voterName : ''} (${confirmedVoteData ? confirmedVoteData.cityUf : ''})\n\nVote você também no Painel Brasil!\nhttps://vota-ae.vercel.app`;
+
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                title: 'Meu Voto — Painel Brasil',
+                text: textShare,
+                files: [file],
+              });
+              return;
+            } catch (err) {
+              if (err.name !== 'AbortError') {
+                console.log('Compartilhamento cancelado ou não suportado:', err);
+              }
+            }
+          }
+
+          const link = document.createElement('a');
+          link.download = fileName;
+          link.href = URL.createObjectURL(blob);
+          link.click();
+          
+          navigator.clipboard.writeText(textShare);
+          alert('Imagem baixada e texto copiado para a área de transferência com sucesso!');
+        }, 'image/png');
+
+      } catch (err) {
+        console.error("Erro ao renderizar com html2canvas:", err);
+        alert('Ocorreu um erro ao preparar o card para compartilhamento.');
+      }
     }
   </script>
 </body>
