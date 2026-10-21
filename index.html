@@ -6,8 +6,8 @@
   <title>Painel Brasil — Pesquisa & Voto Independente</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- SCRIPT CLOUDFLARE TURNSTILE -->
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <!-- SCRIPT CLOUDFLARE TURNSTILE (DESATIVADO TEMPORARIAMENTE) -->
+  <!-- <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script> -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
@@ -57,8 +57,8 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between antialiased selection:bg-blue-500 selection:text-white">
 
-  <!-- TELA DE BLOQUEIO TOTAL PRÉ-SITE -->
-  <div id="site-lock-screen" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-4">
+  <!-- TELA DE BLOQUEIO TOTAL PRÉ-SITE (REMOVIDA TEMPORARIAMENTE) -->
+  <div id="site-lock-screen" class="hidden fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-4">
     <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden text-center space-y-5">
       <div class="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
@@ -84,8 +84,8 @@
     </div>
   </div>
 
-  <!-- CONTEÚDO REAL DO SITE -->
-  <div id="main-site-content" class="hidden flex-1 flex flex-col justify-between">
+  <!-- CONTEÚDO REAL DO SITE (EXIBIDO DIRETAMENTE) -->
+  <div id="main-site-content" class="flex-1 flex flex-col justify-between">
     
     <!-- TOP HEADER -->
     <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-40">
@@ -156,7 +156,7 @@
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Participante</label>
+              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Participante (Modo Teste: Aceita qualquer número)</label>
               <input type="text" id="voter-doc" inputmode="numeric" pattern="[0-9]*" maxlength="14" placeholder="000.000.000-00" oninput="onCPFInput(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition">
               <p id="cpf-status-hint" class="text-[10px] text-blue-400 mt-0.5 hidden font-semibold">ℹ️ CPF já cadastrado neste dispositivo. Localização travada.</p>
             </div>
@@ -812,6 +812,7 @@
       });
     });
 
+    // Função mantida para o caso de reativar o Turnstile futuramente
     function onTurnstileSuccess(token) {
       if (token) {
         document.getElementById('site-lock-screen').classList.add('hidden');
@@ -851,26 +852,6 @@
     function validateCPF(cpf) {
       const clean = cpf.replace(/\D/g, '');
       if (clean.length !== 11) return false;
-      if (/^(\d)\1{10}$/.test(clean)) return false;
-
-      let sum = 0;
-      let remainder;
-
-      for (let i = 1; i <= 9; i++) {
-        sum += parseInt(clean.substring(i - 1, i)) * (11 - i);
-      }
-      remainder = (sum * 10) % 11;
-      if (remainder === 10 || remainder === 11) remainder = 0;
-      if (remainder !== parseInt(clean.substring(9, 10))) return false;
-
-      sum = 0;
-      for (let i = 1; i <= 10; i++) {
-        sum += parseInt(clean.substring(i - 1, i)) * (12 - i);
-      }
-      remainder = (sum * 10) % 11;
-      if (remainder === 10 || remainder === 11) remainder = 0;
-      if (remainder !== parseInt(clean.substring(10, 11))) return false;
-
       return true;
     }
 
@@ -1038,7 +1019,7 @@
       const cleanDoc = doc.replace(/\D/g, '');
       
       if (!validateCPF(cleanDoc)) {
-        errBox.textContent = "⚠️ CPF inválido ou inexistente. Informe um número de CPF verdadeiro.";
+        errBox.textContent = "⚠️ Informe 11 números para o CPF.";
         errBox.classList.remove('hidden');
         return;
       }
