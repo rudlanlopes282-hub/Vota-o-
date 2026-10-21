@@ -402,35 +402,46 @@
           <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 overflow-y-auto">
             <div class="w-full max-w-xs my-auto space-y-3">
               
-              <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-between p-5 text-white bg-[#090d16]" style="background-size: cover; background-position: center;">
+              <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-between p-4 text-white bg-[#090d16]" style="background-size: cover; background-position: center;">
                 
-                <div class="space-y-1 text-center pt-2">
-                  <p id="receipt-top-badge" class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡</p>
-                  <p class="text-xs font-bold text-slate-300">PAINEL BRASIL • ELEIÇÕES 2026</p>
+                <!-- CABEÇALHO DO CARD -->
+                <div class="space-y-1 text-center pt-2 relative z-10">
+                  <p id="receipt-top-badge" class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">⚡ COMPROVANTE AUDITADO ⚡</p>
+                  <p class="text-[11px] font-bold text-slate-300">PAINEL BRASIL • ELEIÇÕES 2026</p>
                 </div>
 
-                <div id="receipt-center-box" class="my-auto text-center space-y-3">
-                  <div class="w-16 h-16 bg-slate-900 border border-slate-700 rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-inner">
+                <!-- ÁREA CENTRAL (USADA APENAS NO COMPROVANTE GRATUITO) -->
+                <div id="receipt-center-box" class="my-auto text-center space-y-4 relative z-10">
+                  <div class="w-14 h-14 bg-slate-900 border border-slate-700 rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-inner">
                     🏛️
                   </div>
-                  <div class="space-y-1">
+                  <div class="space-y-0.5">
                     <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">PRESIDENTE</p>
-                    <p id="receipt-option-text" class="text-lg font-black text-emerald-400">FLÁVIO — 22</p>
+                    <p id="receipt-option-text" class="text-lg font-black text-emerald-400">---</p>
                   </div>
                 </div>
 
-                <div class="relative z-10 space-y-2 bg-black/75 backdrop-blur-md p-3.5 rounded-2xl border border-white/20 shadow-2xl text-center">
-                  <p class="text-[9px] uppercase tracking-widest opacity-75 font-bold">PARTICIPANTE REGISTRADO(A)</p>
+                <!-- SELO DE VERIFICAÇÃO COM OS DADOS DO PARTICIPANTE -->
+                <div id="receipt-seal-box" class="w-[170px] bg-slate-950/90 border-2 border-emerald-400 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 transition-all duration-300 mx-auto">
+                  <p class="text-[10px] font-black text-emerald-400 tracking-wider flex items-center justify-center gap-1">
+                    <span>✓</span> <span>VERIFICADO</span>
+                  </p>
+                  <p class="text-[8px] font-bold text-slate-400 uppercase">PARTICIPANTE</p>
+                  <div class="my-1.5 border-b border-white/20"></div>
                   
-                  <div class="flex items-center justify-center gap-2">
-                    <p class="text-xs font-black uppercase tracking-wide truncate max-w-[190px]" id="receipt-voter-name">---</p>
-                    <button onclick="togglePrivacy('name')" class="text-xs opacity-80 hover:opacity-100 transition p-1" title="Ocultar/Mostrar Nome">👁️</button>
+                  <!-- NOME -->
+                  <div class="flex items-center justify-center gap-1">
+                    <p class="text-xs font-black uppercase text-white truncate max-w-[110px]" id="receipt-voter-name">---</p>
+                    <button onclick="togglePrivacy('name')" class="text-[10px] opacity-80 hover:opacity-100" title="Ocultar/Mostrar Nome">👁️</button>
                   </div>
 
-                  <div class="flex items-center justify-center gap-2">
-                    <p id="receipt-voter-location" class="text-[10px] font-bold">---</p>
-                    <button onclick="togglePrivacy('location')" class="text-xs opacity-80 hover:opacity-100 transition p-1" title="Ocultar/Mostrar Local">👁️</button>
+                  <!-- CIDADE / UF -->
+                  <div class="flex items-center justify-center gap-1 mt-0.5">
+                    <p id="receipt-voter-location" class="text-[10px] font-bold text-emerald-400 truncate max-w-[120px]">---</p>
+                    <button onclick="togglePrivacy('location')" class="text-[10px] opacity-80 hover:opacity-100" title="Ocultar/Mostrar Local">👁️</button>
                   </div>
+
+                  <p class="text-[7px] text-slate-500 font-bold mt-1">PAINEL BRASIL</p>
                 </div>
 
               </div>
@@ -1593,11 +1604,11 @@
 
       if (type === 'name') {
         privacyHiddenName = !privacyHiddenName;
-        nameEl.textContent = privacyHiddenName ? "🔒 [DADO OCULTO]" : confirmedVoteData.voterName;
+        nameEl.textContent = privacyHiddenName ? "OCULTO" : confirmedVoteData.voterName;
         nameEl.classList.toggle('opacity-30', privacyHiddenName);
       } else if (type === 'location') {
         privacyHiddenLocation = !privacyHiddenLocation;
-        locEl.textContent = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : confirmedVoteData.cityUf;
+        locEl.textContent = privacyHiddenLocation ? "OCULTO" : confirmedVoteData.cityUf;
         locEl.classList.toggle('opacity-30', privacyHiddenLocation);
       }
 
@@ -1644,19 +1655,37 @@
       const optionText = document.getElementById('receipt-option-text');
       const receiptCard = document.getElementById('receipt-card');
       const buyBtn = document.getElementById('btn-buy-card-receipt');
-      const topBadge = document.getElementById('receipt-top-badge');
+      const sealBox = document.getElementById('receipt-seal-box');
       const centerBox = document.getElementById('receipt-center-box');
+      const topBadge = document.getElementById('receipt-top-badge');
 
-      nameText.textContent = privacyHiddenName ? "🔒 [DADO OCULTO]" : confirmedVoteData.voterName;
-      locationText.textContent = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : confirmedVoteData.cityUf;
+      nameText.textContent = privacyHiddenName ? "OCULTO" : confirmedVoteData.voterName;
+      locationText.textContent = privacyHiddenLocation ? "OCULTO" : confirmedVoteData.cityUf;
 
       const cpfToLookup = verifiedVoter ? verifiedVoter.cleanDoc : (confirmedVoteData ? confirmedVoteData.voterCpf.replace(/\D/g, '') : '');
       const hasPaid = cpfToLookup && paidSupporters[cpfToLookup];
 
+      // Definir cores conforme a opção de voto
+      let colorClass = "border-emerald-400 text-emerald-400";
+      if (confirmedVoteData.opcao === '22') {
+        colorClass = "border-amber-400 text-amber-400";
+        optionText.className = "text-lg font-black text-amber-400";
+        optionText.textContent = "FLÁVIO — 22";
+      } else if (confirmedVoteData.opcao === '13') {
+        colorClass = "border-rose-500 text-rose-500";
+        optionText.className = "text-lg font-black text-rose-500";
+        optionText.textContent = "LULA — 13";
+      } else {
+        optionText.className = "text-lg font-black text-slate-400";
+        optionText.textContent = "VOTO BRANCO/NULO";
+      }
+
       if (hasPaid) {
+        // COMPROVANTE VIP (COM FOTO DE FUNDO)
         buyBtn.classList.add('hidden');
+        centerBox.classList.add('hidden');
         topBadge.textContent = "⚡ COMPROVANTE OFICIAL DE APOIADOR ⚡";
-        
+
         if (confirmedVoteData.opcao === '22') {
           receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
         } else if (confirmedVoteData.opcao === '13') {
@@ -1665,21 +1694,19 @@
           receiptCard.style.backgroundImage = "none";
           receiptCard.style.backgroundColor = "#090d16";
         }
-        centerBox.classList.add('hidden');
+
+        // Posiciona o Selo no Ombro Esquerdo
+        sealBox.className = `absolute top-[23%] left-[5%] w-[150px] bg-slate-950/90 border-2 rounded-2xl p-2 text-center shadow-2xl backdrop-blur-sm z-20 ${colorClass}`;
       } else {
+        // COMPROVANTE GRATUITO (SEM FOTO)
         buyBtn.classList.remove('hidden');
+        centerBox.classList.remove('hidden');
         topBadge.textContent = "⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡";
         receiptCard.style.backgroundImage = "none";
         receiptCard.style.backgroundColor = "#090d16";
-        centerBox.classList.remove('hidden');
 
-        if (confirmedVoteData.opcao === '22') {
-          optionText.textContent = "FLÁVIO — 22";
-        } else if (confirmedVoteData.opcao === '13') {
-          optionText.textContent = "LULA — 13";
-        } else {
-          optionText.textContent = "VOTO EM BRANCO/NULO";
-        }
+        // Centraliza o Selo na parte inferior
+        sealBox.className = `w-[170px] bg-slate-950/90 border-2 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 mx-auto mb-4 ${colorClass}`;
       }
 
       document.getElementById('receipt-modal').classList.remove('hidden');
