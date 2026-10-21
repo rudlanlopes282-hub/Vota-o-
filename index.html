@@ -1698,15 +1698,15 @@
 
         /* 
          * POSICIONAMENTO DO SELO DENTRO DO CÍRCULO DA IMAGEM:
-         * Posicionado no canto superior esquerdo para encaixar perfeitamente no círculo verde do selo impresso na arte.
+         * Ajustado para alinhamento e centralização ideais dentro da arte do comprovante.
          */
-        sealBox.className = "absolute top-[18px] left-[18px] w-[88px] h-[88px] bg-transparent border-0 rounded-full flex flex-col items-center justify-center text-center p-1 z-20 transition-all duration-300";
+        sealBox.className = "absolute top-[22px] left-[20px] w-[92px] h-[92px] bg-transparent border-0 rounded-full flex flex-col items-center justify-center text-center p-1 z-20 transition-all duration-300 pointer-events-auto";
         
         document.getElementById('seal-header').className = 'hidden';
         document.getElementById('seal-subtitle').className = 'text-[6px] font-extrabold text-white/90 uppercase tracking-tight leading-none mb-0.5';
         document.getElementById('seal-divider').className = 'hidden';
-        document.getElementById('receipt-voter-name').className = 'text-[9px] font-black uppercase text-white truncate max-w-[76px] leading-tight';
-        document.getElementById('receipt-voter-location').className = 'text-[7px] font-bold text-amber-300 truncate max-w-[76px] leading-tight mt-0.5';
+        document.getElementById('receipt-voter-name').className = 'text-[9px] font-black uppercase text-white truncate max-w-[80px] leading-tight';
+        document.getElementById('receipt-voter-location').className = 'text-[7.5px] font-bold text-amber-300 truncate max-w-[80px] leading-tight mt-0.5';
         document.getElementById('seal-footer-tag').className = 'text-[5px] text-white/80 uppercase font-black tracking-tighter mt-0.5';
 
       } else {
