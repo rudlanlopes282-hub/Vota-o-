@@ -1,1904 +1,295 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Painel Brasil — Pesquisa & Voto Independente</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vota Aí - Pesquisa Eleitoral e Comprovante</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <!-- HTML2Canvas para geração de imagem / compartilhamento -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Custom Font Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     body {
-      touch-action: manipulation;
-    }
-    .urn-lcd-font {
-      font-family: 'Share Tech Mono', monospace;
-    }
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: #020617;
-      border-radius: 8px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 8px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #3b82f6;
-    }
-    input:disabled, select:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
+      font-family: 'Inter', sans-serif;
+      background-color: #030712;
+      color: #f8fafc;
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between antialiased selection:bg-blue-500 selection:text-white">
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-slate-950">
 
-  <!-- CONTEÚDO REAL DO SITE -->
-  <div id="main-site-content" class="flex-1 flex flex-col justify-between">
-    
-    <!-- TOP HEADER -->
-    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-40">
-      <div class="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center space-x-2.5">
-          <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-lg">
-            📊
-          </div>
-          <div>
-            <h1 class="text-sm font-bold text-white leading-tight">Painel Brasil</h1>
-            <p class="text-[10px] text-blue-400 font-semibold flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
-              Pesquisa de Opinião — Simulação 2º Turno
-            </p>
-          </div>
-        </div>
-        <div id="nav-tabs" class="flex bg-slate-800 p-1 rounded-lg text-xs font-semibold">
-          <button id="btn-tab-urna" onclick="switchTab('urna')" class="px-3 py-1 rounded-md bg-blue-600 text-white transition font-bold">Votar</button>
-          <button id="btn-tab-dados" onclick="switchTab('dados')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition">Placar</button>
-          <button id="btn-tab-chat" onclick="switchTab('chat')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition flex items-center gap-1">
-            <span>Debate</span>
-            <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
-          </button>
-        </div>
-      </div>
+  <div class="w-full max-w-md mx-auto space-y-6">
+
+    <!-- CABEÇALHO -->
+    <header class="text-center space-y-2">
+      <h1 class="text-3xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-yellow-400 to-blue-500">
+        VOTA-AÊ 2026
+      </h1>
+      <p class="text-xs text-slate-400 font-medium">Pesquisa de Opinião Pública & Comprovante Ilustrativo</p>
     </header>
 
-    <main class="max-w-lg mx-auto w-full px-3 py-3 flex-1 flex flex-col justify-center space-y-4">
+    <!-- FORMULÁRIO DE VOTAÇÃO -->
+    <div id="vote-form-container" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Seu Nome / Apelido</label>
+          <input type="text" id="user-name" placeholder="Ex: MÁRIO" value="MÁRIO" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-yellow-500 transition">
+        </div>
 
-      <div class="bg-blue-950/40 border border-blue-500/30 rounded-xl p-2.5 text-center">
-        <p class="text-[10px] text-blue-300 font-medium leading-tight">
-          ℹ️ <b>Plataforma Independente:</b> Esta é uma simulação e pesquisa de opinião não oficial, sem qualquer vínculo com o TSE ou órgãos governamentais.
-        </p>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Estado (UF)</label>
+            <select id="user-uf" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-sm text-slate-100 focus:outline-none focus:border-yellow-500 transition">
+              <option value="SP">São Paulo / SP</option>
+              <option value="RJ" selected>Rio de Janeiro / RJ</option>
+              <option value="MG">Minas Gerais / MG</option>
+              <option value="BA">Bahia / BA</option>
+              <option value="RS">Rio Grande do Sul / RS</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Opção de Voto</label>
+            <select id="vote-option" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-sm text-slate-100 focus:outline-none focus:border-yellow-500 transition">
+              <option value="22" selected>FLÁVIO — 22</option>
+              <option value="13">LULA — 13</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <!-- STEP 1: ETAPA DE VERIFICAÇÃO -->
-      <section id="sec-auth" class="w-full">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
-          <div class="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
-          <div class="text-center mb-5">
-            <div class="inline-flex p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-2xl mb-2">
-              🛡️
-            </div>
-            <h2 class="text-xl font-extrabold text-white">Identificação do Participante</h2>
-            <p class="text-xs text-slate-400 mt-1">Validação segura e controle de voto único por dispositivo</p>
-          </div>
-
-          <div class="flex items-center justify-center gap-2 mb-6">
-            <div id="step-dot-1" class="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">1</div>
-            <div class="w-8 h-0.5 bg-slate-800"></div>
-            <div id="step-dot-2" class="w-7 h-7 rounded-full bg-slate-800 text-slate-500 font-bold text-xs flex items-center justify-center">2</div>
-            <div class="w-8 h-0.5 bg-slate-800"></div>
-            <div id="step-dot-3" class="w-7 h-7 rounded-full bg-slate-800 text-slate-500 font-bold text-xs flex items-center justify-center">3</div>
-          </div>
-
-          <div id="auth-error" class="hidden mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl text-center font-medium"></div>
-
-          <!-- FORMULÁRIO PASSO 1 -->
-          <div id="auth-step-1" class="space-y-4">
-            <div>
-              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nome Completo</label>
-              <input type="text" id="voter-name" placeholder="Ex: Maria da Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
-            </div>
-
-            <div>
-              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Participante (Modo Teste: Aceita qualquer número)</label>
-              <input type="text" id="voter-doc" inputmode="numeric" pattern="[0-9]*" maxlength="14" placeholder="000.000.000-00" oninput="onCPFInput(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition">
-              <p id="cpf-status-hint" class="text-[10px] text-blue-400 mt-0.5 hidden font-semibold">ℹ️ CPF já cadastrado neste dispositivo. Localização travada.</p>
-            </div>
-
-            <div>
-              <label class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">PIN / Senha de Acesso (4 dígitos)</label>
-              <input type="password" id="voter-pin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" class="w-full bg-slate-950 border border-blue-500/40 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition text-center tracking-widest text-lg">
-            </div>
-
-            <div>
-              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">1. Selecione o Estado (UF)</label>
-              <select id="voter-uf-select" onchange="onUFChange()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
-                <option value="PA" data-region="Norte">Pará (PA) — Norte</option>
-                <option value="SP" data-region="Sudeste">São Paulo (SP) — Sudeste</option>
-                <option value="RJ" data-region="Sudeste">Rio de Janeiro (RJ) — Sudeste</option>
-                <option value="MG" data-region="Sudeste">Minas Gerais (MG) — Sudeste</option>
-                <option value="ES" data-region="Sudeste">Espírito Santo (ES) — Sudeste</option>
-                <option value="BA" data-region="Nordeste">Bahia (BA) — Nordeste</option>
-                <option value="PE" data-region="Nordeste">Pernambuco (PE) — Nordeste</option>
-                <option value="CE" data-region="Nordeste">Ceará (CE) — Nordeste</option>
-                <option value="MA" data-region="Nordeste">Maranhão (MA) — Nordeste</option>
-                <option value="PB" data-region="Nordeste">Paraíba (PB) — Nordeste</option>
-                <option value="RN" data-region="Nordeste">Rio Grande do Norte (RN) — Nordeste</option>
-                <option value="AL" data-region="Nordeste">Alagoas (AL) — Nordeste</option>
-                <option value="SE" data-region="Nordeste">Sergipe (SE) — Nordeste</option>
-                <option value="PI" data-region="Nordeste">Piauí (PI) — Nordeste</option>
-                <option value="PR" data-region="Sul">Paraná (PR) — Sul</option>
-                <option value="RS" data-region="Sul">Rio Grande do Sul (RS) — Sul</option>
-                <option value="SC" data-region="Sul">Santa Catarina (SC) — Sul</option>
-                <option value="GO" data-region="Centro-Oeste">Goiás (GO) — Centro-Oeste</option>
-                <option value="DF" data-region="Centro-Oeste">Distrito Federal (DF) — Centro-Oeste</option>
-                <option value="MT" data-region="Centro-Oeste">Mato Grosso (MT) — Centro-Oeste</option>
-                <option value="MS" data-region="Centro-Oeste">Mato Grosso do Sul (MS) — Centro-Oeste</option>
-                <option value="AM" data-region="Norte">Amazonas (AM) — Norte</option>
-                <option value="RO" data-region="Norte">Rondônia (RO) — Norte</option>
-                <option value="AP" data-region="Norte">Amapá (AP) — Norte</option>
-                <option value="AC" data-region="Norte">Acre (AC) — Norte</option>
-                <option value="RR" data-region="Norte">Roraima (RR) — Norte</option>
-                <option value="TO" data-region="Norte">Tocantins (TO) — Norte</option>
-                <option value="ZZ" data-region="Exterior">Exterior (ZZ) — Votação no Exterior</option>
-              </select>
-            </div>
-
-            <div id="city-group" class="space-y-1.5 relative">
-              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                2. Cidade / Município
-              </label>
-              <input type="text" id="voter-city-search" placeholder="Digite sua cidade..." oninput="filterCityOptions()" onfocus="if(!this.dataset.touched){ this.value=''; this.dataset.touched='true'; } filterCityOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
-              
-              <div id="city-suggestions-container" class="hidden absolute left-0 right-0 top-full bg-slate-950 border border-blue-500/40 rounded-xl max-h-48 overflow-y-auto custom-scrollbar p-1 space-y-1 shadow-2xl z-50 mt-1">
-              </div>
-
-              <input type="hidden" id="selected-city-val" value="">
-            </div>
-
-            <button onclick="submitStep1()" type="button" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 text-sm transition active:scale-[0.99] mt-2">
-              Verificar Elegibilidade &rarr;
-            </button>
-          </div>
-
-          <div id="auth-step-2" class="hidden text-center py-4 space-y-4">
-            <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
-              <div class="absolute inset-0 rounded-full border-2 border-blue-500/20 border-t-blue-500 animate-spin"></div>
-              <div class="text-3xl">👤</div>
-            </div>
-            <p class="text-xs text-slate-300 font-semibold">Validando Assinatura e Credenciais...</p>
-            <p class="text-[11px] text-slate-500">Aguarde alguns segundos...</p>
-          </div>
-
-          <div id="auth-step-3" class="hidden text-center py-3 space-y-4">
-            <div class="w-12 h-12 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
-              ✓
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-white">Sessão Autenticada com Segurança!</h3>
-              <p class="text-xs text-slate-400 mt-0.5">Dispositivo vinculado com sucesso ao seu PIN pessoal.</p>
-            </div>
-
-            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-left text-xs font-mono space-y-1">
-              <p class="text-slate-400">PARTICIPANTE: <span id="summary-name" class="text-white font-bold"></span></p>
-              <p class="text-slate-400">DOCUMENTO: <span id="summary-doc" class="text-blue-400 font-bold"></span></p>
-              <p class="text-slate-400">MUNICIPIO / UF: <span id="summary-state" class="text-blue-400 font-bold"></span></p>
-              <p class="text-slate-400">STATUS: <span id="summary-vote-status" class="text-blue-400 font-bold">APTO PARA VOTAR</span></p>
-            </div>
-
-            <button onclick="startVotingSession()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 text-sm transition active:scale-[0.99]">
-              Acessar Cabine de Votação 🗳️
-            </button>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- STEP 2: SIMULADOR DE VOTO -->
-      <section id="sec-urna" class="hidden w-full space-y-3">
-
-        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 text-center">Clique para Votar Direto</p>
-          <div class="grid grid-cols-2 gap-2">
-            
-            <button onclick="quickSelect('22')" class="flex items-center gap-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 p-2 rounded-xl text-left transition group">
-              <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-sm">
-                🏛️
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-bold text-white truncate group-hover:text-amber-400">Flávio Bolsonaro</p>
-                <p class="text-[10px] text-slate-400">PL — 22</p>
-              </div>
-              <span class="text-xs font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">22</span>
-            </button>
-
-            <button onclick="quickSelect('13')" class="flex items-center gap-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 p-2 rounded-xl text-left transition group">
-              <div class="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-sm">
-                🚩
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-bold text-white truncate group-hover:text-rose-400">Lula</p>
-                <p class="text-[10px] text-slate-400">PT — 13</p>
-              </div>
-              <span class="text-xs font-black text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">13</span>
-            </button>
-
-          </div>
-        </div>
-
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-2xl space-y-3">
-          
-          <div class="bg-[#c3e2c2] border-4 border-slate-800 rounded-xl p-3 text-[#051406] urn-lcd-font shadow-inner min-h-[170px] flex flex-col justify-between relative overflow-hidden">
-            
-            <div class="flex items-center justify-between border-b border-black/15 pb-1">
-              <span class="text-[11px] font-black uppercase tracking-wider text-black">PAINEL BRASIL</span>
-              <span class="text-[10px] font-black text-black/70 bg-black/10 px-1.5 py-0.5 rounded">2º TURNO</span>
-            </div>
-
-            <div id="lcd-content" class="py-2">
-              <div id="lcd-normal-view">
-                <p class="text-[11px] font-extrabold uppercase text-black/70 text-center">PRESIDENTE</p>
-                
-                <div class="flex justify-center gap-2 my-2">
-                  <div id="digit-1" class="w-9 h-11 border-2 border-black/80 bg-white/80 rounded flex items-center justify-center text-xl font-black text-black"></div>
-                  <div id="digit-2" class="w-9 h-11 border-2 border-black/80 bg-white/80 rounded flex items-center justify-center text-xl font-black text-black"></div>
-                </div>
-
-                <div id="candidate-info" class="hidden space-y-0.5 text-left bg-black/5 p-2 rounded border border-black/10">
-                  <p class="text-[11px] font-extrabold text-black">Nome: <span id="cand-name" class="font-black text-black uppercase">---</span></p>
-                  <p class="text-[11px] font-extrabold text-black">Partido: <span id="cand-party" class="font-black text-black uppercase">---</span></p>
-                </div>
-
-                <div id="vote-special-msg" class="hidden text-center my-2">
-                  <p id="special-text" class="text-lg font-black text-black uppercase">VOTO EM BRANCO</p>
-                </div>
-              </div>
-
-              <!-- ALERTA DE VOTO DUPLICADO -->
-              <div id="lcd-duplicate-msg" class="hidden text-center py-1 space-y-1">
-                <p class="text-xs font-black text-red-800 uppercase tracking-wide">⚠️ VOTO JÁ REGISTRADO</p>
-                <p class="text-[10px] font-bold text-black leading-tight">Este CPF já computou voto nesta pesquisa.</p>
-                <div class="pt-1 flex justify-center gap-2">
-                  <button onclick="openReceiptModal()" class="bg-black/80 hover:bg-black text-white font-bold py-1 px-2.5 rounded text-[10px] uppercase transition">
-                    📄 Comprovante
-                  </button>
-                  <button onclick="switchTab('chat')" class="bg-blue-800 hover:bg-blue-900 text-white font-bold py-1 px-2.5 rounded text-[10px] uppercase transition">
-                    💬 Debate
-                  </button>
-                </div>
-              </div>
-
-              <!-- MENSAGEM FIM DE SUCEESO -->
-              <div id="lcd-fim-msg" class="hidden text-center py-4 animate-pulse">
-                <p class="text-3xl font-black text-black">FIM</p>
-                <p class="text-xs font-bold text-black mt-1">VOTO COMPUTADO COM SUCESSO</p>
-              </div>
-            </div>
-
-            <div class="border-t border-black/15 pt-1 text-[10px] font-black text-black/80 flex justify-between items-end">
-              <div>
-                <p>CONFIRMA = Votado</p>
-                <p>CORRIGE = Reiniciar</p>
-              </div>
-              <div class="w-3 h-3 rounded-full bg-blue-700 animate-ping opacity-75"></div>
-            </div>
-
-          </div>
-
-          <!-- MODAL DO KIT APOIADOR & CHAT VIP -->
-          <div id="pix-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-            <div class="bg-slate-900 border border-blue-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4 text-center my-auto">
-              
-              <div id="pix-header-icon" class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-2xl">
-                🎉
-              </div>
-
-              <div id="pix-header-text" class="space-y-1">
-                <h3 id="pix-title" class="text-base font-extrabold text-white">Voto Registrado com Sucesso!</h3>
-                <p id="pix-subtitle" class="text-xs text-slate-300">Sua opinião já foi computada na pesquisa.</p>
-              </div>
-
-              <!-- ALERTA QUANDO O USUÁRIO AINDA NÃO VOTOU -->
-              <div id="pix-unvoted-warning" class="hidden bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl text-amber-300 text-xs text-left space-y-1.5 font-medium">
-                <p class="font-bold flex items-center gap-1.5 text-amber-400">
-                  <span>⚠️</span>
-                  <span>Você ainda não votou nesta pesquisa!</span>
-                </p>
-                <p class="text-[11px] leading-relaxed text-slate-300">
-                  Para emitir o seu comprovante com o seu candidato e ter validade de voto, é necessário registrar seu voto na cabine primeiro.
-                </p>
-                <button onclick="closePixModal(); switchTab('urna');" class="w-full mt-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-lg text-xs transition">
-                  Ir para Cabine de Votação 🗳️
-                </button>
-              </div>
-
-              <div id="pix-options-box" class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl text-left space-y-3">
-                <p class="text-xs font-bold text-blue-400 uppercase tracking-wider text-center">💬 Quer entrar no Chat e Viralizar seu Apoio?</p>
-
-                <div class="text-[11px] text-slate-300 space-y-1.5 leading-relaxed">
-                  <p>✔️ <b>Card Exclusivo de Apoiador</b> para compartilhar nas redes.</p>
-                  <p>✔️ <b>Acesso Imediato ao Chat VIP</b> de debate em tempo real.</p>
-                  <p class="text-[10px] text-slate-400 pt-1 border-t border-slate-900">
-                    💡 <i>100% da contribuição cobre os custos de tráfego pago do site.</i>
-                  </p>
-                </div>
-
-                <button onclick="requestPixCheckout(2.00)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
-                  <span>🎨</span>
-                  <span>Adquirir Card com Foto e Apoiar a Causa (R$ 2,00)</span>
-                </button>
-
-                <button onclick="requestPixCheckout(gerarValorMenorSyncPay())" class="w-full text-slate-400 hover:text-slate-200 font-semibold text-[11px] underline text-center block pt-1 transition">
-                  Não tenho R$ 2,00 (Gerar valor menor dinâmico) &rarr;
-                </button>
-              </div>
-
-              <div id="pix-loading" class="hidden py-6 space-y-2">
-                <div class="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-                <p class="text-xs text-slate-400">Gerando QR Code PIX via SyncPay...</p>
-              </div>
-
-              <div id="pix-content" class="hidden space-y-3">
-                <p class="text-xs text-slate-300 font-semibold">Contribuição: <b id="pix-display-amount" class="text-emerald-400">R$ 2,00</b></p>
-                
-                <div class="bg-white p-3 rounded-xl inline-block shadow-inner mx-auto">
-                  <img id="pix-qr-img" src="" alt="QR Code PIX" class="w-44 h-44 mx-auto">
-                </div>
-
-                <div>
-                  <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Código PIX Copia e Cola</p>
-                  <div class="flex items-center gap-1.5 bg-slate-950 border border-slate-800 p-2 rounded-xl">
-                    <input type="text" id="pix-code-input" readonly class="bg-transparent text-[10px] font-mono text-slate-300 flex-1 outline-none truncate">
-                    <button onclick="copyPixCode()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] px-2.5 py-1 rounded-lg transition">Copiar</button>
-                  </div>
-                </div>
-
-                <div class="bg-slate-950 border border-slate-800 p-2 rounded-xl flex items-center justify-center gap-2">
-                  <div id="pix-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
-                  <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
-                </div>
-
-                <!-- BOTÃO DE TESTE TEMPORÁRIO PARA SIMULAR PAGAMENTO PAGO -->
-                <button onclick="finalizePixSuccess()" type="button" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider shadow-md transition active:scale-95 border-2 border-amber-300">
-                  🧪 [MODO TESTE] Simular Pagamento Aprovado
-                </button>
-              </div>
-
-              <div id="msg-vote-success" class="hidden space-y-4 pt-1">
-                <div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
-                  <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wide">
-                    <span>✅</span>
-                    <span>PAGAMENTO CONFIRMADO!</span>
-                  </div>
-                  <p class="text-xs text-slate-200 leading-relaxed font-medium">
-                    Seu Kit Apoiador e o Acesso ao Chat VIP foram liberados!
-                  </p>
-                </div>
-
-                <canvas id="cardCanvas" width="800" height="1422" class="hidden"></canvas>
-
-                <div class="space-y-2">
-                  <button onclick="openReceiptModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
-                    <span>📥</span>
-                    <span>VER E BAIXAR CARD DE APOIADOR 9:16</span>
-                  </button>
-                  <button onclick="goToChatFromModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
-                    Entrar no Chat VIP de Debate 💬
-                  </button>
-                </div>
-              </div>
-
-              <button id="btn-cancel-pix" onclick="closePixModal()" class="text-xs text-slate-500 hover:text-slate-300 font-medium transition underline pt-1 block mx-auto">
-                Pular / Voltar ao Início
-              </button>
-            </div>
-          </div>
-
-          <!-- MODAL COMPROVANTE SIMPLES / OFICIAL -->
-          <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 overflow-y-auto">
-            <div class="w-full max-w-xs my-auto space-y-3">
-              
-              <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-between p-4 text-white bg-[#090d16]" style="background-size: cover; background-position: center;">
-                
-                <!-- CABEÇALHO DO CARD -->
-                <div class="space-y-1 text-center pt-2 relative z-10">
-                  <p id="receipt-top-badge" class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">⚡ COMPROVANTE AUDITADO ⚡</p>
-                  <p class="text-[11px] font-bold text-slate-300">PAINEL BRASIL • ELEIÇÕES 2026</p>
-                </div>
-
-                <!-- ÁREA CENTRAL (USADA APENAS NO COMPROVANTE GRATUITO) -->
-                <div id="receipt-center-box" class="my-auto text-center space-y-4 relative z-10">
-                  <div class="w-14 h-14 bg-slate-900 border border-slate-700 rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-inner">
-                    🏛️
-                  </div>
-                  <div class="space-y-0.5">
-                    <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">PRESIDENTE</p>
-                    <p id="receipt-option-text" class="text-lg font-black text-emerald-400">---</p>
-                  </div>
-                </div>
-
-                <!-- SELO DE VERIFICAÇÃO COM OS DADOS DO PARTICIPANTE -->
-                <div id="receipt-seal-box" class="w-[170px] bg-slate-950/90 border-2 border-emerald-400 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 transition-all duration-300 mx-auto">
-                  <p class="text-[10px] font-black text-emerald-400 tracking-wider flex items-center justify-center gap-1">
-                    <span>✓</span> <span>VERIFICADO</span>
-                  </p>
-                  <p class="text-[8px] font-bold text-slate-400 uppercase">PARTICIPANTE</p>
-                  <div class="my-1.5 border-b border-white/20"></div>
-                  
-                  <!-- NOME -->
-                  <div class="flex items-center justify-center gap-1">
-                    <p class="text-xs font-black uppercase text-white truncate max-w-[110px]" id="receipt-voter-name">---</p>
-                    <button onclick="togglePrivacy('name')" class="text-[10px] opacity-80 hover:opacity-100" title="Ocultar/Mostrar Nome">👁️</button>
-                  </div>
-
-                  <!-- CIDADE / UF -->
-                  <div class="flex items-center justify-center gap-1 mt-0.5">
-                    <p id="receipt-voter-location" class="text-[10px] font-bold text-emerald-400 truncate max-w-[120px]">---</p>
-                    <button onclick="togglePrivacy('location')" class="text-[10px] opacity-80 hover:opacity-100" title="Ocultar/Mostrar Local">👁️</button>
-                  </div>
-
-                  <p class="text-[7px] text-slate-500 font-bold mt-1">PAINEL BRASIL</p>
-                </div>
-
-              </div>
-
-              <!-- BOTÃO PARA ADQUIRIR O CARD COM FOTO (EXIBIDO APENAS SE NÃO PAGOU) -->
-              <button id="btn-buy-card-receipt" onclick="openApoiadorModalFromReceipt()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
-                <span>🎨</span>
-                <span>Adquirir Card com Foto e Apoiar a Causa</span>
-              </button>
-
-              <div class="space-y-2">
-                <button onclick="shareReceipt()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-2xl shadow-lg shadow-blue-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
-                  <span>📲</span>
-                  <span>Compartilhar nas Redes Sociais</span>
-                </button>
-                
-                <div class="grid grid-cols-2 gap-2">
-                  <button onclick="copyReceiptText()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition">
-                    Copiar Texto 📋
-                  </button>
-                  <button onclick="closeReceiptModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition">
-                    Ir para o Debate 💬
-                  </button>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- TECLADO NUMÉRICO -->
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2">
-            <div class="grid grid-cols-3 gap-2">
-              <button onclick="pressKey('1')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">1</button>
-              <button onclick="pressKey('2')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">2</button>
-              <button onclick="pressKey('3')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">3</button>
-              <button onclick="pressKey('4')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">4</button>
-              <button onclick="pressKey('5')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">5</button>
-              <button onclick="pressKey('6')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">6</button>
-              <button onclick="pressKey('7')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">7</button>
-              <button onclick="pressKey('8')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">8</button>
-              <button onclick="pressKey('9')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">9</button>
-            </div>
-
-            <div class="flex justify-center">
-              <button onclick="pressKey('0')" class="w-1/3 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">0</button>
-            </div>
-
-            <div class="grid grid-cols-3 gap-2 pt-1">
-              <button onclick="pressBranco()" class="bg-slate-100 hover:bg-white text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-slate-300 transition uppercase">BRANCO</button>
-              <button onclick="pressCorrige()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-amber-700 transition uppercase">CORRIGE</button>
-              <button onclick="pressConfirma()" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs py-2.5 rounded-lg border-b-2 border-blue-800 transition uppercase">CONFIRMA</button>
-            </div>
-          </div>
-
-        </div>
-
-      </section>
-
-      <!-- BOTÃO DE VER COMPROVANTE -->
-      <div id="post-vote-receipt-container" class="hidden w-full">
-        <button onclick="openReceiptModal()" class="w-full bg-slate-900 hover:bg-slate-800 border border-blue-500/40 p-3 rounded-2xl flex items-center justify-between shadow-lg transition group">
-          <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 text-base">
-              📄
-            </div>
-            <div class="text-left">
-              <p class="text-xs font-extrabold text-white group-hover:text-blue-400 transition">Ver Comprovante de Participação</p>
-              <p class="text-[10px] text-slate-400">Acesse sua comprovação auditada e card exclusivo</p>
-            </div>
-          </div>
-          <span class="text-xs font-bold text-blue-400">&rarr;</span>
+      <div class="pt-2 flex flex-col gap-3">
+        <button onclick="submitVote(false)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-emerald-900/30 transition transform active:scale-98 text-sm">
+          🗳️ Confirmar Voto (Versão Grátis)
+        </button>
+        <button onclick="submitVote(true)" class="w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black py-3.5 rounded-2xl shadow-lg shadow-amber-500/20 transition transform active:scale-98 text-sm">
+          ⚡ Confirmar Voto + Apoiar (Versão VIP)
         </button>
       </div>
+    </div>
 
-      <!-- STEP 3: PAINEL DE PLACAR / DADOS -->
-      <section id="sec-dados" class="hidden w-full space-y-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
-          
-          <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
-            <div>
-              <h2 class="text-base font-extrabold text-white">Placar da Pesquisa Independente</h2>
-              <p class="text-[11px] text-slate-400">Resultados consolidados em tempo real</p>
+    <!-- MODAL DO COMPROVANTE (CARD COMPARTILHÁVEL) -->
+    <div id="receipt-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden overflow-y-auto">
+      <div class="w-full max-w-sm space-y-4 my-auto">
+        
+        <!-- CARD GERADO COM COMPROVANTE -->
+        <div id="receipt-card" class="relative w-full aspect-[9/16] max-h-[640px] bg-slate-950 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between p-5 bg-cover bg-center transition-all duration-300">
+
+          <!-- TOPO DO COMPROVANTE (TEXTOS HTML - OCULTOS NO PAGO) -->
+          <div id="top-text-container" class="pt-2 text-center space-y-1 z-10 transition-opacity">
+            <p id="top-badge" class="text-[10px] font-black tracking-widest text-emerald-400 uppercase">
+              ⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡
+            </p>
+            <p id="top-title" class="text-[11px] font-bold text-slate-300 tracking-wider uppercase">
+              PAINEL BRASIL • ELEIÇÕES 2026
+            </p>
+          </div>
+
+          <!-- CENTRO (ÍCONE E DESTAQUE DO CANDIDATO - VISÍVEL APENAS NO GRÁTIS) -->
+          <div id="center-box" class="my-auto text-center space-y-3 z-10">
+            <div class="w-16 h-16 bg-slate-900 border border-slate-800 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-inner">
+              🏛️
             </div>
-            <button id="btn-refresh-stats" onclick="loadCloudStats()" class="text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg hover:bg-blue-500/20 transition flex items-center gap-1.5 disabled:opacity-50">
-              <span id="refresh-icon">🔄</span>
-              <span id="refresh-spinner" class="hidden w-3.5 h-3.5 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin"></span>
-              <span>Atualizar Dados</span>
+            <div>
+              <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">PRESIDENTE</p>
+              <h2 id="candidate-name-display" class="text-2xl font-black text-amber-400 tracking-wide mt-0.5">
+                FLÁVIO — 22
+              </h2>
+            </div>
+          </div>
+
+          <!-- CAIXA / SELO DE VERIFICAÇÃO DO USUÁRIO -->
+          <div id="seal-box" class="z-20 border rounded-2xl backdrop-blur-sm shadow-2xl text-center transition-all duration-300">
+            <div id="seal-header" class="flex items-center justify-center gap-1 font-black uppercase text-emerald-400 tracking-wider">
+              <span>✓</span>
+              <span>VERIFICADO</span>
+            </div>
+            <p id="seal-subtitle" class="text-[8px] font-semibold text-slate-400 uppercase tracking-widest">PARTICIPANTE</p>
+            
+            <div id="seal-divider" class="my-1 border-t border-slate-800"></div>
+
+            <p id="seal-user-name" class="font-extrabold text-slate-100 uppercase tracking-wide truncate">
+              MÁRIO 👁️
+            </p>
+            <p id="seal-user-loc" class="font-medium text-emerald-400 tracking-wide truncate">
+              Rio de Janeiro / RJ 👁️
+            </p>
+            <p id="seal-footer-tag" class="text-[8px] text-slate-400 uppercase mt-0.5 font-bold tracking-widest">
+              PAINEL BRASIL
+            </p>
+          </div>
+
+          <!-- FOOTER VAZIO APENAS PARA ESPAÇAMENTO INTERNO DO CARD -->
+          <div class="h-2"></div>
+        </div>
+
+        <!-- BOTOES DE AÇÃO -->
+        <div class="space-y-2.5">
+          <button id="buy-btn" onclick="togglePaidState(true)" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 px-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 text-xs transition transform active:scale-98">
+            🎨 ADQUIRIR CARD COM FOTO E APOIAR A CAUSA
+          </button>
+
+          <button onclick="shareOrDownload()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 text-sm transition transform active:scale-98">
+            📱 COMPARTILHAR NAS REDES SOCIAIS
+          </button>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <button onclick="copyReceiptText()" class="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-semibold py-3 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+              Copiar Texto 📋
+            </button>
+            <button onclick="closeModal()" class="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-semibold py-3 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+              Ir para o Debate 💬
             </button>
           </div>
-
-          <div class="grid grid-cols-2 gap-2.5">
-            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-              <p class="text-[10px] font-bold text-slate-500 uppercase">TOTAL DE VOTOS</p>
-              <p id="stat-total" class="text-2xl font-black text-white">0</p>
-            </div>
-            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-              <p class="text-[10px] font-bold text-blue-500 uppercase">VOTOS VÁLIDOS</p>
-              <p id="stat-validos" class="text-2xl font-black text-blue-400">0</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2.5">
-            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-              <p class="text-[10px] font-bold text-slate-400 uppercase">VOTOS BRANCOS</p>
-              <p id="stat-branco" class="text-xl font-black text-slate-200">0</p>
-            </div>
-            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-              <p class="text-[10px] font-bold text-rose-500 uppercase">VOTOS NULOS</p>
-              <p id="stat-nulo" class="text-xl font-black text-rose-400">0</p>
-            </div>
-          </div>
-
-          <div class="space-y-3 pt-2">
-            <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2">
-              <div class="flex justify-between items-center text-xs">
-                <span class="font-bold text-white flex items-center gap-1.5">
-                  🏛️ Flávio Bolsonaro (22)
-                </span>
-                <span id="pct-22" class="font-black text-amber-400 text-sm">0.0%</span>
-              </div>
-              <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
-                <div id="bar-22" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
-              </div>
-              <p id="count-22" class="text-[10px] text-slate-400 text-right font-mono">0 votos</p>
-            </div>
-
-            <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2">
-              <div class="flex justify-between items-center text-xs">
-                <span class="font-bold text-white flex items-center gap-1.5">
-                  🚩 Lula (13)
-                </span>
-                <span id="pct-13" class="font-black text-rose-400 text-sm">0.0%</span>
-              </div>
-              <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
-                <div id="bar-13" class="bg-rose-500 h-full transition-all duration-500" style="width: 0%"></div>
-              </div>
-              <p id="count-13" class="text-[10px] text-slate-400 text-right font-mono">0 votos</p>
-            </div>
-          </div>
-
-          <div class="space-y-2 pt-2">
-            <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-              🗺️ Desempenho por Região
-            </h3>
-            <div id="regional-stats-container" class="space-y-2">
-            </div>
-          </div>
-
-          <div class="space-y-2.5 pt-2 border-t border-slate-800">
-            <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-              🏙️ Apuração por Município
-            </h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <select id="query-uf-select" onchange="renderCityResults()" class="bg-slate-950 border border-slate-800 text-xs text-white rounded-xl p-2.5 outline-none">
-                <option value="">Todas as UFs</option>
-              </select>
-              <input type="text" id="query-city-filter" placeholder="Filtrar município..." oninput="renderCityResults()" class="bg-slate-950 border border-slate-800 text-xs text-white rounded-xl p-2.5 placeholder-slate-600 outline-none">
-            </div>
-            <div id="city-results-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- STEP 4: DEBATE / CHAT -->
-      <section id="sec-chat" class="hidden w-full space-y-3">
-        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl flex items-center justify-between">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-sm">💬</div>
-            <div>
-              <h3 class="text-xs font-bold text-white">Debate Público ao Vivo</h3>
-              <p class="text-[10px] text-emerald-400 font-medium">● Exclusivo para Apoiadores VIP</p>
-            </div>
-          </div>
-          <span id="chat-user-badge" class="text-[10px] font-mono bg-slate-950 border border-slate-800 px-2 py-1 rounded-lg text-slate-300"></span>
         </div>
 
-        <div id="chat-messages" class="bg-slate-900 border border-slate-800 p-3 rounded-2xl h-64 overflow-y-auto custom-scrollbar space-y-3 text-xs flex flex-col">
-        </div>
-
-        <div id="chat-locked-warning" class="hidden bg-emerald-950/40 border border-emerald-500/40 p-4 rounded-xl text-center space-y-2.5">
-          <p class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
-            🔒 Chat VIP Restrito aos Apoiadores
-          </p>
-          <p class="text-[11px] text-slate-300 leading-relaxed">
-            O acesso ao chat de debate é <b>exclusivo para quem ajudou a causa</b> adquirindo o comprovante de apoiador com imagem.
-          </p>
-          <button onclick="openApoiadorModalFromReceipt()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2">
-            <span>🎨</span>
-            <span>Adquirir Card com Foto e Desbloquear Chat</span>
-          </button>
-        </div>
-
-        <div id="nickname-error" class="hidden bg-rose-500/10 border border-rose-500/30 p-2.5 rounded-xl text-center text-rose-400 text-xs font-medium"></div>
-
-        <div id="nickname-setup-box" class="hidden bg-slate-900 border border-blue-500/40 p-3 rounded-xl space-y-2">
-          <p class="text-xs font-bold text-blue-400">Escolha seu Apelido para o Chat VIP:</p>
-          <div class="flex gap-2">
-            <input type="text" id="chat-nickname-input" placeholder="Digite seu apelido..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-blue-500">
-            <button onclick="saveNickname()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-2 rounded-xl text-xs transition">Salvar</button>
-          </div>
-        </div>
-
-        <div id="chat-input-container" class="hidden flex gap-2">
-          <input type="text" id="chat-input" placeholder="Digite seu comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-blue-500">
-          <button onclick="sendChatMessage()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-lg shadow-blue-600/20">
-            Enviar 🚀
-          </button>
-        </div>
-      </section>
-
-      <!-- FAQ -->
-      <section id="sec-faq" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
-        <div class="flex items-center gap-2 border-b border-slate-800 pb-2">
-          <span class="text-lg">❓</span>
-          <div>
-            <h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Dúvidas Frequentes</h3>
-            <p class="text-[10px] text-slate-400">Sobre a segurança e regras da pesquisa</p>
-          </div>
-        </div>
-
-        <div class="space-y-2.5 text-xs">
-          <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
-            <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-              <span>🛡️ Como o sistema protege a localização?</span>
-              <span class="text-blue-400 group-open:rotate-180 transition-transform">▼</span>
-            </summary>
-            <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-              Após o primeiro registo com o CPF, a localização (Estado e Cidade) vinculada fica travada no dispositivo para garantir consistência e evitar fraudes na amostra da pesquisa.
-            </div>
-          </details>
-        </div>
-      </section>
-
-    </main>
-
-    <footer class="text-center py-3 text-[10px] text-slate-500 border-t border-slate-900">
-      © Painel Brasil — Pesquisa Independente de Opinião Pública
-    </footer>
+      </div>
+    </div>
 
   </div>
 
   <script>
-    const SUPABASE_URL = "https://SEU_PROJETO.supabase.co"; 
-    const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_SUPABASE"; 
-    const isSupabaseConfigured = window.supabase && SUPABASE_URL !== "https://SEU_PROJETO.supabase.co" && !SUPABASE_URL.includes("SEU_PROJETO");
-    const supabaseClient = isSupabaseConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-
-    let pixPollInterval = null;
-    let pendingVoteObj = null;
-    let confirmedVoteData = null;
-
-    let deviceSessionToken = localStorage.getItem('simulador_device_token');
-    if (!deviceSessionToken) {
-      deviceSessionToken = 'tok_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
-      localStorage.setItem('simulador_device_token', deviceSessionToken);
-    }
-
-    const stateCities = {
-      "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal", "Parauapebas", "Abaetetuba", "Marituba", "Cametá", "Bragança", "Paragominas"],
-      "AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira", "Tarauacá"],
-      "AL": ["Maceió", "Arapiraca", "Rio Largo", "Palmeira dos Índios"],
-      "AP": ["Macapá", "Santana", "Laranjal do Jari"],
-      "AM": ["Manaus", "Parintins", "Itacoatiara", "Manacapuru"],
-      "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Itabuna"],
-      "CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral"],
-      "DF": ["Brasília", "Ceilândia", "Taguatinga", "Samambaia"],
-      "ES": ["Vitória", "Vila Velha", "Serra", "Cariacica", "Guarapari"],
-      "GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde"],
-      "MA": ["São Luís", "Imperatriz", "São José de Ribamar", "Timon", "Caxias"],
-      "MT": ["Cuiabá", "Várzea Grande", "Rondonópolis", "Sinop", "Tangará da Serra"],
-      "MS": ["Campo Grande", "Dourados", "Três Lagoas", "Corumbá"],
-      "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros"],
-      "PB": ["João Pessoa", "Campina Grande", "Santa Rita", "Patos"],
-      "PR": ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "Foz do Iguaçu"],
-      "PE": ["Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina"],
-      "PI": ["Teresina", "Parnaíba", "Picos", "Floriano"],
-      "RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Petropolis"],
-      "RN": ["Natal", "Mossoró", "Parnamirim", "São Gonçalo do Amarante"],
-      "RS": ["Porto Alegre", "Caxias do Sul", "Canoas", "Pelotas", "Santa Maria", "Gravataí"],
-      "RO": ["Porto Velho", "Ji-Paraná", "Ariquemes", "Vilhena"],
-      "RR": ["Boa Vista", "Rorainópolis", "Caracaraí"],
-      "SC": ["Florianópolis", "Joinville", "Blumenau", "São José", "Criciúma"],
-      "SP": ["São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo", "Santo André", "Osasco", "Ribeirão Preto", "Sorocaba"],
-      "SE": ["Aracaju", "Nossa Senhora do Socorro", "Lagarto", "Itabaiana"],
-      "TO": ["Palmas", "Araguaína", "Gurupi", "Porto Nacional"],
-      "ZZ": ["Exterior / Voto no Exterior"]
+    let confirmedVoteData = {
+      nome: 'MÁRIO',
+      uf: 'Rio de Janeiro / RJ',
+      opcao: '22',
+      hasPaid: false
     };
 
-    let verifiedVoter = null;
-    let currentInput = "";
-    let isBranco = false;
-
-    let votedCPFs = JSON.parse(localStorage.getItem('simulador_voted_cpfs') || "{}");
-    let voterChoices = JSON.parse(localStorage.getItem('simulador_voter_choices') || "{}");
-    let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}");
-    let voterDevicePins = JSON.parse(localStorage.getItem('simulador_voter_pins') || "{}");
-    let voterLocations = JSON.parse(localStorage.getItem('simulador_voter_locations') || "{}");
-    let paidSupporters = JSON.parse(localStorage.getItem('simulador_paid_supporters') || "{}");
-
-    let votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-    let regionalVotes = {
-      'Norte': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Nordeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Sudeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Sul': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Centro-Oeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Exterior': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 }
-    };
-    let cityVotes = {};
-
-    let chatMessages = JSON.parse(localStorage.getItem('simulador_chat_msgs') || JSON.stringify([
-      { id: 1, sender: "Moderação", uf: "DF", text: "Bem-vindo ao debate público independente. Mantenha o respeito.", time: "Agora", isSystem: true }
-    ]));
-
-    window.addEventListener('DOMContentLoaded', async () => {
-      populateQueryUFs();
-      await loadCloudStats();
-      renderChat();
-
-      setInterval(() => {
-        loadCloudStats();
-      }, 10000);
-
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('#voter-city-search') && !e.target.closest('#city-suggestions-container')) {
-          document.getElementById('city-suggestions-container').classList.add('hidden');
-        }
-      });
-    });
-
-    function onCPFInput(input) {
-      formatCPF(input);
-      const cleanDoc = input.value.replace(/\D/g, '');
-      const hint = document.getElementById('cpf-status-hint');
-      const ufSelect = document.getElementById('voter-uf-select');
-      const cityInput = document.getElementById('voter-city-search');
-
-      if (cleanDoc.length === 11) {
-        if (voterLocations[cleanDoc]) {
-          const loc = voterLocations[cleanDoc];
-          ufSelect.value = loc.uf;
-          cityInput.value = loc.city;
-          document.getElementById('selected-city-val').value = loc.city;
-
-          ufSelect.disabled = true;
-          cityInput.disabled = true;
-          hint.classList.remove('hidden');
-        } else {
-          ufSelect.disabled = false;
-          cityInput.disabled = false;
-          hint.classList.add('hidden');
-        }
-      } else {
-        ufSelect.disabled = false;
-        cityInput.disabled = false;
-        hint.classList.add('hidden');
-      }
-    }
-
-    function validateCPF(cpf) {
-      const clean = cpf.replace(/\D/g, '');
-      if (clean.length !== 11) return false;
-      return true;
-    }
-
-    async function checkVoterInDatabase(cleanDoc) {
-      if (!supabaseClient) return null;
-      try {
-        const { data, error } = await supabaseClient
-          .from('votos')
-          .select('cpf, opcao, cidade, uf, created_at')
-          .eq('cpf', cleanDoc)
-          .maybeSingle();
-
-        if (error || !data) return null;
-        return data;
-      } catch (err) {
-        return null;
-      }
-    }
-
-    async function loadCloudStats() {
-      const btnRefresh = document.getElementById('btn-refresh-stats');
-      const iconEl = document.getElementById('refresh-icon');
-      const spinnerEl = document.getElementById('refresh-spinner');
-
-      if (btnRefresh && iconEl && spinnerEl) {
-        btnRefresh.disabled = true;
-        iconEl.classList.add('hidden');
-        spinnerEl.classList.remove('hidden');
-      }
-
-      let allVotesData = [];
-
-      try {
-        if (supabaseClient) {
-          try {
-            const { data, error } = await supabaseClient.from('votos').select('*');
-            if (!error && data) allVotesData = data;
-            else allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-          } catch (err) {
-            allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-          }
-        } else {
-          allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-        }
-      } finally {
-        if (btnRefresh && iconEl && spinnerEl) {
-          setTimeout(() => {
-            btnRefresh.disabled = false;
-            iconEl.classList.remove('hidden');
-            spinnerEl.classList.add('hidden');
-          }, 300);
-        }
-      }
-
-      votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-      cityVotes = {};
-      Object.keys(regionalVotes).forEach(r => {
-        regionalVotes[r] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-      });
-
-      allVotesData.forEach(item => {
-        const op = item.opcao;
-        if (votes[op] !== undefined) votes[op]++;
-        else votes['NULO']++;
-
-        const reg = item.regiao || 'Norte';
-        if (regionalVotes[reg]) {
-          if (regionalVotes[reg][op] !== undefined) regionalVotes[reg][op]++;
-          else regionalVotes[reg]['NULO']++;
-        }
-
-        const cityKey = `${item.cidade || 'Capital'} - ${item.uf || 'PA'}`;
-        if (!cityVotes[cityKey]) {
-          cityVotes[cityKey] = { uf: item.uf || 'PA', city: item.cidade || 'Capital', '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-        }
-        if (cityVotes[cityKey][op] !== undefined) cityVotes[cityKey][op]++;
-        else cityVotes[cityKey]['NULO']++;
-
-        if (item.cpf) votedCPFs[item.cpf] = true;
-      });
-
-      localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
-      renderStats();
-      renderCityResults();
-    }
-
-    function formatCPF(input) {
-      let v = input.value.replace(/\D/g, '');
-      if (v.length > 11) v = v.slice(0, 11);
-      if (v.length > 9) {
-        v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-      } else if (v.length > 6) {
-        v = v.replace(/^(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
-      } else if (v.length > 3) {
-        v = v.replace(/^(\d{3})(\d{1,3})/, '$1.$2');
-      }
-      input.value = v;
-    }
-
-    function onUFChange() {
-      const ufSelect = document.getElementById('voter-uf-select');
-      const selectedUf = ufSelect.value;
-      const cities = stateCities[selectedUf] || ["Capital"];
-      
-      const cityInput = document.getElementById('voter-city-search');
-      cityInput.value = cities[0];
-      cityInput.dataset.touched = ""; 
-      
-      document.getElementById('selected-city-val').value = cities[0];
-    }
-
-    function filterCityOptions() {
-      const ufSelect = document.getElementById('voter-uf-select');
-      if (ufSelect.disabled) return;
-
-      const uf = ufSelect.value;
-      const cities = stateCities[uf] || [];
-      const query = document.getElementById('voter-city-search').value.toLowerCase().trim();
-      const container = document.getElementById('city-suggestions-container');
-
-      const filtered = query === "" ? cities : cities.filter(c => c.toLowerCase().includes(query));
-
-      let html = "";
-      if (filtered.length > 0) {
-        html = filtered.map(c => `
-          <div onclick="selectCity('${c}')" class="p-2.5 text-xs text-slate-200 hover:bg-slate-900 rounded-lg cursor-pointer flex items-center gap-2">
-            <span>📍</span>
-            <span class="font-medium">${c}</span>
-          </div>
-        `).join('');
-      } else {
-        html = `
-          <div onclick="selectCity('${document.getElementById('voter-city-search').value}')" class="p-2.5 text-xs text-blue-400 hover:bg-slate-900 rounded-lg cursor-pointer font-bold">
-            📍 Usar: "${document.getElementById('voter-city-search').value}"
-          </div>
-        `;
-      }
-
-      container.innerHTML = html;
-      container.classList.remove('hidden');
-    }
-
-    function selectCity(cityName) {
-      document.getElementById('voter-city-search').value = cityName;
-      document.getElementById('selected-city-val').value = cityName;
-      document.getElementById('city-suggestions-container').classList.add('hidden');
-    }
-
-    async function submitStep1() {
-      const name = document.getElementById('voter-name').value.trim();
-      const doc = document.getElementById('voter-doc').value.trim();
-      const pin = document.getElementById('voter-pin').value.trim();
-      const ufSelect = document.getElementById('voter-uf-select');
-      const city = document.getElementById('voter-city-search').value.trim() || "Capital";
-      const errBox = document.getElementById('auth-error');
-
-      errBox.classList.add('hidden');
-
-      if (!name) {
-        errBox.textContent = "Por favor, digite seu nome completo.";
-        errBox.classList.remove('hidden');
-        return;
-      }
-
-      const cleanDoc = doc.replace(/\D/g, '');
-      
-      if (!validateCPF(cleanDoc)) {
-        errBox.textContent = "⚠️ Informe 11 números para o CPF.";
-        errBox.classList.remove('hidden');
-        return;
-      }
-
-      if (!pin || pin.length < 4) {
-        errBox.textContent = "⚠️ Digite um PIN de segurança com 4 dígitos para proteger sua conta.";
-        errBox.classList.remove('hidden');
-        return;
-      }
-
-      if (voterDevicePins[cleanDoc] && voterDevicePins[cleanDoc] !== pin) {
-        errBox.textContent = "❌ PIN incorreto para este CPF! Este CPF já está associado a outro PIN de segurança.";
-        errBox.classList.remove('hidden');
-        return;
-      } else if (!voterDevicePins[cleanDoc]) {
-        voterDevicePins[cleanDoc] = pin;
-        localStorage.setItem('simulador_voter_pins', JSON.stringify(voterDevicePins));
-      }
-
-      if (!voterLocations[cleanDoc]) {
-        voterLocations[cleanDoc] = { uf: ufSelect.value, city: city };
-        localStorage.setItem('simulador_voter_locations', JSON.stringify(voterLocations));
-      }
-
-      document.getElementById('auth-step-1').classList.add('hidden');
-      document.getElementById('auth-step-2').classList.remove('hidden');
-
-      const dbRecord = await checkVoterInDatabase(cleanDoc);
-      const isAlreadyVoted = !!dbRecord || !!votedCPFs[cleanDoc];
-
-      setTimeout(() => {
-        document.getElementById('auth-step-2').classList.add('hidden');
-
-        const lockedLoc = voterLocations[cleanDoc] || { uf: ufSelect.value, city: city };
-        const selectedOpt = ufSelect.querySelector(`option[value="${lockedLoc.uf}"]`);
-        const region = selectedOpt ? selectedOpt.getAttribute('data-region') : 'Norte';
-
-        verifiedVoter = { name, doc, cleanDoc, pin, uf: lockedLoc.uf, city: lockedLoc.city, region, token: deviceSessionToken };
-
-        document.getElementById('summary-name').textContent = name;
-        document.getElementById('summary-doc').textContent = doc;
-        document.getElementById('summary-state').textContent = `${lockedLoc.city} / ${lockedLoc.uf} (${region})`;
-
-        const statusEl = document.getElementById('summary-vote-status');
-
-        if (isAlreadyVoted) {
-          statusEl.textContent = "JÁ VOTOU (Sessão Segura Protegida)";
-          statusEl.className = "text-amber-400 font-bold";
-
-          const savedReceipt = localStorage.getItem('simulador_receipt_' + cleanDoc);
-          if (savedReceipt) {
-            confirmedVoteData = JSON.parse(savedReceipt);
-          } else if (dbRecord) {
-            confirmedVoteData = {
-              voterName: name,
-              voterCpf: doc,
-              cityUf: `${dbRecord.cidade || lockedLoc.city} / ${dbRecord.uf || lockedLoc.uf}`,
-              opcao: dbRecord.opcao,
-              time: dbRecord.created_at ? new Date(dbRecord.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')
-            };
-            localStorage.setItem('simulador_receipt_' + cleanDoc, JSON.stringify(confirmedVoteData));
-          }
-        } else {
-          statusEl.textContent = "APTO PARA VOTAR";
-          statusEl.className = "text-blue-400 font-bold";
-        }
-
-        document.getElementById('auth-step-3').classList.remove('hidden');
-
-        document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-blue-500/30 text-blue-400 font-bold text-xs flex items-center justify-center";
-        document.getElementById('step-dot-3').className = "w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center";
-      }, 1000);
-    }
-
-    async function startVotingSession() {
-      document.getElementById('sec-auth').classList.add('hidden');
-      document.getElementById('sec-urna').classList.remove('hidden');
-      switchTab('urna');
-
-      if (verifiedVoter) {
-        const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
-        const isAlreadyVoted = !!dbRecord || !!votedCPFs[verifiedVoter.cleanDoc];
-        if (isAlreadyVoted) {
-          document.getElementById('lcd-normal-view').classList.add('hidden');
-          document.getElementById('lcd-fim-msg').classList.add('hidden');
-          document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
-          document.getElementById('post-vote-receipt-container').classList.remove('hidden');
-        } else {
-          resetUrna();
-          document.getElementById('post-vote-receipt-container').classList.add('hidden');
-        }
-      }
-    }
-
-    function switchTab(tab) {
-      ['sec-auth', 'sec-urna', 'sec-dados', 'sec-chat'].forEach(s => {
-        const el = document.getElementById(s);
-        if (el) el.classList.add('hidden');
-      });
-
-      ['btn-tab-urna', 'btn-tab-dados', 'btn-tab-chat'].forEach(b => {
-        const el = document.getElementById(b);
-        if (el) el.className = "px-3 py-1 rounded-md text-slate-400 hover:text-white transition font-semibold";
-      });
-
-      if (tab === 'urna') {
-        document.getElementById('sec-urna').classList.remove('hidden');
-        document.getElementById('btn-tab-urna').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
-        
-        if (verifiedVoter && (votedCPFs[verifiedVoter.cleanDoc] || confirmedVoteData)) {
-          document.getElementById('lcd-normal-view').classList.add('hidden');
-          document.getElementById('lcd-fim-msg').classList.add('hidden');
-          document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
-          document.getElementById('post-vote-receipt-container').classList.remove('hidden');
-        } else {
-          resetUrna();
-        }
-      } else if (tab === 'dados') {
-        document.getElementById('sec-dados').classList.remove('hidden');
-        document.getElementById('btn-tab-dados').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
-        loadCloudStats();
-      } else if (tab === 'chat') {
-        document.getElementById('sec-chat').classList.remove('hidden');
-        document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition flex items-center gap-1";
-        
-        const isPaidSupporter = verifiedVoter && paidSupporters[verifiedVoter.cleanDoc];
-        const nickname = verifiedVoter ? voterNicknames[verifiedVoter.cleanDoc] : null;
-        
-        document.getElementById('chat-user-badge').textContent = nickname ? `${nickname} (${verifiedVoter.uf})` : (verifiedVoter ? verifiedVoter.name.split(' ')[0] : "Visitante");
-        
-        const lockWarning = document.getElementById('chat-locked-warning');
-        const nicknameBox = document.getElementById('nickname-setup-box');
-        const inputContainer = document.getElementById('chat-input-container');
-        const nickErrBox = document.getElementById('nickname-error');
-
-        nickErrBox.classList.add('hidden');
-
-        if (!isPaidSupporter) {
-          lockWarning.classList.remove('hidden');
-          nicknameBox.classList.add('hidden');
-          inputContainer.classList.add('hidden');
-        } else {
-          lockWarning.classList.add('hidden');
-          if (!nickname) {
-            nicknameBox.classList.remove('hidden');
-            inputContainer.classList.add('hidden');
-          } else {
-            nicknameBox.classList.add('hidden');
-            inputContainer.classList.remove('hidden');
-          }
-        }
-
-        renderChat();
-      }
-    }
-
-    function saveNickname() {
-      const input = document.getElementById('chat-nickname-input');
-      const nickname = input.value.trim();
-      const errBox = document.getElementById('nickname-error');
-      
-      errBox.classList.add('hidden');
-
-      if (!verifiedVoter || !paidSupporters[verifiedVoter.cleanDoc]) {
-        errBox.textContent = "⚠️ Você precisa adquirir o comprovante de apoiador via PIX para ter acesso ao chat.";
-        errBox.classList.remove('hidden');
-        return;
-      }
-
-      if (!nickname) return;
-
-      const normalizedNewNick = nickname.toLowerCase();
-      const existingEntries = Object.entries(voterNicknames);
-      
-      for (let [cpfKey, nickVal] of existingEntries) {
-        if (cpfKey !== verifiedVoter.cleanDoc && nickVal.toLowerCase() === normalizedNewNick) {
-          errBox.textContent = `⚠️ O apelido "${nickname}" já está em uso por outro participante.`;
-          errBox.classList.remove('hidden');
-          return;
-        }
-      }
-
-      voterNicknames[verifiedVoter.cleanDoc] = nickname;
-      localStorage.setItem('simulador_voter_nicknames', JSON.stringify(voterNicknames));
-
-      document.getElementById('chat-user-badge').textContent = `${nickname} (${verifiedVoter.uf})`;
-      document.getElementById('nickname-setup-box').classList.add('hidden');
-      document.getElementById('chat-input-container').classList.remove('hidden');
-    }
-
-    function resetUrna() {
-      currentInput = "";
-      isBranco = false;
-      document.getElementById('lcd-normal-view').classList.remove('hidden');
-      document.getElementById('lcd-duplicate-msg').classList.add('hidden');
-      document.getElementById('lcd-fim-msg').classList.add('hidden');
-      renderUrnaScreen();
-    }
-
-    function pressKey(n) {
-      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) {
-        return;
-      }
-      if (isBranco) return;
-      if (currentInput.length < 2) {
-        currentInput += n;
-        renderUrnaScreen();
-      }
-    }
-
-    function quickSelect(num) {
-      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) {
-        return;
-      }
-      resetUrna();
-      currentInput = num;
-      isBranco = false;
-      renderUrnaScreen();
-    }
-
-    function pressBranco() {
-      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) {
-        return;
-      }
-      resetUrna();
-      currentInput = "";
-      isBranco = true;
-      renderUrnaScreen();
-    }
-
-    function pressCorrige() {
-      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) {
-        return;
-      }
-      resetUrna();
-    }
-
-    function renderUrnaScreen() {
-      const d1 = document.getElementById('digit-1');
-      const d2 = document.getElementById('digit-2');
-      const info = document.getElementById('candidate-info');
-      const special = document.getElementById('vote-special-msg');
-      const specialText = document.getElementById('special-text');
-      const candName = document.getElementById('cand-name');
-      const candParty = document.getElementById('cand-party');
-
-      if (isBranco) {
-        d1.textContent = "B";
-        d2.textContent = "R";
-        info.classList.add('hidden');
-        special.classList.remove('hidden');
-        specialText.textContent = "VOTO EM BRANCO";
-        return;
-      }
-
-      special.classList.add('hidden');
-      d1.textContent = currentInput.length > 0 ? currentInput[0] : "";
-      d2.textContent = currentInput.length > 1 ? currentInput[1] : "";
-
-      if (currentInput.length === 2) {
-        info.classList.remove('hidden');
-        if (currentInput === '22') {
-          candName.textContent = "Flávio Bolsonaro";
-          candParty.textContent = "Partido Liberal (PL)";
-        } else if (currentInput === '13') {
-          candName.textContent = "Lula";
-          candParty.textContent = "Partido dos Trabalhadores (PT)";
-        } else {
-          candName.textContent = "Voto Nulo";
-          candParty.textContent = "Legenda Inexistente";
-        }
-      } else {
-        info.classList.add('hidden');
-      }
-    }
-
-    async function pressConfirma() {
-      if (!verifiedVoter) return;
-
-      const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
-      const isAlreadyVoted = !!dbRecord || votedCPFs[verifiedVoter.cleanDoc];
-
-      if (isAlreadyVoted) {
-        votedCPFs[verifiedVoter.cleanDoc] = true;
-        localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
-
-        let userOption = dbRecord?.opcao || voterChoices[verifiedVoter.cleanDoc] || '22';
-
-        const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
-        if (savedReceipt) {
-          confirmedVoteData = JSON.parse(savedReceipt);
-        } else {
-          confirmedVoteData = {
-            voterName: verifiedVoter.name,
-            voterCpf: verifiedVoter.doc,
-            cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-            opcao: userOption,
-            time: new Date().toLocaleString('pt-BR')
-          };
-          localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
-        }
-
-        document.getElementById('lcd-normal-view').classList.add('hidden');
-        document.getElementById('lcd-fim-msg').classList.add('hidden');
-        document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
-
-        document.getElementById('post-vote-receipt-container').classList.remove('hidden');
-        return;
-      }
-
-      if (!isBranco && currentInput.length < 2) {
-        return;
-      }
-
-      let voteType = 'NULO';
-      let voteLabel = 'votou Nulo';
-      if (isBranco) {
-        voteType = 'BRANCO';
-        voteLabel = 'votou Branco';
-      } else if (currentInput === '22') {
-        voteType = '22';
-        voteLabel = 'votou 22';
-      } else if (currentInput === '13') {
-        voteType = '13';
-        voteLabel = 'votou 13';
-      }
-
-      pendingVoteObj = {
-        cpf: verifiedVoter.cleanDoc,
-        opcao: voteType,
-        uf: verifiedVoter.uf,
-        cidade: verifiedVoter.city,
-        regiao: verifiedVoter.region,
-        voteLabel: voteLabel,
-        device_token: verifiedVoter.token
-      };
+    /**
+     * Captura os dados do formulário e abre o comprovante
+     */
+    function submitVote(isPaid) {
+      const nameInput = document.getElementById('user-name').value.trim() || 'PARTICIPANTE';
+      const ufSelect = document.getElementById('user-uf');
+      const ufText = ufSelect.options[ufSelect.selectedIndex].text;
+      const voteOption = document.getElementById('vote-option').value;
 
       confirmedVoteData = {
-        voterName: verifiedVoter.name,
-        voterCpf: verifiedVoter.doc,
-        cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-        opcao: voteType,
-        time: new Date().toLocaleString('pt-BR')
+        nome: nameInput.toUpperCase(),
+        uf: ufText,
+        opcao: voteOption,
+        hasPaid: isPaid
       };
 
-      localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
-      votedCPFs[verifiedVoter.cleanDoc] = true;
-      voterChoices[verifiedVoter.cleanDoc] = voteLabel;
-      localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
-      localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
-
-      const localVotes = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-      localVotes.push(pendingVoteObj);
-      localStorage.setItem('simulador_all_votes', JSON.stringify(localVotes));
-
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('votos').insert([pendingVoteObj]);
-        } catch (err) {
-          console.error("Falha ao gravar voto no Supabase:", err);
-        }
-      }
-
-      await loadCloudStats();
-
-      document.getElementById('lcd-normal-view').classList.add('hidden');
-      document.getElementById('lcd-duplicate-msg').classList.add('hidden');
-      document.getElementById('lcd-fim-msg').classList.remove('hidden');
-
-      document.getElementById('post-vote-receipt-container').classList.remove('hidden');
-
-      openApoiadorModal();
+      openReceiptModal();
     }
 
-    function gerarValorMenorSyncPay() {
-      const min = 1.01;
-      const max = 1.99;
-      const valorAleatorio = (Math.random() * (max - min) + min).toFixed(2);
-      return parseFloat(valorAleatorio);
+    /**
+     * Alterna rapidamente entre o estado Grátis e Pago na visualização
+     */
+    function togglePaidState(isPaid) {
+      confirmedVoteData.hasPaid = isPaid;
+      openReceiptModal();
     }
 
-    function openApoiadorModal() {
-      document.getElementById('receipt-modal').classList.add('hidden');
-      
-      const hasVoted = verifiedVoter && (votedCPFs[verifiedVoter.cleanDoc] || confirmedVoteData);
-      const titleEl = document.getElementById('pix-title');
-      const subtitleEl = document.getElementById('pix-subtitle');
-      const iconEl = document.getElementById('pix-header-icon');
-      const unvotedWarn = document.getElementById('pix-unvoted-warning');
-
-      if (hasVoted) {
-        iconEl.textContent = "🎉";
-        titleEl.textContent = "Voto Registrado com Sucesso!";
-        subtitleEl.textContent = "Sua opinião já foi computada na pesquisa.";
-        unvotedWarn.classList.add('hidden');
-      } else {
-        iconEl.textContent = "💬";
-        titleEl.textContent = "Acesso ao Chat VIP de Debate";
-        subtitleEl.textContent = "Adquira o Card de Apoiador para participar das conversas ao vivo.";
-        unvotedWarn.classList.remove('hidden');
-      }
-
-      document.getElementById('pix-modal').classList.remove('hidden');
-      document.getElementById('pix-options-box').classList.remove('hidden');
-      document.getElementById('pix-loading').classList.add('hidden');
-      document.getElementById('pix-content').classList.add('hidden');
-      document.getElementById('msg-vote-success').classList.add('hidden');
-      document.getElementById('btn-cancel-pix').classList.remove('hidden');
-    }
-
-    function openApoiadorModalFromReceipt() {
-      closeReceiptModal();
-      switchTab('urna');
-      openApoiadorModal();
-    }
-
-    async function requestPixCheckout(amountValue) {
-      document.getElementById('pix-options-box').classList.add('hidden');
-      document.getElementById('pix-loading').classList.remove('hidden');
-      document.getElementById('pix-display-amount').textContent = `R$ ${amountValue.toFixed(2).replace('.', ',')}`;
-
-      try {
-        const response = await fetch('/api/gerar-pix', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: verifiedVoter ? verifiedVoter.name : "Apoiador",
-            email: "apoiador@painelbrasil.org",
-            cpf: verifiedVoter ? verifiedVoter.cleanDoc : "00000000000",
-            amount: amountValue
-          })
-        });
-
-        const data = await response.json();
-
-        if (data && data.pix_code) {
-          document.getElementById('pix-code-input').value = data.pix_code;
-          document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.pix_code)}`;
-          
-          document.getElementById('pix-loading').classList.add('hidden');
-          document.getElementById('pix-content').classList.remove('hidden');
-
-          startPixStatusPolling(data.identifier);
-        } else {
-          fallbackPixSimulated(amountValue);
-        }
-      } catch (err) {
-        fallbackPixSimulated(amountValue);
-      }
-    }
-
-    function fallbackPixSimulated(amount) {
-      const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865404" + Math.floor(amount * 100) + "5802BR5920KIT APOIADOR PAINEL BRASIL6009SAO PAULO62070503***6304E2CA";
-      document.getElementById('pix-code-input').value = mockPix;
-      document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mockPix)}`;
-      
-      document.getElementById('pix-loading').classList.add('hidden');
-      document.getElementById('pix-content').classList.remove('hidden');
-
-      setTimeout(() => {
-        finalizePixSuccess();
-      }, 5000);
-    }
-
-    function startPixStatusPolling(transactionId) {
-      if (!transactionId) return;
-      if (pixPollInterval) clearInterval(pixPollInterval);
-
-      pixPollInterval = setInterval(async () => {
-        try {
-          const voterCpf = verifiedVoter ? verifiedVoter.cleanDoc : '';
-          const res = await fetch(`/api/gerar-pix?id=${transactionId}&voterCpf=${voterCpf}`);
-          const data = await res.json();
-
-          if (data && data.paid) {
-            clearInterval(pixPollInterval);
-            finalizePixSuccess();
-          }
-        } catch (err) {
-          console.error("Erro na verificação do PIX:", err);
-        }
-      }, 3000);
-    }
-
-    function copyPixCode() {
-      const input = document.getElementById('pix-code-input');
-      input.select();
-      document.execCommand('copy');
-    }
-
-    function closePixModal() {
-      if (pixPollInterval) clearInterval(pixPollInterval);
-      document.getElementById('pix-modal').classList.add('hidden');
-    }
-
-    function finalizePixSuccess() {
-      if (pixPollInterval) clearInterval(pixPollInterval);
-
-      if (verifiedVoter) {
-        paidSupporters[verifiedVoter.cleanDoc] = true;
-        localStorage.setItem('simulador_paid_supporters', JSON.stringify(paidSupporters));
-      }
-
-      document.getElementById('pix-content').classList.add('hidden');
-      document.getElementById('btn-cancel-pix').classList.add('hidden');
-      document.getElementById('msg-vote-success').classList.remove('hidden');
-
-      const vName = verifiedVoter ? verifiedVoter.name : "Apoiador";
-      const vOpcao = confirmedVoteData ? confirmedVoteData.opcao : "22";
-      const vLoc = verifiedVoter ? `${verifiedVoter.city} / ${verifiedVoter.uf}` : "Brasil";
-
-      renderCardCanvas(vName, vOpcao, vLoc);
-    }
-
-    function renderCardCanvas(nomeUsuario, opcaoVoto, localidade) {
-      const canvas = document.getElementById('cardCanvas');
-      const ctx = canvas.getContext('2d');
-
-      let bgImgSrc = "";
-      let accentColor = "#38bdf8"; 
-
-      if (opcaoVoto === '22') {
-        bgImgSrc = "comprovante-22.jpg";
-        accentColor = "#eab308"; // Amarelo/Dourado para 22
-      } else if (opcaoVoto === '13') {
-        bgImgSrc = "comprovante-13.jpg";
-        accentColor = "#ef4444"; // Vermelho para 13
-      }
-
-      const drawOverlayText = () => {
-        const displayName = privacyHiddenName ? "DADO OCULTO" : nomeUsuario;
-        const displayLoc = privacyHiddenLocation ? "LOCAL OCULTO" : localidade;
-
-        // --- SELO DE VERIFICAÇÃO NO OMBRO ESQUERDO ---
-        const centerX = 210;
-        const centerY = 370;
-
-        ctx.save();
-
-        // 1. Fundo do Selo
-        ctx.fillStyle = "rgba(10, 15, 26, 0.88)";
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 95, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 2. Bordas
-        ctx.strokeStyle = accentColor;
-        ctx.lineWidth = 4;
-        ctx.stroke();
-
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 88, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // 3. Cabeçalho do Selo
-        ctx.fillStyle = accentColor;
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('✓ VERIFICADO', centerX, centerY - 50);
-
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 12px Arial';
-        ctx.fillText('PARTICIPANTE', centerX, centerY - 32);
-
-        // Divisória
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(centerX - 65, centerY - 24);
-        ctx.lineTo(centerX + 65, centerY - 24);
-        ctx.stroke();
-
-        // 4. Nome do Usuário
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 18px Arial';
-        let formattedName = displayName.toUpperCase();
-        if (formattedName.length > 14) {
-          formattedName = formattedName.substring(0, 12) + '..';
-        }
-        ctx.fillText(formattedName, centerX, centerY + 2);
-
-        // 5. Localização
-        ctx.fillStyle = accentColor;
-        ctx.font = 'bold 14px Arial';
-        let formattedLoc = displayLoc.toUpperCase();
-        if (formattedLoc.length > 16) {
-          formattedLoc = formattedLoc.substring(0, 14) + '..';
-        }
-        ctx.fillText(`📍 ${formattedLoc}`, centerX, centerY + 26);
-
-        // 6. Rodapé do Selo
-        ctx.fillStyle = '#64748b';
-        ctx.font = 'bold 10px Arial';
-        ctx.fillText('PAINEL BRASIL', centerX, centerY + 52);
-
-        ctx.restore();
-      };
-
-      if (bgImgSrc) {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          drawOverlayText();
-        };
-        img.onerror = () => {
-          ctx.fillStyle = '#090d16';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          drawOverlayText();
-        };
-        img.src = bgImgSrc;
-      } else {
-        ctx.fillStyle = '#090d16';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        drawOverlayText();
-      }
-    }
-
-    let privacyHiddenName = false;
-    let privacyHiddenLocation = false;
-
-    function togglePrivacy(type) {
-      if (!confirmedVoteData) return;
-      const nameEl = document.getElementById('receipt-voter-name');
-      const locEl = document.getElementById('receipt-voter-location');
-
-      if (type === 'name') {
-        privacyHiddenName = !privacyHiddenName;
-        nameEl.textContent = privacyHiddenName ? "OCULTO" : confirmedVoteData.voterName;
-        nameEl.classList.toggle('opacity-30', privacyHiddenName);
-      } else if (type === 'location') {
-        privacyHiddenLocation = !privacyHiddenLocation;
-        locEl.textContent = privacyHiddenLocation ? "OCULTO" : confirmedVoteData.cityUf;
-        locEl.classList.toggle('opacity-30', privacyHiddenLocation);
-      }
-
-      if (verifiedVoter) {
-        renderCardCanvas(verifiedVoter.name, confirmedVoteData.opcao, `${verifiedVoter.city} / ${verifiedVoter.uf}`);
-      }
-    }
-
-    async function openReceiptModal() {
-      if (!confirmedVoteData && verifiedVoter) {
-        const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
-        if (savedReceipt) {
-          confirmedVoteData = JSON.parse(savedReceipt);
-        } else {
-          const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
-          confirmedVoteData = {
-            voterName: verifiedVoter.name,
-            voterCpf: verifiedVoter.doc,
-            cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-            opcao: dbRecord?.opcao || '22',
-            time: new Date().toLocaleString('pt-BR')
-          };
-          localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
-        }
-      }
-
-      if (!confirmedVoteData) {
-        const allKeys = Object.keys(localStorage);
-        const receiptKey = allKeys.find(k => k.startsWith('simulador_receipt_'));
-        if (receiptKey) {
-          confirmedVoteData = JSON.parse(localStorage.getItem(receiptKey));
-        }
-      }
-
-      if (!confirmedVoteData) {
-        alert("Nenhum voto registrado encontrado para gerar o comprovante.");
-        return;
-      }
-
-      closePixModal();
-
-      const nameText = document.getElementById('receipt-voter-name');
-      const locationText = document.getElementById('receipt-voter-location');
-      const optionText = document.getElementById('receipt-option-text');
+    /**
+     * Configura o layout exato do comprovante dependendo se é Pago ou Grátis
+     */
+    function openReceiptModal() {
+      const modal = document.getElementById('receipt-modal');
       const receiptCard = document.getElementById('receipt-card');
-      const buyBtn = document.getElementById('btn-buy-card-receipt');
-      const sealBox = document.getElementById('receipt-seal-box');
-      const centerBox = document.getElementById('receipt-center-box');
-      const topBadge = document.getElementById('receipt-top-badge');
+      const topTextContainer = document.getElementById('top-text-container');
+      const centerBox = document.getElementById('center-box');
+      const sealBox = document.getElementById('seal-box');
+      const buyBtn = document.getElementById('buy-btn');
 
-      nameText.textContent = privacyHiddenName ? "OCULTO" : confirmedVoteData.voterName;
-      locationText.textContent = privacyHiddenLocation ? "OCULTO" : confirmedVoteData.cityUf;
+      // Atualiza textos do usuário
+      document.getElementById('seal-user-name').textContent = `${confirmedVoteData.nome} 👁️`;
+      document.getElementById('seal-user-loc').textContent = `${confirmedVoteData.uf} 👁️`;
 
-      const cpfToLookup = verifiedVoter ? verifiedVoter.cleanDoc : (confirmedVoteData ? confirmedVoteData.voterCpf.replace(/\D/g, '') : '');
-      const hasPaid = cpfToLookup && paidSupporters[cpfToLookup];
-
-      // Definir cores conforme a opção de voto
-      let colorClass = "border-emerald-400 text-emerald-400";
+      // Nome do candidato display
+      const candidateNameDisplay = document.getElementById('candidate-name-display');
       if (confirmedVoteData.opcao === '22') {
-        colorClass = "border-amber-400 text-amber-400";
-        optionText.className = "text-lg font-black text-amber-400";
-        optionText.textContent = "FLÁVIO — 22";
-      } else if (confirmedVoteData.opcao === '13') {
-        colorClass = "border-rose-500 text-rose-500";
-        optionText.className = "text-lg font-black text-rose-500";
-        optionText.textContent = "LULA — 13";
+        candidateNameDisplay.textContent = 'FLÁVIO — 22';
+        candidateNameDisplay.className = 'text-2xl font-black text-amber-400 tracking-wide mt-0.5';
       } else {
-        optionText.className = "text-lg font-black text-slate-400";
-        optionText.textContent = "VOTO BRANCO/NULO";
+        candidateNameDisplay.textContent = 'LULA — 13';
+        candidateNameDisplay.className = 'text-2xl font-black text-red-500 tracking-wide mt-0.5';
       }
 
-      if (hasPaid) {
-        // COMPROVANTE VIP (COM FOTO DE FUNDO)
+      if (confirmedVoteData.hasPaid) {
+        // ==========================================
+        // COMPROVANTE VIP / PAGO (COM FOTO DE FUNDO)
+        // ==========================================
         buyBtn.classList.add('hidden');
         centerBox.classList.add('hidden');
-        topBadge.textContent = "⚡ COMPROVANTE OFICIAL DE APOIADOR ⚡";
 
+        // Esconde os textos HTML do topo para NÃO sobrepor a imagem oficial
+        topTextContainer.classList.add('opacity-0', 'pointer-events-none');
+
+        // Imagem de fundo estilizada (Simulada com CSS gradient / imagem base)
         if (confirmedVoteData.opcao === '22') {
-          receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
-        } else if (confirmedVoteData.opcao === '13') {
-          receiptCard.style.backgroundImage = "url('comprovante-13.jpg')";
+          receiptCard.style.backgroundImage = "linear-gradient(to bottom, rgba(3, 7, 18, 0.2), rgba(3, 7, 18, 0.8)), url('https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=800&q=80')";
         } else {
-          receiptCard.style.backgroundImage = "none";
-          receiptCard.style.backgroundColor = "#090d16";
+          receiptCard.style.backgroundImage = "linear-gradient(to bottom, rgba(3, 7, 18, 0.2), rgba(3, 7, 18, 0.8)), url('https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=800&q=80')";
         }
 
-        // Posiciona o Selo no Ombro Esquerdo
-        sealBox.className = `absolute top-[23%] left-[5%] w-[150px] bg-slate-950/90 border-2 rounded-2xl p-2 text-center shadow-2xl backdrop-blur-sm z-20 ${colorClass}`;
+        /* 
+         * AJUSTE PRINCIPAL SOLICITADO:
+         * - Diminuído o tamanho do card do usuário (w-[130px] e textos compactos text-[10px]/text-[9px])
+         * - Posicionado estrategicamente no ombro esquerdo (top-[26%] left-[4%])
+         * - Evita cobrir o rosto dos candidatos e não polui o design
+         */
+        sealBox.className = `absolute top-[26%] left-[4%] w-[130px] bg-slate-950/90 border border-amber-500/50 rounded-xl p-2 text-center shadow-2xl backdrop-blur-md z-20`;
+        
+        document.getElementById('seal-header').className = 'flex items-center justify-center gap-1 font-black uppercase text-emerald-400 tracking-wider text-[10px]';
+        document.getElementById('seal-user-name').className = 'font-bold text-slate-100 uppercase tracking-wide truncate text-[10px] mt-0.5';
+        document.getElementById('seal-user-loc').className = 'font-medium text-emerald-400 tracking-wide truncate text-[9px]';
+        
       } else {
-        // COMPROVANTE GRATUITO (SEM FOTO)
+        // ==========================================
+        // COMPROVANTE GRATUITO (SEM FOTO DE FUNDO)
+        // ==========================================
         buyBtn.classList.remove('hidden');
         centerBox.classList.remove('hidden');
-        topBadge.textContent = "⚡ ARTE ILUSTRATIVA — COMPROVANTE INDEPENDENTE ⚡";
+
+        // Restaura a visibilidade dos textos do topo
+        topTextContainer.classList.remove('opacity-0', 'pointer-events-none');
+
+        // Remove imagem de fundo e aplica cor sólida limpa
         receiptCard.style.backgroundImage = "none";
         receiptCard.style.backgroundColor = "#090d16";
 
-        // Centraliza o Selo na parte inferior
-        sealBox.className = `w-[170px] bg-slate-950/90 border-2 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 mx-auto mb-4 ${colorClass}`;
+        // Centraliza o Selo com tamanho padrão na parte inferior
+        sealBox.className = `w-[170px] bg-slate-950/90 border border-amber-500/40 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 mx-auto mb-4`;
+        
+        document.getElementById('seal-header').className = 'flex items-center justify-center gap-1 font-black uppercase text-emerald-400 tracking-wider text-xs';
+        document.getElementById('seal-user-name').className = 'font-extrabold text-slate-100 uppercase tracking-wide truncate text-xs mt-1';
+        document.getElementById('seal-user-loc').className = 'font-semibold text-emerald-400 tracking-wide truncate text-[10px]';
       }
 
-      document.getElementById('receipt-modal').classList.remove('hidden');
+      modal.classList.remove('hidden');
     }
 
-    function closeReceiptModal() {
+    /**
+     * Fecha o modal
+     */
+    function closeModal() {
       document.getElementById('receipt-modal').classList.add('hidden');
     }
 
-    function goToChatFromModal() {
-      closePixModal();
-      switchTab('chat');
-    }
-
-    async function shareReceipt() {
-      if (!confirmedVoteData) return;
-
-      let slogan = confirmedVoteData.opcao === '22' ? "🇧🇷 Participando da pesquisa: Flávio 22!" : (confirmedVoteData.opcao === '13' ? "🚩 Participando da pesquisa: Lula 13!" : "📊 Voto registrado no Painel Brasil!");
-      const displayName = privacyHiddenName ? "[Anônimo]" : confirmedVoteData.voterName;
-
-      const shareText = `${slogan}\n\nAcabei de participar da Pesquisa Independente de Opinião Pública!\n\nParticipante: ${displayName}\nStatus: Participação Auditada.\n\nParticipe você também e deixe sua opinião no debate ao vivo!`;
-
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'Comprovante de Participação - Painel Brasil',
-            text: shareText,
-            url: window.location.href
-          });
-        } catch (err) {
-          console.log("Compartilhamento cancelado:", err);
-        }
-      } else {
-        copyReceiptText();
-      }
-    }
-
+    /**
+     * Copia texto promocional para área de transferência
+     */
     function copyReceiptText() {
-      if (!confirmedVoteData) return;
-      let slogan = confirmedVoteData.opcao === '22' ? "🇧🇷 Flávio 22!" : (confirmedVoteData.opcao === '13' ? "🚩 Lula 13!" : "📊 Voto registrado!");
-      const displayName = privacyHiddenName ? "[Anônimo]" : confirmedVoteData.voterName;
-      const shareText = `${slogan}\nParticipante: ${displayName}\nComprovante emitido pelo Painel Brasil!`;
-
-      navigator.clipboard.writeText(shareText);
+      const text = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData.opcao === '22' ? 'FLÁVIO (22)' : 'LULA (13)'}\nParticipante: ${confirmedVoteData.nome} - ${confirmedVoteData.uf}\n\nVote você também em: vota-ae.vercel.app`;
+      navigator.clipboard.writeText(text);
+      alert('Texto copiado com sucesso!');
     }
 
-    function renderStats() {
-      const valid = (votes['22'] || 0) + (votes['13'] || 0);
-      const total = valid + (votes['BRANCO'] || 0) + (votes['NULO'] || 0);
-
-      document.getElementById('stat-total').textContent = total;
-      document.getElementById('stat-validos').textContent = valid;
-      document.getElementById('stat-branco').textContent = votes['BRANCO'] || 0;
-      document.getElementById('stat-nulo').textContent = votes['NULO'] || 0;
-
-      const p22 = valid > 0 ? ((votes['22'] / valid) * 100).toFixed(1) : "0.0";
-      const p13 = valid > 0 ? ((votes['13'] / valid) * 100).toFixed(1) : "0.0";
-
-      document.getElementById('pct-22').textContent = `${p22}%`;
-      document.getElementById('bar-22').style.width = `${p22}%`;
-      document.getElementById('count-22').textContent = `${votes['22'] || 0} votos`;
-
-      document.getElementById('pct-13').textContent = `${p13}%`;
-      document.getElementById('bar-13').style.width = `${p13}%`;
-      document.getElementById('count-13').textContent = `${votes['13'] || 0} votos`;
-
-      const regContainer = document.getElementById('regional-stats-container');
-      regContainer.innerHTML = Object.keys(regionalVotes).map(r => {
-        const rv = regionalVotes[r];
-        const rValid = (rv['22'] || 0) + (rv['13'] || 0);
-        const rp22 = rValid > 0 ? Math.round((rv['22'] / rValid) * 100) : 0;
-        const rp13 = rValid > 0 ? Math.round((rv['13'] / rValid) * 100) : 0;
-        return `
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-            <div>
-              <p class="font-bold text-white">${r}</p>
-              <p class="text-[10px] text-slate-400">${rValid} votos válidos</p>
-            </div>
-            <div class="font-mono text-right text-[11px]">
-              <span class="text-amber-400">22: <b>${rp22}%</b></span> | 
-              <span class="text-rose-400">13: <b>${rp13}%</b></span>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function populateQueryUFs() {
-      const select = document.getElementById('query-uf-select');
-      select.innerHTML = `<option value="">Todas as UFs</option>` + Object.keys(stateCities).map(u => `<option value="${u}">${u}</option>`).join('');
-    }
-
-    function renderCityResults() {
-      const ufFilter = document.getElementById('query-uf-select').value;
-      const textFilter = document.getElementById('query-city-filter').value.toLowerCase();
-      const container = document.getElementById('city-results-list');
-
-      const keys = Object.keys(cityVotes).filter(k => {
-        const d = cityVotes[k];
-        if (ufFilter && d.uf !== ufFilter) return false;
-        if (textFilter && !d.city.toLowerCase().includes(textFilter)) return false;
-        return true;
+    /**
+     * Simula download / compartilhamento da imagem
+     */
+    function shareOrDownload() {
+      const card = document.getElementById('receipt-card');
+      html2canvas(card, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `comprovante-${confirmedVoteData.nome.toLowerCase()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
       });
-
-      if (keys.length === 0) {
-        container.innerHTML = `<div class="p-4 text-center text-xs text-slate-500 bg-slate-950 rounded-xl">Nenhum resultado municipal encontrado.</div>`;
-        return;
-      }
-
-      container.innerHTML = keys.map(k => {
-        const d = cityVotes[k];
-        const valid = (d['22'] || 0) + (d['13'] || 0);
-        const p22 = valid > 0 ? ((d['22'] / valid) * 100).toFixed(0) : 0;
-        const p13 = valid > 0 ? ((d['13'] / valid) * 100).toFixed(0) : 0;
-        return `
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs space-y-1">
-            <div class="flex justify-between items-center">
-              <span class="font-bold text-white">${d.city} / ${d.uf}</span>
-              <span class="text-[10px] text-slate-400">${valid} votos</span>
-            </div>
-            <div class="flex justify-between text-[11px] font-mono text-slate-300">
-              <span class="text-amber-400">🏛️ 22: <b>${d['22'] || 0}</b> (${p22}%)</span>
-              <span class="text-rose-400">🚩 13: <b>${d['13'] || 0}</b> (${p13}%)</span>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function renderChat() {
-      const chatBox = document.getElementById('chat-messages');
-      chatBox.innerHTML = chatMessages.map(m => {
-        const isVote13 = m.voteLabel && m.voteLabel.includes('13');
-        const badgeStyle = isVote13
-          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
-
-        return `
-        <div class="flex flex-col ${m.isSystem ? 'items-center text-center' : 'items-start'}">
-          ${m.isSystem ? `
-            <div class="bg-slate-950 border border-slate-800 text-slate-400 px-3 py-1.5 rounded-xl text-[11px]">
-              🤖 <b>${m.sender}:</b>${m.text}
-            </div>
-          ` : `
-            <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl max-w-[90%] space-y-1">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="font-bold text-blue-400">${m.nickname}</span>
-                <span class="text-[9px] bg-slate-900 px-1.5 py-0.5 rounded text-slate-300 font-mono border border-slate-800">${m.uf}</span>
-                <span class="text-[9px] ${badgeStyle} px-1.5 py-0.5 rounded font-mono font-bold">${m.voteLabel}</span>
-                <span class="text-[9px] text-slate-500 ml-auto">${m.time}</span>
-              </div>
-              <p class="text-slate-200 text-xs">${m.text}</p>
-            </div>
-          `}
-        </div>
-      `;
-      }).join('');
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function sendChatMessage() {
-      if (!verifiedVoter) return;
-
-      const nickname = voterNicknames[verifiedVoter.cleanDoc];
-      if (!nickname) return;
-
-      const input = document.getElementById('chat-input');
-      const text = input.value.trim();
-      if (!text) return;
-
-      const uf = verifiedVoter.uf;
-      const voteLabel = voterChoices[verifiedVoter.cleanDoc] || "votou";
-
-      chatMessages.push({
-        id: Date.now(),
-        nickname,
-        uf,
-        voteLabel,
-        text,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isSystem: false
-      });
-
-      localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
-      input.value = "";
-      renderChat();
-    }
-
-    function handleChatKeyPress(e) {
-      if (e.key === 'Enter') {
-        sendChatMessage();
-      }
     }
   </script>
 </body>
