@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  
   <style>
     body {
       touch-action: manipulation;
@@ -423,7 +424,7 @@
                 </div>
 
                 <!-- SELO DE VERIFICAÇÃO COM OS DADOS DO PARTICIPANTE -->
-                <div id="receipt-seal-box" class="w-[170px] bg-slate-950/90 border-2 border-emerald-400 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 transition-all duration-300 mx-auto">
+                <div id="receipt-seal-box" class="w-[170px] bg-slate-950/90 border-2 border-emerald-400 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 transition-all duration-100 mx-auto">
                   <p id="seal-header" class="text-[10px] font-black text-emerald-400 tracking-wider flex items-center justify-center gap-1">
                     <span>✓</span> <span>VERIFICADO</span>
                   </p>
@@ -445,6 +446,20 @@
                   <p id="seal-footer-tag" class="text-[7px] text-slate-500 font-bold mt-1">PAINEL BRASIL</p>
                 </div>
 
+              </div>
+
+              <!-- CONTROLES DE POSICIONAMENTO PARA O COMPROVANTE PAGO -->
+              <div id="receipt-pos-controls" class="hidden bg-slate-900 border border-slate-800 p-2.5 rounded-2xl space-y-2 text-center">
+                <p class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 flex items-center justify-center gap-1">
+                  <span>🎯</span> Ajustar Posição do Nome/Selo no Card
+                </p>
+                <div class="flex items-center justify-center gap-2">
+                  <button onclick="adjustSealPos(0, -5)" class="bg-slate-800 hover:bg-slate-700 text-white font-black px-3 py-1.5 rounded-lg text-xs transition active:scale-95">⬆️ Cima</button>
+                  <button onclick="adjustSealPos(0, 5)" class="bg-slate-800 hover:bg-slate-700 text-white font-black px-3 py-1.5 rounded-lg text-xs transition active:scale-95">⬇️ Baixo</button>
+                  <button onclick="adjustSealPos(-5, 0)" class="bg-slate-800 hover:bg-slate-700 text-white font-black px-3 py-1.5 rounded-lg text-xs transition active:scale-95">⬅️ Esquerda</button>
+                  <button onclick="adjustSealPos(5, 0)" class="bg-slate-800 hover:bg-slate-700 text-white font-black px-3 py-1.5 rounded-lg text-xs transition active:scale-95">➡️ Direita</button>
+                </div>
+                <button onclick="resetSealPos()" class="text-[10px] text-slate-400 hover:text-white underline font-semibold transition">Restaurar Posição Padrão</button>
               </div>
 
               <!-- BOTÃO PARA ADQUIRIR O CARD COM FOTO -->
@@ -698,6 +713,10 @@
 
     let hideName = false;
     let hideLocation = false;
+
+    // VARIÁVEIS PARA CONTROLAR A POSIÇÃO DO SELO NO CARD PAGO
+    let sealPosLeft = 56;
+    let sealPosTop = 102;
 
     let deviceSessionToken = localStorage.getItem('simulador_device_token');
     if (!deviceSessionToken) {
@@ -1636,6 +1655,22 @@
       switchTab('chat');
     }
 
+    function adjustSealPos(dx, dy) {
+      sealPosLeft += dx;
+      sealPosTop += dy;
+      const sealBox = document.getElementById('receipt-seal-box');
+      sealBox.style.left = sealPosLeft + 'px';
+      sealBox.style.top = sealPosTop + 'px';
+    }
+
+    function resetSealPos() {
+      sealPosLeft = 56;
+      sealPosTop = 102;
+      const sealBox = document.getElementById('receipt-seal-box');
+      sealBox.style.left = sealPosLeft + 'px';
+      sealBox.style.top = sealPosTop + 'px';
+    }
+
     function openReceiptModal() {
       if (!confirmedVoteData) {
         if (verifiedVoter) {
@@ -1663,6 +1698,7 @@
       const sealBox = document.getElementById('receipt-seal-box');
       const buyBtn = document.getElementById('btn-buy-card-receipt');
       const optionText = document.getElementById('receipt-option-text');
+      const posControls = document.getElementById('receipt-pos-controls');
 
       const isPaid = verifiedVoter && paidSupporters[verifiedVoter.cleanDoc];
 
@@ -1686,6 +1722,7 @@
         buyBtn.classList.add('hidden');
         centerBox.classList.add('hidden');
         topHeader.classList.add('hidden');
+        if (posControls) posControls.classList.remove('hidden');
 
         if (confirmedVoteData.opcao === '22') {
           receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
@@ -1697,10 +1734,11 @@
         }
 
         /* 
-         * POSICIONAMENTO DO SELO DENTRO DO CÍRCULO DA IMAGEM:
-         * Ajustado left para 56px para mover o selo mais para a esquerda e centralizar no círculo do template.
+         * POSICIONAMENTO AJUSTÁVEL DO SELO DENTRO DO CARD TEMPLATE
          */
-        sealBox.className = "absolute top-[102px] left-[56px] w-[92px] h-[92px] bg-transparent border-0 rounded-full flex flex-col items-center justify-center text-center p-1 z-20 transition-all duration-300 pointer-events-auto";
+        sealBox.className = "absolute w-[92px] h-[92px] bg-transparent border-0 rounded-full flex flex-col items-center justify-center text-center p-1 z-20 transition-all duration-100 pointer-events-auto";
+        sealBox.style.left = sealPosLeft + 'px';
+        sealBox.style.top = sealPosTop + 'px';
         
         document.getElementById('seal-header').className = 'hidden';
         document.getElementById('seal-subtitle').className = 'text-[6px] font-extrabold text-white/90 uppercase tracking-tight leading-none mb-0.5';
@@ -1716,11 +1754,14 @@
         buyBtn.classList.remove('hidden');
         centerBox.classList.remove('hidden');
         topHeader.classList.remove('hidden');
+        if (posControls) posControls.classList.add('hidden');
 
         receiptCard.style.backgroundImage = "none";
         receiptCard.style.backgroundColor = "#090d16";
 
         sealBox.className = "w-[170px] bg-slate-950/90 border-2 border-emerald-400 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 transition-all duration-300 mx-auto mb-2";
+        sealBox.style.left = 'auto';
+        sealBox.style.top = 'auto';
         
         document.getElementById('seal-header').className = 'text-[10px] font-black text-emerald-400 tracking-wider flex items-center justify-center gap-1';
         document.getElementById('seal-subtitle').className = 'text-[8px] font-bold text-slate-400 uppercase';
