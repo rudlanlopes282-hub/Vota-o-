@@ -293,13 +293,27 @@
           <div id="pix-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
             <div class="bg-slate-900 border border-blue-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4 text-center my-auto">
               
-              <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-2xl">
+              <div id="pix-header-icon" class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-2xl">
                 🎉
               </div>
 
               <div id="pix-header-text" class="space-y-1">
-                <h3 class="text-base font-extrabold text-white">Voto Registrado com Sucesso!</h3>
-                <p class="text-xs text-slate-300">Sua opinião já foi computada na pesquisa.</p>
+                <h3 id="pix-title" class="text-base font-extrabold text-white">Voto Registrado com Sucesso!</h3>
+                <p id="pix-subtitle" class="text-xs text-slate-300">Sua opinião já foi computada na pesquisa.</p>
+              </div>
+
+              <!-- ALERTA QUANDO O USUÁRIO AINDA NÃO VOTOU -->
+              <div id="pix-unvoted-warning" class="hidden bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl text-amber-300 text-xs text-left space-y-1.5 font-medium">
+                <p class="font-bold flex items-center gap-1.5 text-amber-400">
+                  <span>⚠️</span>
+                  <span>Você ainda não votou nesta pesquisa!</span>
+                </p>
+                <p class="text-[11px] leading-relaxed text-slate-300">
+                  Para emitir o seu comprovante com o seu candidato e ter validade de voto, é necessário registrar seu voto na cabine primeiro.
+                </p>
+                <button onclick="closePixModal(); switchTab('urna');" class="w-full mt-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-lg text-xs transition">
+                  Ir para Cabine de Votação 🗳️
+                </button>
               </div>
 
               <div id="pix-options-box" class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl text-left space-y-3">
@@ -1312,6 +1326,24 @@
     function openApoiadorModal() {
       document.getElementById('receipt-modal').classList.add('hidden');
       
+      const hasVoted = verifiedVoter && (votedCPFs[verifiedVoter.cleanDoc] || confirmedVoteData);
+      const titleEl = document.getElementById('pix-title');
+      const subtitleEl = document.getElementById('pix-subtitle');
+      const iconEl = document.getElementById('pix-header-icon');
+      const unvotedWarn = document.getElementById('pix-unvoted-warning');
+
+      if (hasVoted) {
+        iconEl.textContent = "🎉";
+        titleEl.textContent = "Voto Registrado com Sucesso!";
+        subtitleEl.textContent = "Sua opinião já foi computada na pesquisa.";
+        unvotedWarn.classList.add('hidden');
+      } else {
+        iconEl.textContent = "💬";
+        titleEl.textContent = "Acesso ao Chat VIP de Debate";
+        subtitleEl.textContent = "Adquira o Card de Apoiador para participar das conversas ao vivo.";
+        unvotedWarn.classList.remove('hidden');
+      }
+
       document.getElementById('pix-modal').classList.remove('hidden');
       document.getElementById('pix-options-box').classList.remove('hidden');
       document.getElementById('pix-loading').classList.add('hidden');
@@ -1322,7 +1354,6 @@
 
     function openApoiadorModalFromReceipt() {
       closeReceiptModal();
-      switchTab('urna');
       openApoiadorModal();
     }
 
