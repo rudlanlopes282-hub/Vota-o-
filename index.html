@@ -372,7 +372,7 @@
                 <div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
                   <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wide">
                     <span>✅</span>
-                    <span>Pagamento Confirmado!</span>
+                    <span>PAGAMENTO CONFIRMADO!</span>
                   </div>
                   <p class="text-xs text-slate-200 leading-relaxed font-medium">
                     Seu Kit Apoiador e o Acesso ao Chat VIP foram liberados!
@@ -382,10 +382,11 @@
                 <canvas id="cardCanvas" width="800" height="1422" class="hidden"></canvas>
 
                 <div class="space-y-2">
-                  <a id="downloadCardBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2" download="meu-card-apoiador.png">
+                  <!-- BOTÃO CORRIGIDO: Redireciona diretamente para o Comprovante com Foto -->
+                  <button onclick="openReceiptModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
                     <span>📥</span>
-                    <span>Baixar Card de Apoiador 9:16</span>
-                  </a>
+                    <span>VER E BAIXAR CARD DE APOIADOR 9:16</span>
+                  </button>
                   <button onclick="goToChatFromModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
                     Entrar no Chat VIP de Debate 💬
                   </button>
@@ -398,7 +399,7 @@
             </div>
           </div>
 
-          <!-- MODAL COMPROVANTE SIMPLES -->
+          <!-- MODAL COMPROVANTE SIMPLES / OFICIAL -->
           <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 overflow-y-auto">
             <div class="w-full max-w-xs my-auto space-y-3">
               
@@ -1375,7 +1376,7 @@
 
     function openApoiadorModalFromReceipt() {
       closeReceiptModal();
-      switchTab('urna'); // Garante que vai para a tela de votar/urna corretamente
+      switchTab('urna');
       openApoiadorModal();
     }
 
@@ -1480,7 +1481,6 @@
     function renderCardCanvas(nomeUsuario, opcaoVoto, localidade) {
       const canvas = document.getElementById('cardCanvas');
       const ctx = canvas.getContext('2d');
-      const downloadBtn = document.getElementById('downloadCardBtn');
 
       let bgImgSrc = "";
       if (opcaoVoto === '22') {
@@ -1513,8 +1513,6 @@
         ctx.fillStyle = '#38bdf8';
         ctx.font = 'bold 28px Arial';
         ctx.fillText(`📍 ${displayLoc}`, 400, 1270);
-
-        downloadBtn.href = canvas.toDataURL('image/png');
       };
 
       if (bgImgSrc) {
