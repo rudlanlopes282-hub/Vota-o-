@@ -1023,6 +1023,7 @@
               opcao: dbRecord.opcao,
               time: dbRecord.created_at ? new Date(dbRecord.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')
             };
+            localStorage.setItem('simulador_receipt_' + cleanDoc, JSON.stringify(confirmedVoteData));
           }
         } else {
           statusEl.textContent = "APTO PARA VOTAR";
@@ -1040,14 +1041,17 @@
       document.getElementById('sec-auth').classList.add('hidden');
       document.getElementById('sec-urna').classList.remove('hidden');
       switchTab('urna');
-      resetUrna();
 
       if (verifiedVoter) {
         const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
         const isAlreadyVoted = !!dbRecord || !!votedCPFs[verifiedVoter.cleanDoc];
         if (isAlreadyVoted) {
+          document.getElementById('lcd-normal-view').classList.add('hidden');
+          document.getElementById('lcd-fim-msg').classList.add('hidden');
+          document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
           document.getElementById('post-vote-receipt-container').classList.remove('hidden');
         } else {
+          resetUrna();
           document.getElementById('post-vote-receipt-container').classList.add('hidden');
         }
       }
@@ -1067,7 +1071,15 @@
       if (tab === 'urna') {
         document.getElementById('sec-urna').classList.remove('hidden');
         document.getElementById('btn-tab-urna').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
-        resetUrna();
+        
+        if (verifiedVoter && (votedCPFs[verifiedVoter.cleanDoc] || confirmedVoteData)) {
+          document.getElementById('lcd-normal-view').classList.add('hidden');
+          document.getElementById('lcd-fim-msg').classList.add('hidden');
+          document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
+          document.getElementById('post-vote-receipt-container').classList.remove('hidden');
+        } else {
+          resetUrna();
+        }
       } else if (tab === 'dados') {
         document.getElementById('sec-dados').classList.remove('hidden');
         document.getElementById('btn-tab-dados').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
@@ -1152,7 +1164,7 @@
 
     function pressKey(n) {
       if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) {
-        resetUrna();
+        return;
       }
       if (isBranco) return;
       if (currentInput.length < 2) {
@@ -1162,6 +1174,9 @@
     }
 
     function quickSelect(num) {
+      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) {
+        return;
+      }
       resetUrna();
       currentInput = num;
       isBranco = false;
@@ -1169,6 +1184,9 @@
     }
 
     function pressBranco() {
+      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) {
+        return;
+      }
       resetUrna();
       currentInput = "";
       isBranco = true;
@@ -1176,6 +1194,9 @@
     }
 
     function pressCorrige() {
+      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) {
+        return;
+      }
       resetUrna();
     }
 
@@ -1228,7 +1249,7 @@
         votedCPFs[verifiedVoter.cleanDoc] = true;
         localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
 
-        let userOption = dbRecord?.opcao || voterChoices[verifiedVoter.cleanDoc] || 'Votado';
+        let userOption = dbRecord?.opcao || voterChoices[verifiedVoter.cleanDoc] || '22';
 
         const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
         if (savedReceipt) {
@@ -1471,7 +1492,6 @@
         const displayName = privacyHiddenName ? "🔒 [DADO OCULTO]" : nomeUsuario;
         const displayLoc = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : localidade;
 
-        // Fundo semitransparente escuro para destacar o texto sobre o comprovante
         ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
         ctx.beginPath();
         ctx.roundRect(100, 1100, 600, 220, 24);
@@ -1504,7 +1524,6 @@
           drawOverlayText();
         };
         img.onerror = () => {
-          // Fallback caso a imagem não carregue localmente
           ctx.fillStyle = '#090d16';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           drawOverlayText();
@@ -1554,10 +1573,21 @@
             opcao: dbRecord?.opcao || '22',
             time: new Date().toLocaleString('pt-BR')
           };
+          localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
+        }
+      }
+
+      // Procura em qualquer comprovante salvo no dispositivo se não houver no objeto
+      if (!confirmedVoteData) {
+        const allKeys = Object.keys(localStorage);
+        const receiptKey = allKeys.find(k => k.startsWith('simulador_receipt_'));
+        if (receiptKey) {
+          confirmedVoteData = JSON.parse(localStorage.getItem(receiptKey));
         }
       }
 
       if (!confirmedVoteData) {
+        alert("Nenhum voto registrado encontrado para gerar o comprovante.");
         return;
       }
 
@@ -1574,7 +1604,8 @@
       nameText.textContent = privacyHiddenName ? "🔒 [DADO OCULTO]" : confirmedVoteData.voterName;
       locationText.textContent = privacyHiddenLocation ? "🔒 [LOCAL OCULTO]" : confirmedVoteData.cityUf;
 
-      const hasPaid = verifiedVoter && paidSupporters[verifiedVoter.cleanDoc];
+      const cpfToLookup = verifiedVoter ? verifiedVoter.cleanDoc : (confirmedVoteData ? confirmedVoteData.voterCpf.replace(/\D/g, '') : '');
+      const hasPaid = cpfToLookup && paidSupporters[cpfToLookup];
 
       if (hasPaid) {
         buyBtn.classList.add('hidden');
