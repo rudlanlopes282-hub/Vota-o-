@@ -6,8 +6,6 @@
   <title>Painel Brasil — Pesquisa & Voto Independente</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- SCRIPT CLOUDFLARE TURNSTILE (DESATIVADO TEMPORARIAMENTE) -->
-  <!-- <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script> -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
@@ -57,34 +55,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between antialiased selection:bg-blue-500 selection:text-white">
 
-  <!-- TELA DE BLOQUEIO TOTAL PRÉ-SITE (REMOVIDA TEMPORARIAMENTE) -->
-  <div id="site-lock-screen" class="hidden fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-4">
-    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden text-center space-y-5">
-      <div class="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
-      <div class="inline-flex p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-3xl">
-        🛡️
-      </div>
-
-      <div class="space-y-1.5">
-        <h2 class="text-xl font-extrabold text-white">Verificação de Segurança</h2>
-        <p class="text-xs text-slate-400 leading-relaxed">
-          Para garantir a integridade da pesquisa e proteger contra robôs automatizados, confirme a verificação abaixo para acessar a plataforma.
-        </p>
-      </div>
-
-      <!-- WIDGET CLOUDFLARE TURNSTILE -->
-      <div class="flex justify-center py-2">
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAAFcbW-OkldDEkMm2" data-theme="dark" data-callback="onTurnstileSuccess"></div>
-      </div>
-
-      <p class="text-[10px] text-slate-500">
-        Aguardando a conclusão da verificação de segurança...
-      </p>
-    </div>
-  </div>
-
-  <!-- CONTEÚDO REAL DO SITE (EXIBIDO DIRETAMENTE) -->
+  <!-- CONTEÚDO REAL DO SITE -->
   <div id="main-site-content" class="flex-1 flex flex-col justify-between">
     
     <!-- TOP HEADER -->
@@ -102,7 +73,6 @@
             </p>
           </div>
         </div>
-        <!-- Abas ativadas por padrão para permitir navegação após desbloqueio -->
         <div id="nav-tabs" class="flex bg-slate-800 p-1 rounded-lg text-xs font-semibold">
           <button id="btn-tab-urna" onclick="switchTab('urna')" class="px-3 py-1 rounded-md bg-blue-600 text-white transition font-bold">Votar</button>
           <button id="btn-tab-dados" onclick="switchTab('dados')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition">Placar</button>
@@ -116,14 +86,13 @@
 
     <main class="max-w-lg mx-auto w-full px-3 py-3 flex-1 flex flex-col justify-center space-y-4">
 
-      <!-- AVISO DE ISENÇÃO DE RESPONSABILIDADE -->
       <div class="bg-blue-950/40 border border-blue-500/30 rounded-xl p-2.5 text-center">
         <p class="text-[10px] text-blue-300 font-medium leading-tight">
           ℹ️ <b>Plataforma Independente:</b> Esta é uma simulação e pesquisa de opinião não oficial, sem qualquer vínculo com o TSE ou órgãos governamentais.
         </p>
       </div>
 
-      <!-- STEP 1: ETAPA DE VERIFICAÇÃO / AUTENTICAÇÃO DO PARTICIPANTE -->
+      <!-- STEP 1: ETAPA DE VERIFICAÇÃO -->
       <section id="sec-auth" class="w-full">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
           <div class="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
@@ -136,7 +105,6 @@
             <p class="text-xs text-slate-400 mt-1">Validação segura e controle de voto único por dispositivo</p>
           </div>
 
-          <!-- Indicador de Passos -->
           <div class="flex items-center justify-center gap-2 mb-6">
             <div id="step-dot-1" class="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">1</div>
             <div class="w-8 h-0.5 bg-slate-800"></div>
@@ -145,7 +113,6 @@
             <div id="step-dot-3" class="w-7 h-7 rounded-full bg-slate-800 text-slate-500 font-bold text-xs flex items-center justify-center">3</div>
           </div>
 
-          <!-- Alerta de Erro -->
           <div id="auth-error" class="hidden mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl text-center font-medium"></div>
 
           <!-- FORMULÁRIO PASSO 1 -->
@@ -161,13 +128,11 @@
               <p id="cpf-status-hint" class="text-[10px] text-blue-400 mt-0.5 hidden font-semibold">ℹ️ CPF já cadastrado neste dispositivo. Localização travada.</p>
             </div>
 
-            <!-- SENHA / PIN DE SEGURANÇA PESSOAL -->
             <div>
               <label class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">PIN / Senha de Acesso (4 dígitos)</label>
               <input type="password" id="voter-pin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" class="w-full bg-slate-950 border border-blue-500/40 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition text-center tracking-widest text-lg">
             </div>
 
-            <!-- SELEÇÃO DE ESTADO (UF) -->
             <div>
               <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">1. Selecione o Estado (UF)</label>
               <select id="voter-uf-select" onchange="onUFChange()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
@@ -202,7 +167,6 @@
               </select>
             </div>
 
-            <!-- SELEÇÃO DE CIDADE COM SUGESTÕES EM LISTA -->
             <div id="city-group" class="space-y-1.5 relative">
               <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                 2. Cidade / Município
@@ -220,7 +184,6 @@
             </button>
           </div>
 
-          <!-- FORMULÁRIO PASSO 2: SIMULAÇÃO DA VALIDAÇÃO -->
           <div id="auth-step-2" class="hidden text-center py-4 space-y-4">
             <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
               <div class="absolute inset-0 rounded-full border-2 border-blue-500/20 border-t-blue-500 animate-spin"></div>
@@ -230,7 +193,6 @@
             <p class="text-[11px] text-slate-500">Aguarde alguns segundos...</p>
           </div>
 
-          <!-- FORMULÁRIO PASSO 3 -->
           <div id="auth-step-3" class="hidden text-center py-3 space-y-4">
             <div class="w-12 h-12 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
               ✓
@@ -258,7 +220,6 @@
       <!-- STEP 2: SIMULADOR DE VOTO -->
       <section id="sec-urna" class="hidden w-full space-y-3">
 
-        <!-- CARDS DE ATALHO RÁPIDO PARA CANDIDATOS -->
         <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 text-center">Clique para Votar Direto</p>
           <div class="grid grid-cols-2 gap-2">
@@ -288,10 +249,8 @@
           </div>
         </div>
 
-        <!-- PAINEL DE VOTAÇÃO -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-2xl space-y-3">
           
-          <!-- VISOR LCD DA URNA -->
           <div class="bg-[#c3e2c2] border-4 border-slate-800 rounded-xl p-3 text-[#051406] urn-lcd-font shadow-inner min-h-[170px] flex flex-col justify-between relative overflow-hidden">
             
             <div class="flex items-center justify-between border-b border-black/15 pb-1">
@@ -327,11 +286,10 @@
 
           </div>
 
-          <!-- MODAL DO KIT APOIADOR & CHAT VIP (PÓS-VOTO COM PIX OPCIONAL) -->
+          <!-- MODAL DO KIT APOIADOR & CHAT VIP -->
           <div id="pix-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
             <div class="bg-slate-900 border border-blue-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4 text-center my-auto">
               
-              <!-- CABEÇALHO -->
               <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-2xl">
                 🎉
               </div>
@@ -341,7 +299,6 @@
                 <p class="text-xs text-slate-300">Sua opinião já foi computada na pesquisa.</p>
               </div>
 
-              <!-- OPÇÕES DE APOIO -->
               <div id="pix-options-box" class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl text-left space-y-3">
                 <p class="text-xs font-bold text-blue-400 uppercase tracking-wider text-center">💬 Quer entrar no Chat e Viralizar seu Apoio?</p>
 
@@ -353,25 +310,21 @@
                   </p>
                 </div>
 
-                <!-- BOTÃO PRINCIPAL (R$ 2,00) -->
                 <button onclick="requestPixCheckout(2.00)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
                   <span>🎨</span>
                   <span>Adquirir Card com Foto e Apoiar a Causa (R$ 2,00)</span>
                 </button>
 
-                <!-- BOTÃO SECUNDÁRIO (R$ 1,01 a R$ 1,99) -->
                 <button onclick="requestPixCheckout(gerarValorMenorSyncPay())" class="w-full text-slate-400 hover:text-slate-200 font-semibold text-[11px] underline text-center block pt-1 transition">
                   Não tenho R$ 2,00 (Gerar valor menor dinâmico) &rarr;
                 </button>
               </div>
 
-              <!-- Loader de Geração -->
               <div id="pix-loading" class="hidden py-6 space-y-2">
                 <div class="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
                 <p class="text-xs text-slate-400">Gerando QR Code PIX via SyncPay...</p>
               </div>
 
-              <!-- Área do QR Code e Copia e Cola -->
               <div id="pix-content" class="hidden space-y-3">
                 <p class="text-xs text-slate-300 font-semibold">Contribuição: <b id="pix-display-amount" class="text-emerald-400">R$ 2,00</b></p>
                 
@@ -387,14 +340,12 @@
                   </div>
                 </div>
 
-                <!-- Status do Pagamento -->
                 <div class="bg-slate-950 border border-slate-800 p-2 rounded-xl flex items-center justify-center gap-2">
                   <div id="pix-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
                   <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
                 </div>
               </div>
 
-              <!-- PAINEL DESBLOQUEADO (Aprovação do PIX) -->
               <div id="msg-vote-success" class="hidden space-y-4 pt-1">
                 <div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
                   <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wide">
@@ -406,7 +357,6 @@
                   </p>
                 </div>
 
-                <!-- CANVAS OCORRENDO EM SEGUNDO PLANO -->
                 <canvas id="cardCanvas" width="800" height="1422" class="hidden"></canvas>
 
                 <div class="space-y-2">
@@ -426,11 +376,10 @@
             </div>
           </div>
 
-          <!-- MODAL COMPROVANTE SIMPLES / COM OPÇÃO DE ADQUIRIR O CARD COM FOTO -->
+          <!-- MODAL COMPROVANTE SIMPLES -->
           <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 overflow-y-auto">
             <div class="w-full max-w-xs my-auto space-y-3">
               
-              <!-- CARTAZ PROPORÇÃO 9:16 SIMPLES OU COM FOTO (DINÂMICO) -->
               <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-between p-5 text-white bg-[#090d16]" style="background-size: cover; background-position: center;">
                 
                 <div class="space-y-1 text-center pt-2">
@@ -448,17 +397,14 @@
                   </div>
                 </div>
 
-                <!-- SOBREPOSIÇÃO DE DADOS DO ELEITOR NA PARTE INFERIOR -->
                 <div class="relative z-10 space-y-2 bg-black/75 backdrop-blur-md p-3.5 rounded-2xl border border-white/20 shadow-2xl text-center">
                   <p class="text-[9px] uppercase tracking-widest opacity-75 font-bold">PARTICIPANTE REGISTRADO(A)</p>
                   
-                  <!-- NOME COM BOTÃO DE PRIVACIDADE -->
                   <div class="flex items-center justify-center gap-2">
                     <p class="text-xs font-black uppercase tracking-wide truncate max-w-[190px]" id="receipt-voter-name">---</p>
                     <button onclick="togglePrivacy('name')" class="text-xs opacity-80 hover:opacity-100 transition p-1" title="Ocultar/Mostrar Nome">👁️</button>
                   </div>
 
-                  <!-- LOCALIDADE COM BOTÃO DE PRIVACIDADE -->
                   <div class="flex items-center justify-center gap-2">
                     <p id="receipt-voter-location" class="text-[10px] font-bold">---</p>
                     <button onclick="togglePrivacy('location')" class="text-xs opacity-80 hover:opacity-100 transition p-1" title="Ocultar/Mostrar Local">👁️</button>
@@ -473,7 +419,6 @@
                 <span>Adquirir Card com Foto e Apoiar a Causa</span>
               </button>
 
-              <!-- BOTÕES DE AÇÃO DO COMPROVANTE -->
               <div class="space-y-2">
                 <button onclick="shareReceipt()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-2xl shadow-lg shadow-blue-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
                   <span>📲</span>
@@ -493,9 +438,8 @@
             </div>
           </div>
 
-          <!-- TECLADO NUMÉRICO E BOTOES -->
+          <!-- TECLADO NUMÉRICO -->
           <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2">
-            
             <div class="grid grid-cols-3 gap-2">
               <button onclick="pressKey('1')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">1</button>
               <button onclick="pressKey('2')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">2</button>
@@ -517,14 +461,13 @@
               <button onclick="pressCorrige()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-amber-700 transition uppercase">CORRIGE</button>
               <button onclick="pressConfirma()" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs py-2.5 rounded-lg border-b-2 border-blue-800 transition uppercase">CONFIRMA</button>
             </div>
-
           </div>
 
         </div>
 
       </section>
 
-      <!-- BOTÃO DE VER COMPROVANTE ENTRE A URNA E A SEÇÃO DE DÚVIDAS (EXIBIDO AUTOMATICAMENTE SE JÁ VOTOU) -->
+      <!-- BOTÃO DE VER COMPROVANTE -->
       <div id="post-vote-receipt-container" class="hidden w-full">
         <button onclick="openReceiptModal()" class="w-full bg-slate-900 hover:bg-slate-800 border border-blue-500/40 p-3 rounded-2xl flex items-center justify-between shadow-lg transition group">
           <div class="flex items-center gap-2.5">
@@ -556,7 +499,6 @@
             </button>
           </div>
 
-          <!-- CARDS DE ESTATÍSTICA GERAL -->
           <div class="grid grid-cols-2 gap-2.5">
             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
               <p class="text-[10px] font-bold text-slate-500 uppercase">TOTAL DE VOTOS</p>
@@ -579,9 +521,7 @@
             </div>
           </div>
 
-          <!-- CANDIDATOS PLACAR -->
           <div class="space-y-3 pt-2">
-            
             <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2">
               <div class="flex justify-between items-center text-xs">
                 <span class="font-bold text-white flex items-center gap-1.5">
@@ -607,20 +547,16 @@
               </div>
               <p id="count-13" class="text-[10px] text-slate-400 text-right font-mono">0 votos</p>
             </div>
-
           </div>
 
-          <!-- DESEMPENHO POR REGIÃO -->
           <div class="space-y-2 pt-2">
             <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
               🗺️ Desempenho por Região
             </h3>
             <div id="regional-stats-container" class="space-y-2">
-              <!-- Renderizado via JS -->
             </div>
           </div>
 
-          <!-- CONSULTA POR MUNICÍPIO -->
           <div class="space-y-2.5 pt-2 border-t border-slate-800">
             <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
               🏙️ Apuração por Município
@@ -632,7 +568,6 @@
               <input type="text" id="query-city-filter" placeholder="Filtrar município..." oninput="renderCityResults()" class="bg-slate-950 border border-slate-800 text-xs text-white rounded-xl p-2.5 placeholder-slate-600 outline-none">
             </div>
             <div id="city-results-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-              <!-- Renderizado via JS -->
             </div>
           </div>
 
@@ -652,12 +587,9 @@
           <span id="chat-user-badge" class="text-[10px] font-mono bg-slate-950 border border-slate-800 px-2 py-1 rounded-lg text-slate-300"></span>
         </div>
 
-        <!-- Caixa de Mensagens -->
         <div id="chat-messages" class="bg-slate-900 border border-slate-800 p-3 rounded-2xl h-64 overflow-y-auto custom-scrollbar space-y-3 text-xs flex flex-col">
-          <!-- Renderizado via JS -->
         </div>
 
-        <!-- ALERTA: BLOQUEIO PARA QUEM AINDA NÃO FEZ O PIX DA CAUSA -->
         <div id="chat-locked-warning" class="hidden bg-emerald-950/40 border border-emerald-500/40 p-4 rounded-xl text-center space-y-2.5">
           <p class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
             🔒 Chat VIP Restrito aos Apoiadores
@@ -671,10 +603,8 @@
           </button>
         </div>
 
-        <!-- Alerta de Erro de Apelido Duplicado -->
         <div id="nickname-error" class="hidden bg-rose-500/10 border border-rose-500/30 p-2.5 rounded-xl text-center text-rose-400 text-xs font-medium"></div>
 
-        <!-- Configuração de Apelido -->
         <div id="nickname-setup-box" class="hidden bg-slate-900 border border-blue-500/40 p-3 rounded-xl space-y-2">
           <p class="text-xs font-bold text-blue-400">Escolha seu Apelido para o Chat VIP:</p>
           <div class="flex gap-2">
@@ -683,7 +613,6 @@
           </div>
         </div>
 
-        <!-- Enviar Mensagem -->
         <div id="chat-input-container" class="hidden flex gap-2">
           <input type="text" id="chat-input" placeholder="Digite seu comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-blue-500">
           <button onclick="sendChatMessage()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-lg shadow-blue-600/20">
@@ -811,14 +740,6 @@
         }
       });
     });
-
-    // Função mantida para o caso de reativar o Turnstile futuramente
-    function onTurnstileSuccess(token) {
-      if (token) {
-        document.getElementById('site-lock-screen').classList.add('hidden');
-        document.getElementById('main-site-content').classList.remove('hidden');
-      }
-    }
 
     function onCPFInput(input) {
       formatCPF(input);
@@ -1388,7 +1309,10 @@
     }
 
     function openApoiadorModal() {
+      // Garante que o modal do comprovante fecha e muda para a aba de voto para visualização correta
       document.getElementById('receipt-modal').classList.add('hidden');
+      switchTab('urna');
+      
       document.getElementById('pix-modal').classList.remove('hidden');
       document.getElementById('pix-options-box').classList.remove('hidden');
       document.getElementById('pix-loading').classList.add('hidden');
@@ -1398,6 +1322,8 @@
     }
 
     function openApoiadorModalFromReceipt() {
+      // Direciona para a aba de Votação e abre a caixa do PIX
+      switchTab('urna');
       openApoiadorModal();
     }
 
@@ -1411,9 +1337,9 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: verifiedVoter.name,
+            name: verifiedVoter ? verifiedVoter.name : "Apoiador",
             email: "apoiador@painelbrasil.org",
-            cpf: verifiedVoter.cleanDoc,
+            cpf: verifiedVoter ? verifiedVoter.cleanDoc : "00000000000",
             amount: amountValue
           })
         });
@@ -1455,7 +1381,8 @@
 
       pixPollInterval = setInterval(async () => {
         try {
-          const res = await fetch(`/api/gerar-pix?id=${transactionId}&voterCpf=${verifiedVoter.cleanDoc}`);
+          const voterCpf = verifiedVoter ? verifiedVoter.cleanDoc : '';
+          const res = await fetch(`/api/gerar-pix?id=${transactionId}&voterCpf=${voterCpf}`);
           const data = await res.json();
 
           if (data && data.paid) {
@@ -1491,7 +1418,11 @@
       document.getElementById('btn-cancel-pix').classList.add('hidden');
       document.getElementById('msg-vote-success').classList.remove('hidden');
 
-      renderCardCanvas(verifiedVoter.name, confirmedVoteData.opcao, `${verifiedVoter.city} / ${verifiedVoter.uf}`);
+      const vName = verifiedVoter ? verifiedVoter.name : "Apoiador";
+      const vOpcao = confirmedVoteData ? confirmedVoteData.opcao : "22";
+      const vLoc = verifiedVoter ? `${verifiedVoter.city} / ${verifiedVoter.uf}` : "Brasil";
+
+      renderCardCanvas(vName, vOpcao, vLoc);
     }
 
     function renderCardCanvas(nomeUsuario, opcaoVoto, localidade) {
