@@ -1375,6 +1375,7 @@
 
     function openApoiadorModalFromReceipt() {
       closeReceiptModal();
+      switchTab('urna'); // Garante que vai para a tela de votar/urna corretamente
       openApoiadorModal();
     }
 
@@ -1577,7 +1578,6 @@
         }
       }
 
-      // Procura em qualquer comprovante salvo no dispositivo se não houver no objeto
       if (!confirmedVoteData) {
         const allKeys = Object.keys(localStorage);
         const receiptKey = allKeys.find(k => k.startsWith('simulador_receipt_'));
