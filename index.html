@@ -1720,8 +1720,14 @@
       } else if (confirmedVoteData.opcao === '13') {
         optionText.textContent = "LULA — 13";
         optionText.className = "text-lg font-black text-rose-500";
+      } else if (confirmedVoteData.opcao === 'BRANCO') {
+        optionText.textContent = "VOTO EM BRANCO";
+        optionText.className = "text-lg font-black text-slate-200";
+      } else if (confirmedVoteData.opcao === 'NULO') {
+        optionText.textContent = "VOTO NULO";
+        optionText.className = "text-lg font-black text-rose-400";
       } else {
-        optionText.textContent = "VOTO " + (confirmedVoteData.opcao || "NULO");
+        optionText.textContent = "VOTO " + confirmedVoteData.opcao;
         optionText.className = "text-lg font-black text-slate-300";
       }
 
@@ -1735,6 +1741,10 @@
           receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
         } else if (confirmedVoteData.opcao === '13') {
           receiptCard.style.backgroundImage = "url('comprovante-13.jpg')";
+        } else if (confirmedVoteData.opcao === 'BRANCO') {
+          receiptCard.style.backgroundImage = "url('comprovante-em-branco.jpg')";
+        } else if (confirmedVoteData.opcao === 'NULO') {
+          receiptCard.style.backgroundImage = "url('comprovante-nulo.jpg')";
         } else {
           receiptCard.style.backgroundImage = "none";
           receiptCard.style.backgroundColor = "#090d16";
