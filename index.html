@@ -1820,31 +1820,39 @@
           const fileName = `comprovante-${(confirmedVoteData ? confirmedVoteData.voterName : 'participante').toLowerCase().replace(/\s+/g, '-')}.png`;
           const file = new File([blob], fileName, { type: 'image/png' });
 
-          const textShare = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData ? confirmedVoteData.opcao : ''}\nParticipante: ${confirmedVoteData ? confirmedVoteData.voterName : ''}\n\nVote você também!`;
+          const textShare = `Já registrei meu voto na Pesquisa Eleitoral! 🗳️\nParticipe você também!`;
 
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
               await navigator.share({
-                title: 'Comprovante Voto Independente',
+                title: 'Comprovante - Painel Brasil',
                 text: textShare,
                 files: [file]
               });
             } catch (err) {
-              console.log('Compartilhamento cancelado pelo usuário.', err);
+              if (err.name !== 'AbortError') {
+                downloadBlob(blob, fileName);
+              }
             }
           } else {
-            // Fallback: download direto da imagem
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(file);
-            a.download = fileName;
-            a.click();
-            URL.revokeObjectURL(a.href);
+            downloadBlob(blob, fileName);
           }
         }, 'image/png');
-      } catch (e) {
-        console.error("Erro ao processar imagem para compartilhamento", e);
-        alert('Não foi possível gerar a imagem para compartilhar neste navegador.');
+      } catch (err) {
+        console.error('Erro ao gerar card:', err);
+        alert('Ocorreu um erro ao gerar a imagem para compartilhamento.');
       }
+    }
+
+    function downloadBlob(blob, fileName) {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+      alert('Seu comprovante foi baixado! Agora você pode compartilhar nas suas redes sociais.');
     }
   </script>
 </body>
