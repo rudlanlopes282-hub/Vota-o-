@@ -1810,36 +1810,36 @@
           const fileName = `comprovante-${(confirmedVoteData ? confirmedVoteData.voterName : 'participante').toLowerCase().replace(/\s+/g, '-')}.png`;
           const file = new File([blob], fileName, { type: 'image/png' });
 
-          const textShare = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData ? confirmedVoteData.opcao : 'N/A'}\nParticipante: ${confirmedVoteData ? confirmedVoteData.voterName : ''} (${confirmedVoteData ? confirmedVoteData.cityUf : ''})\n\nVote você também no Painel Brasil!\nhttps://vota-ae.vercel.app`;
+          const textShare = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData ? confirmedVoteData.opcao : ''}\nParticipante: ${confirmedVoteData ? confirmedVoteData.voterName : ''} (${confirmedVoteData ? confirmedVoteData.cityUf : ''})\n\nVote você também no Painel Brasil!\nhttps://vota-ae.vercel.app`;
 
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
               await navigator.share({
-                title: 'Meu Voto — Painel Brasil',
+                title: 'Comprovante Voto Independente',
                 text: textShare,
-                files: [file],
+                files: [file]
               });
-              return;
-            } catch (err) {
-              if (err.name !== 'AbortError') {
-                console.log('Compartilhamento cancelado ou não suportado:', err);
-              }
+            } catch (shareErr) {
+              downloadFallbackImage(blob, fileName);
             }
+          } else {
+            downloadFallbackImage(blob, fileName);
           }
-
-          const link = document.createElement('a');
-          link.download = fileName;
-          link.href = URL.createObjectURL(blob);
-          link.click();
-          
-          navigator.clipboard.writeText(textShare);
-          alert('Imagem baixada e texto copiado para a área de transferência com sucesso!');
         }, 'image/png');
-
       } catch (err) {
-        console.error("Erro ao renderizar com html2canvas:", err);
-        alert('Ocorreu um erro ao preparar o card para compartilhamento.');
+        console.error("Erro ao processar imagem para compartilhamento:", err);
+        alert("Erro ao gerar imagem para compartilhar. Tente novamente.");
       }
+    }
+
+    function downloadFallbackImage(blob, fileName) {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      alert('Card baixado com sucesso! Você pode compartilhá-lo agora em suas redes sociais.');
     }
   </script>
 </body>
