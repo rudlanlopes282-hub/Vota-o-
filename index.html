@@ -57,7 +57,8 @@
             </p>
           </div>
         </div>
-        <div id="nav-tabs" class="flex bg-slate-800 p-1 rounded-lg text-xs font-semibold">
+        <!-- BARRA DE ABAS OCULTA ATÉ A AUTENTICAÇÃO -->
+        <div id="nav-tabs" class="hidden flex bg-slate-800 p-1 rounded-lg text-xs font-semibold">
           <button id="btn-tab-urna" onclick="switchTab('urna')" class="px-3 py-1 rounded-md bg-blue-600 text-white transition font-bold">Votar</button>
           <button id="btn-tab-dados" onclick="switchTab('dados')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition">Placar</button>
           <button id="btn-tab-chat" onclick="switchTab('chat')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition flex items-center gap-1">
@@ -1183,6 +1184,9 @@
     }
 
     async function startVotingSession() {
+      // EXIBE A BARRA DE ABAS ASSIM QUE O USUÁRIO ENTRA NA CABINE
+      document.getElementById('nav-tabs').classList.remove('hidden');
+
       document.getElementById('sec-auth').classList.add('hidden');
       document.getElementById('sec-urna').classList.remove('hidden');
       switchTab('urna');
