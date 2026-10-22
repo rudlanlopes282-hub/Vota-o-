@@ -1806,14 +1806,14 @@
 
     function copyReceiptText() {
       if (!confirmedVoteData) return;
-      const text = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData.opcao}\nParticipante: ${confirmedVoteData.voterName} (${confirmedVoteData.cityUf})\n\nVote você também no Painel Brasil!`;
+      const text = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData.opcao}\nParticipante: ${confirmedVoteData.voterName} (${confirmedVoteData.cityUf})\n\nVote você também no Painel Brasil!\nhttps://vota-ae.vercel.app/`;
       navigator.clipboard.writeText(text);
       alert('Texto do comprovante copiado com sucesso!');
     }
 
     async function shareReceipt() {
       if (!confirmedVoteData) return;
-      const text = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData.opcao}\nParticipante: ${confirmedVoteData.voterName} (${confirmedVoteData.cityUf})\n\nVote você também no Painel Brasil!`;
+      const text = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData.opcao}\nParticipante: ${confirmedVoteData.voterName} (${confirmedVoteData.cityUf})\n\nVote você também no Painel Brasil!\nhttps://vota-ae.vercel.app/`;
       
       if (navigator.share) {
         try {
