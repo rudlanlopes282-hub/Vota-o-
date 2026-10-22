@@ -12,6 +12,7 @@
   <style>
     body {
       touch-action: manipulation;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
     .urn-lcd-font {
       font-family: 'Share Tech Mono', monospace;
@@ -106,7 +107,7 @@
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Participante (Modo Teste: Aceita qualquer número)</label>
+              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Participante</label>
               <input type="text" id="voter-doc" inputmode="numeric" pattern="[0-9]*" maxlength="14" placeholder="000.000.000-00" oninput="onCPFInput(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition">
               <p id="cpf-status-hint" class="text-[10px] text-blue-400 mt-0.5 hidden font-semibold">ℹ️ CPF já cadastrado neste dispositivo. Localização travada.</p>
             </div>
@@ -688,6 +689,15 @@
             </summary>
             <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
               Após o primeiro registo com o CPF, a localização (Estado e Cidade) vinculada fica travada no dispositivo para garantir consistência e evitar fraudes na amostra da pesquisa.
+            </div>
+          </details>
+          <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
+            <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+              <span>📊 Os votos são sincronizados em tempo real?</span>
+              <span class="text-blue-400 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+              Sim! Todos os votos confirmados passam por validação e são agregados de forma anônima no placar público a cada 10 segundos.
             </div>
           </details>
         </div>
@@ -1810,7 +1820,7 @@
           const fileName = `comprovante-${(confirmedVoteData ? confirmedVoteData.voterName : 'participante').toLowerCase().replace(/\s+/g, '-')}.png`;
           const file = new File([blob], fileName, { type: 'image/png' });
 
-          const textShare = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData ? confirmedVoteData.opcao : ''}\nParticipante: ${confirmedVoteData ? confirmedVoteData.voterName : ''} (${confirmedVoteData ? confirmedVoteData.cityUf : ''})\n\nVote você também no Painel Brasil!\nhttps://vota-ae.vercel.app`;
+          const textShare = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData ? confirmedVoteData.opcao : ''}\nParticipante: ${confirmedVoteData ? confirmedVoteData.voterName : ''}\n\nVote você também!`;
 
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
@@ -1819,27 +1829,22 @@
                 text: textShare,
                 files: [file]
               });
-            } catch (shareErr) {
-              downloadFallbackImage(blob, fileName);
+            } catch (err) {
+              console.log('Compartilhamento cancelado pelo usuário.', err);
             }
           } else {
-            downloadFallbackImage(blob, fileName);
+            // Fallback: download direto da imagem
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(file);
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(a.href);
           }
         }, 'image/png');
-      } catch (err) {
-        console.error("Erro ao processar imagem para compartilhamento:", err);
-        alert("Erro ao gerar imagem para compartilhar. Tente novamente.");
+      } catch (e) {
+        console.error("Erro ao processar imagem para compartilhamento", e);
+        alert('Não foi possível gerar a imagem para compartilhar neste navegador.');
       }
-    }
-
-    function downloadFallbackImage(blob, fileName) {
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      alert('Card baixado com sucesso! Você pode compartilhá-lo agora em suas redes sociais.');
     }
   </script>
 </body>
