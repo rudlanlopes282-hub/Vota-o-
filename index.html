@@ -1448,7 +1448,7 @@
         votedCPFs[verifiedVoter.cleanDoc] = true;
         localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
 
-        let userOption = dbRecord?.opcao || voterChoices[verifiedVoter.cleanDoc] || '22';
+        let userOption = dbRecord?.opcao || voterChoices[verifiedVoter.cleanDoc] || 'NULO';
 
         const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
         if (savedReceipt) {
@@ -1688,7 +1688,7 @@
             voterName: verifiedVoter.name,
             voterCpf: verifiedVoter.doc,
             cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-            opcao: voterChoices[verifiedVoter.cleanDoc] || '22',
+            opcao: voterChoices[verifiedVoter.cleanDoc] || 'NULO',
             time: new Date().toLocaleString('pt-BR')
           };
         } else {
@@ -1696,7 +1696,7 @@
             voterName: "PARTICIPANTE",
             voterCpf: "000.000.000-00",
             cityUf: "Rio de Janeiro / RJ",
-            opcao: '22',
+            opcao: 'NULO',
             time: new Date().toLocaleString('pt-BR')
           };
         }
@@ -1746,8 +1746,7 @@
         } else if (confirmedVoteData.opcao === 'NULO') {
           receiptCard.style.backgroundImage = "url('comprovante-nulo.jpg')";
         } else {
-          receiptCard.style.backgroundImage = "none";
-          receiptCard.style.backgroundColor = "#090d16";
+          receiptCard.style.backgroundImage = "url('comprovante-nulo.jpg')";
         }
 
         sealBox.className = "absolute w-[92px] h-[92px] bg-transparent border-0 rounded-full flex flex-col items-center justify-center text-center p-1 z-20 transition-all duration-100 pointer-events-auto";
