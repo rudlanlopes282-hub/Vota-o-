@@ -796,7 +796,7 @@
     let cityVotes = {};
 
     let chatMessages = JSON.parse(localStorage.getItem('simulador_chat_msgs') || JSON.stringify([
-      { id: 1, sender: "Moderação", uf: "DF", text: "Bem-vindo ao debate público independente. Mantenha o respeito.", time: "Agora", isSystem: true }
+      { id: 1, sender: "Moderação", uf: "DF", vote: null, text: "Bem-vindo ao debate público independente. Mantenha o respeito.", time: "Agora", isSystem: true }
     ]));
 
     window.addEventListener('DOMContentLoaded', async () => {
@@ -1319,10 +1319,24 @@
             </div>
           `;
         }
+
+        let voteBadgeClass = "bg-slate-800 text-slate-300 border-slate-700";
+        let voteLabelText = msg.vote ? `votou ${msg.vote}` : "";
+        
+        if (msg.vote === '22') {
+          voteBadgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/40";
+        } else if (msg.vote === '13') {
+          voteBadgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/40";
+        }
+
         return `
           <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl space-y-1">
             <div class="flex justify-between items-center text-[10px]">
-              <span class="font-extrabold text-blue-400">${msg.sender} (${msg.uf})</span>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="font-extrabold text-blue-400">${msg.sender || 'Participante'}</span>
+                <span class="bg-slate-900 border border-slate-800 px-1.5 py-0.5 rounded text-slate-400 font-mono">${msg.uf || 'BR'}</span>
+                ${msg.vote ? `<span class="border px-1.5 py-0.5 rounded font-bold ${voteBadgeClass}">${voteLabelText}</span>` : ''}
+              </div>
               <span class="text-slate-500 font-mono">${msg.time}</span>
             </div>
             <p class="text-slate-200 text-xs leading-normal">${msg.text}</p>
@@ -1347,11 +1361,13 @@
       if (!text) return;
 
       const nickname = voterNicknames[verifiedVoter.cleanDoc] || verifiedVoter.name.split(' ')[0];
+      const userVote = voterChoices[verifiedVoter.cleanDoc] || confirmedVoteData?.opcao || 'NULO';
 
       const newMsg = {
         id: Date.now(),
         sender: nickname,
         uf: verifiedVoter.uf,
+        vote: userVote,
         text: text,
         time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       };
@@ -1520,7 +1536,7 @@
 
       localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
       votedCPFs[verifiedVoter.cleanDoc] = true;
-      voterChoices[verifiedVoter.cleanDoc] = voteLabel;
+      voterChoices[verifiedVoter.cleanDoc] = voteType;
       localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
       localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
 
