@@ -1797,62 +1797,27 @@
 
     function copyReceiptText() {
       if (!confirmedVoteData) return;
-      const text = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData.opcao}\nParticipante: ${confirmedVoteData.voterName} (${confirmedVoteData.cityUf})\n\nVote você também no Painel Brasil!\nhttps://vota-ae.vercel.app`;
+      const text = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData.opcao}\nParticipante: ${confirmedVoteData.voterName} (${confirmedVoteData.cityUf})\n\nVote você também no Painel Brasil!`;
       navigator.clipboard.writeText(text);
       alert('Texto do comprovante copiado com sucesso!');
     }
 
     async function shareReceipt() {
-      const card = document.getElementById('receipt-card');
-      try {
-        const canvas = await html2canvas(card, { 
-          scale: 2, 
-          useCORS: true,
-          allowTaint: true 
-        });
-
-        canvas.toBlob(async (blob) => {
-          if (!blob) {
-            alert('Erro ao gerar a imagem do card.');
-            return;
-          }
-
-          const fileName = `comprovante-${(confirmedVoteData ? confirmedVoteData.voterName : 'participante').toLowerCase().replace(/\s+/g, '-')}.png`;
-          const file = new File([blob], fileName, { type: 'image/png' });
-
-          const textShare = `Já registrei meu voto na Pesquisa Eleitoral! 🗳️\nParticipe você também!`;
-
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-              await navigator.share({
-                title: 'Comprovante - Painel Brasil',
-                text: textShare,
-                files: [file]
-              });
-            } catch (err) {
-              if (err.name !== 'AbortError') {
-                downloadBlob(blob, fileName);
-              }
-            }
-          } else {
-            downloadBlob(blob, fileName);
-          }
-        }, 'image/png');
-      } catch (err) {
-        console.error('Erro ao gerar card:', err);
-        alert('Ocorreu um erro ao gerar a imagem para compartilhamento.');
+      if (!confirmedVoteData) return;
+      const text = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData.opcao}\nParticipante: ${confirmedVoteData.voterName} (${confirmedVoteData.cityUf})\n\nVote você também no Painel Brasil!`;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Painel Brasil - Comprovante de Voto',
+            text: text
+          });
+        } catch (err) {
+          copyReceiptText();
+        }
+      } else {
+        copyReceiptText();
       }
-    }
-
-    function downloadBlob(blob, fileName) {
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-      alert('Seu comprovante foi baixado! Agora você pode compartilhar nas suas redes sociais.');
     }
   </script>
 </body>
