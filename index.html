@@ -435,14 +435,24 @@
                   
                   <!-- NOME -->
                   <div class="flex items-center justify-center gap-1">
-                    <p class="text-xs font-black uppercase text-white truncate max-w-[110px]" id="receipt-voter-name">---</p>
-                    <button onclick="togglePrivacy('name')" class="text-[40px] opacity-80 hover:opacity-100" title="Ocultar/Mostrar Nome">🧿</button>
+                    <p class="text-[14px] font-black uppercase text-white truncate max-w-[110px]" id="receipt-voter-name">---</p>
+                    <button onclick="togglePrivacy('name')" class="opacity-80 hover:opacity-100 p-0.5" title="Ocultar/Mostrar Nome">
+                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </button>
                   </div>
 
                   <!-- CIDADE / UF -->
                   <div class="flex items-center justify-center gap-1 mt-0.5">
                     <p id="receipt-voter-location" class="text-[10px] font-bold text-emerald-400 truncate max-w-[120px]">---</p>
-                    <button onclick="togglePrivacy('location')" class="text-[10px] opacity-80 hover:opacity-100" title="Ocultar/Mostrar Local">👁️</button>
+                    <button onclick="togglePrivacy('location')" class="opacity-80 hover:opacity-100 p-0.5" title="Ocultar/Mostrar Local">
+                      <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </button>
                   </div>
 
                   <p id="seal-footer-tag" class="text-[7px] text-slate-500 font-bold mt-1">PAINEL BRASIL</p>
@@ -1701,8 +1711,8 @@
     }
 
     function resetSealPos() {
-      sealPosLeft = 56;
-      sealPosTop = 102;
+      sealPosLeft = 48;
+      sealPosTop = 95;
       const sealBox = document.getElementById('receipt-seal-box');
       sealBox.style.left = sealPosLeft + 'px';
       sealBox.style.top = sealPosTop + 'px';
