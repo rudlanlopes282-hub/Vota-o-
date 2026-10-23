@@ -793,6 +793,14 @@
   const SUPABASE_ANON_KEY = "sb_publishable_8Uxo8QibKqSN-9fA9gt5Pw_1Urbvhpt";
   const isSupabaseConfigured = window.supabase && SUPABASE_URL !== "https://SEU_PROJETO.supabase.co" && !SUPABASE_URL.includes("SEU_PROJETO");
   const supabaseClient = isSupabaseConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+  if (supabaseClient) {
+  supabaseClient
+    .channel('mudancas-votos')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votos' }, payload => {
+      loadCloudStats();
+    })
+    .subscribe();
+}
 
 
     let pixPollInterval = null;
