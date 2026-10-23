@@ -73,7 +73,7 @@
 
       <div class="bg-blue-950/40 border border-blue-500/30 rounded-xl p-2.5 text-center">
         <p class="text-[10px] text-blue-300 font-medium leading-tight">
-          ℹ️ <b>Plataforma Independente:</b> Esta é uma simulação e pesquisa de opinião não oficial, sem qualquer vínculo com o TSE ou órgãos governamentais.
+          ℹ️ <b>Plataforma Independente:</b> Esta é uma simulação e pesquisa de opinião não oficial, sem recolha de dados sensíveis.
         </p>
       </div>
 
@@ -87,7 +87,7 @@
               🛡️
             </div>
             <h2 class="text-xl font-extrabold text-white">Identificação do Participante</h2>
-            <p class="text-xs text-slate-400 mt-1">Validação segura e controle de voto único por dispositivo</p>
+            <p class="text-xs text-slate-400 mt-1">Validação segura por Dispositivo e PIN</p>
           </div>
 
           <div class="flex items-center justify-center gap-2 mb-6">
@@ -108,14 +108,9 @@
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CPF do Participante</label>
-              <input type="text" id="voter-doc" inputmode="numeric" pattern="[0-9]*" maxlength="14" placeholder="000.000.000-00" oninput="onCPFInput(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition">
-              <p id="cpf-status-hint" class="text-[10px] text-blue-400 mt-0.5 hidden font-semibold">ℹ️ CPF já cadastrado neste dispositivo. Localização travada.</p>
-            </div>
-
-            <div>
               <label class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">PIN / Senha de Acesso (4 dígitos)</label>
               <input type="password" id="voter-pin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" class="w-full bg-slate-950 border border-blue-500/40 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition text-center tracking-widest text-lg">
+              <p class="text-[10px] text-slate-400 mt-1">Crie um PIN para proteger o seu voto e recuperar a sessão neste aparelho.</p>
             </div>
 
             <div>
@@ -174,7 +169,7 @@
               <div class="absolute inset-0 rounded-full border-2 border-blue-500/20 border-t-blue-500 animate-spin"></div>
               <div class="text-3xl">👤</div>
             </div>
-            <p class="text-xs text-slate-300 font-semibold">Validando Assinatura e Credenciais...</p>
+            <p class="text-xs text-slate-300 font-semibold">Validando Assinatura do Aparelho...</p>
             <p class="text-[11px] text-slate-500">Aguarde alguns segundos...</p>
           </div>
 
@@ -189,7 +184,7 @@
 
             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-left text-xs font-mono space-y-1">
               <p class="text-slate-400">PARTICIPANTE: <span id="summary-name" class="text-white font-bold"></span></p>
-              <p class="text-slate-400">DOCUMENTO: <span id="summary-doc" class="text-blue-400 font-bold"></span></p>
+              <p class="text-slate-400">DISPOSITIVO: <span id="summary-doc" class="text-blue-400 font-bold">VERIFICADO</span></p>
               <p class="text-slate-400">MUNICIPIO / UF: <span id="summary-state" class="text-blue-400 font-bold"></span></p>
               <p class="text-slate-400">STATUS: <span id="summary-vote-status" class="text-blue-400 font-bold">APTO PARA VOTAR</span></p>
             </div>
@@ -265,7 +260,7 @@
               <!-- ALERTA DE VOTO DUPLICADO -->
               <div id="lcd-duplicate-msg" class="hidden text-center py-1 space-y-1">
                 <p class="text-xs font-black text-red-800 uppercase tracking-wide">⚠️ VOTO JÁ REGISTRADO</p>
-                <p class="text-[10px] font-bold text-black leading-tight">Este CPF já computou voto nesta pesquisa.</p>
+                <p class="text-[10px] font-bold text-black leading-tight">Este dispositivo já computou voto nesta pesquisa.</p>
                 <div class="pt-1 flex justify-center gap-2">
                   <button onclick="openReceiptModal()" class="bg-black/80 hover:bg-black text-white font-bold py-1 px-2.5 rounded text-[10px] uppercase transition">
                     📄 Comprovante
@@ -366,7 +361,6 @@
                   <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
                 </div>
 
-                <!-- BOTÃO DE TESTE TEMPORÁRIO PARA SIMULAR PAGAMENTO PAGO -->
                 <button onclick="finalizePixSuccess()" type="button" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider shadow-md transition active:scale-95 border-2 border-amber-300">
                   🧪 [MODO TESTE] Simular Pagamento Aprovado
                 </button>
@@ -408,13 +402,11 @@
               
               <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-between p-4 text-white bg-[#090d16]" style="background-size: cover; background-position: center;">
                 
-                <!-- CABEÇALHO DO CARD -->
                 <div id="receipt-top-header" class="space-y-1 text-center pt-2 relative z-10">
                   <p id="receipt-top-badge" class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">⚡ COMPROVANTE AUDITADO ⚡</p>
                   <p class="text-[11px] font-bold text-slate-300">PAINEL BRASIL • ELEIÇÕES 2026</p>
                 </div>
 
-                <!-- ÁREA CENTRAL (USADA APENAS NO COMPROVANTE GRATUITO) -->
                 <div id="receipt-center-box" class="my-auto text-center space-y-4 relative z-10">
                   <div class="w-14 h-14 bg-slate-900 border border-slate-700 rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-inner">
                     🏛️
@@ -425,7 +417,6 @@
                   </div>
                 </div>
 
-                <!-- SELO DE VERIFICAÇÃO COM OS DADOS DO PARTICIPANTE -->
                 <div id="receipt-seal-box" class="w-[170px] bg-slate-950/90 border-2 border-emerald-400 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 transition-all duration-100 mx-auto">
                   <p id="seal-header" class="text-[10px] font-black text-emerald-400 tracking-wider flex items-center justify-center gap-1">
                     <span>✓</span> <span>VERIFICADO</span>
@@ -433,7 +424,6 @@
                   <p id="seal-subtitle" class="text-[8px] font-bold text-slate-400 uppercase">PARTICIPANTE</p>
                   <div id="seal-divider" class="my-1.5 border-b border-white/20"></div>
                   
-                  <!-- NOME -->
                   <div class="flex items-center justify-center gap-1">
                     <p class="text-[14px] font-black uppercase text-white truncate max-w-[150px]" id="receipt-voter-name">---</p>
                     <button onclick="togglePrivacy('name')" class="opacity-80 hover:opacity-100 p-0.5" title="Ocultar/Mostrar Nome">
@@ -444,7 +434,6 @@
                     </button>
                   </div>
 
-                  <!-- CIDADE / UF -->
                   <div class="flex items-center justify-center gap-1 mt-0.5">
                     <p id="receipt-voter-location" class="text-[10px] font-bold text-emerald-400 truncate max-w-[120px]">---</p>
                     <button onclick="togglePrivacy('location')" class="opacity-80 hover:opacity-100 p-0.5" title="Ocultar/Mostrar Local">
@@ -460,7 +449,6 @@
 
               </div>
 
-              <!-- CONTROLES DE POSICIONAMENTO PARA O COMPROVANTE PAGO -->
               <div id="receipt-pos-controls" class="hidden bg-slate-900 border border-slate-800 p-2.5 rounded-2xl space-y-2 text-center">
                 <p class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 flex items-center justify-center gap-1">
                   <span>🎯</span> Ajustar Posição do Nome/Selo no Card
@@ -474,14 +462,12 @@
                 <button onclick="resetSealPos()" class="text-[10px] text-slate-400 hover:text-white underline font-semibold transition">Restaurar Posição Padrão</button>
               </div>
 
-              <!-- BOTÃO PARA ADQUIRIR O CARD COM FOTO -->
               <button id="btn-buy-card-receipt" onclick="openApoiadorModalFromReceipt()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
                 <span>🎨</span>
                 <span>Adquirir Card com Foto e Apoiar a Causa</span>
               </button>
 
               <div class="space-y-2">
-                <!-- AVISO DE PRINT -->
                 <div class="bg-blue-950/40 border border-blue-500/30 p-2.5 rounded-xl text-center">
                   <p class="text-[11px] text-blue-300 font-medium leading-tight">
                     📸 <b>Dica:</b> Tire um print (captura de tela) deste card para compartilhar facilmente nas suas redes sociais!
@@ -702,11 +688,11 @@
         <div class="space-y-2.5 text-xs">
           <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
             <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-              <span>🛡️ Como o sistema protege a localização?</span>
+              <span>🛡️ Como o sistema protege a votação?</span>
               <span class="text-blue-400 group-open:rotate-180 transition-transform">▼</span>
             </summary>
             <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-              Após o primeiro registo com o CPF, a localização (Estado e Cidade) vinculada fica travada no dispositivo para garantir consistência e evitar fraudes na amostra da pesquisa.
+              O sistema utiliza uma assinatura única gerada pelo seu navegador e um PIN de 4 dígitos para garantir que cada dispositivo vote apenas uma vez, sem a necessidade de recolher dados sensíveis.
             </div>
           </details>
           <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
@@ -745,6 +731,9 @@
     // VARIÁVEIS PARA CONTROLAR A POSIÇÃO DO SELO NO CARD PAGO
     let sealPosLeft = 48;
     let sealPosTop = 95;
+
+    // GERAÇÃO DA ASSINATURA DO NAVEGADOR (FINGERPRINT)
+    const deviceFingerprint = `${navigator.language}-${screen.width}x${screen.height}-${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
 
     let deviceSessionToken = localStorage.getItem('simulador_device_token');
     if (!deviceSessionToken) {
@@ -787,7 +776,7 @@
     let currentInput = "";
     let isBranco = false;
 
-    let votedCPFs = JSON.parse(localStorage.getItem('simulador_voted_cpfs') || "{}");
+    let votedDevices = JSON.parse(localStorage.getItem('simulador_voted_devices') || "{}");
     let voterChoices = JSON.parse(localStorage.getItem('simulador_voter_choices') || "{}");
     let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}");
     let voterDevicePins = JSON.parse(localStorage.getItem('simulador_voter_pins') || "{}");
@@ -814,6 +803,14 @@
       await loadCloudStats();
       renderChat();
 
+      // Preenche automaticamente o local se já houver registo neste dispositivo
+      if (voterLocations[deviceFingerprint]) {
+        const loc = voterLocations[deviceFingerprint];
+        document.getElementById('voter-uf-select').value = loc.uf;
+        document.getElementById('voter-city-search').value = loc.city;
+        document.getElementById('selected-city-val').value = loc.city;
+      }
+
       setInterval(() => {
         loadCloudStats();
       }, 10000);
@@ -825,48 +822,13 @@
       });
     });
 
-    function onCPFInput(input) {
-      formatCPF(input);
-      const cleanDoc = input.value.replace(/\D/g, '');
-      const hint = document.getElementById('cpf-status-hint');
-      const ufSelect = document.getElementById('voter-uf-select');
-      const cityInput = document.getElementById('voter-city-search');
-
-      if (cleanDoc.length === 11) {
-        if (voterLocations[cleanDoc]) {
-          const loc = voterLocations[cleanDoc];
-          ufSelect.value = loc.uf;
-          cityInput.value = loc.city;
-          document.getElementById('selected-city-val').value = loc.city;
-
-          ufSelect.disabled = true;
-          cityInput.disabled = true;
-          hint.classList.remove('hidden');
-        } else {
-          ufSelect.disabled = false;
-          cityInput.disabled = false;
-          hint.classList.add('hidden');
-        }
-      } else {
-        ufSelect.disabled = false;
-        cityInput.disabled = false;
-        hint.classList.add('hidden');
-      }
-    }
-
-    function validateCPF(cpf) {
-      const clean = cpf.replace(/\D/g, '');
-      if (clean.length !== 11) return false;
-      return true;
-    }
-
-    async function checkVoterInDatabase(cleanDoc) {
+    async function checkVoterInDatabase(fingerprintKey) {
       if (!supabaseClient) return null;
       try {
         const { data, error } = await supabaseClient
           .from('votos')
-          .select('cpf, opcao, cidade, uf, created_at')
-          .eq('cpf', cleanDoc)
+          .select('device_token, opcao, cidade, uf, created_at')
+          .eq('device_token', fingerprintKey)
           .maybeSingle();
 
         if (error || !data) return null;
@@ -935,10 +897,10 @@
         if (cityVotes[cityKey][op] !== undefined) cityVotes[cityKey][op]++;
         else cityVotes[cityKey]['NULO']++;
 
-        if (item.cpf) votedCPFs[item.cpf] = true;
+        if (item.device_token) votedDevices[item.device_token] = true;
       });
 
-      localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+      localStorage.setItem('simulador_voted_devices', JSON.stringify(votedDevices));
       renderStats();
       renderCityResults();
     }
@@ -1037,19 +999,6 @@
       }).join('');
     }
 
-    function formatCPF(input) {
-      let v = input.value.replace(/\D/g, '');
-      if (v.length > 11) v = v.slice(0, 11);
-      if (v.length > 9) {
-        v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-      } else if (v.length > 6) {
-        v = v.replace(/^(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
-      } else if (v.length > 3) {
-        v = v.replace(/^(\d{3})(\d{1,3})/, '$1.$2');
-      }
-      input.value = v;
-    }
-
     function onUFChange() {
       const ufSelect = document.getElementById('voter-uf-select');
       const selectedUf = ufSelect.value;
@@ -1063,10 +1012,7 @@
     }
 
     function filterCityOptions() {
-      const ufSelect = document.getElementById('voter-uf-select');
-      if (ufSelect.disabled) return;
-
-      const uf = ufSelect.value;
+      const uf = document.getElementById('voter-uf-select').value;
       const cities = stateCities[uf] || [];
       const query = document.getElementById('voter-city-search').value.toLowerCase().trim();
       const container = document.getElementById('city-suggestions-container');
@@ -1101,7 +1047,6 @@
 
     async function submitStep1() {
       const name = document.getElementById('voter-name').value.trim();
-      const doc = document.getElementById('voter-doc').value.trim();
       const pin = document.getElementById('voter-pin').value.trim();
       const ufSelect = document.getElementById('voter-uf-select');
       const city = document.getElementById('voter-city-search').value.trim() || "Capital";
@@ -1115,51 +1060,43 @@
         return;
       }
 
-      const cleanDoc = doc.replace(/\D/g, '');
-      
-      if (!validateCPF(cleanDoc)) {
-        errBox.textContent = "⚠️ Informe 11 números para o CPF.";
-        errBox.classList.remove('hidden');
-        return;
-      }
-
       if (!pin || pin.length < 4) {
-        errBox.textContent = "⚠️ Digite um PIN de segurança com 4 dígitos para proteger sua conta.";
+        errBox.textContent = "⚠️ Digite um PIN de segurança com 4 dígitos para proteger sua sessão.";
         errBox.classList.remove('hidden');
         return;
       }
 
-      if (voterDevicePins[cleanDoc] && voterDevicePins[cleanDoc] !== pin) {
-        errBox.textContent = "❌ PIN incorreto para este CPF! Este CPF já está associado a outro PIN de segurança.";
+      if (voterDevicePins[deviceFingerprint] && voterDevicePins[deviceFingerprint] !== pin) {
+        errBox.textContent = "❌ PIN incorreto para este dispositivo! Outro PIN foi cadastrado anteriormente.";
         errBox.classList.remove('hidden');
         return;
-      } else if (!voterDevicePins[cleanDoc]) {
-        voterDevicePins[cleanDoc] = pin;
+      } else if (!voterDevicePins[deviceFingerprint]) {
+        voterDevicePins[deviceFingerprint] = pin;
         localStorage.setItem('simulador_voter_pins', JSON.stringify(voterDevicePins));
       }
 
-      if (!voterLocations[cleanDoc]) {
-        voterLocations[cleanDoc] = { uf: ufSelect.value, city: city };
+      if (!voterLocations[deviceFingerprint]) {
+        voterLocations[deviceFingerprint] = { uf: ufSelect.value, city: city };
         localStorage.setItem('simulador_voter_locations', JSON.stringify(voterLocations));
       }
 
       document.getElementById('auth-step-1').classList.add('hidden');
       document.getElementById('auth-step-2').classList.remove('hidden');
 
-      const dbRecord = await checkVoterInDatabase(cleanDoc);
-      const isAlreadyVoted = !!dbRecord || !!votedCPFs[cleanDoc];
+      const dbRecord = await checkVoterInDatabase(deviceFingerprint);
+      const isAlreadyVoted = !!dbRecord || !!votedDevices[deviceFingerprint];
 
       setTimeout(() => {
         document.getElementById('auth-step-2').classList.add('hidden');
 
-        const lockedLoc = voterLocations[cleanDoc] || { uf: ufSelect.value, city: city };
+        const lockedLoc = voterLocations[deviceFingerprint] || { uf: ufSelect.value, city: city };
         const selectedOpt = ufSelect.querySelector(`option[value="${lockedLoc.uf}"]`);
         const region = selectedOpt ? selectedOpt.getAttribute('data-region') : 'Norte';
 
-        verifiedVoter = { name, doc, cleanDoc, pin, uf: lockedLoc.uf, city: lockedLoc.city, region, token: deviceSessionToken };
+        verifiedVoter = { name, pin, uf: lockedLoc.uf, city: lockedLoc.city, region, token: deviceFingerprint };
 
         document.getElementById('summary-name').textContent = name;
-        document.getElementById('summary-doc').textContent = doc;
+        document.getElementById('summary-doc').textContent = "Dispositivo Seguro";
         document.getElementById('summary-state').textContent = `${lockedLoc.city} / ${lockedLoc.uf} (${region})`;
 
         const statusEl = document.getElementById('summary-vote-status');
@@ -1168,18 +1105,18 @@
           statusEl.textContent = "JÁ VOTOU (Sessão Segura Protegida)";
           statusEl.className = "text-amber-400 font-bold";
 
-          const savedReceipt = localStorage.getItem('simulador_receipt_' + cleanDoc);
+          const savedReceipt = localStorage.getItem('simulador_receipt_' + deviceFingerprint);
           if (savedReceipt) {
             confirmedVoteData = JSON.parse(savedReceipt);
           } else if (dbRecord) {
             confirmedVoteData = {
               voterName: name,
-              voterCpf: doc,
+              voterCpf: "Dispositivo Verificado",
               cityUf: `${dbRecord.cidade || lockedLoc.city} / ${dbRecord.uf || lockedLoc.uf}`,
               opcao: dbRecord.opcao,
               time: dbRecord.created_at ? new Date(dbRecord.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')
             };
-            localStorage.setItem('simulador_receipt_' + cleanDoc, JSON.stringify(confirmedVoteData));
+            localStorage.setItem('simulador_receipt_' + deviceFingerprint, JSON.stringify(confirmedVoteData));
           }
         } else {
           statusEl.textContent = "APTO PARA VOTAR";
@@ -1194,7 +1131,6 @@
     }
 
     async function startVotingSession() {
-      // EXIBE A BARRA DE ABAS ASSIM QUE O USUÁRIO ENTRA NA CABINE
       document.getElementById('nav-tabs').classList.remove('hidden');
 
       document.getElementById('sec-auth').classList.add('hidden');
@@ -1202,8 +1138,8 @@
       switchTab('urna');
 
       if (verifiedVoter) {
-        const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
-        const isAlreadyVoted = !!dbRecord || !!votedCPFs[verifiedVoter.cleanDoc];
+        const dbRecord = await checkVoterInDatabase(deviceFingerprint);
+        const isAlreadyVoted = !!dbRecord || !!votedDevices[deviceFingerprint];
         if (isAlreadyVoted) {
           document.getElementById('lcd-normal-view').classList.add('hidden');
           document.getElementById('lcd-fim-msg').classList.add('hidden');
@@ -1231,7 +1167,7 @@
         document.getElementById('sec-urna').classList.remove('hidden');
         document.getElementById('btn-tab-urna').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
         
-        if (verifiedVoter && (votedCPFs[verifiedVoter.cleanDoc] || confirmedVoteData)) {
+        if (verifiedVoter && (votedDevices[deviceFingerprint] || confirmedVoteData)) {
           document.getElementById('lcd-normal-view').classList.add('hidden');
           document.getElementById('lcd-fim-msg').classList.add('hidden');
           document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
@@ -1247,8 +1183,8 @@
         document.getElementById('sec-chat').classList.remove('hidden');
         document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition flex items-center gap-1";
         
-        const isPaidSupporter = verifiedVoter && paidSupporters[verifiedVoter.cleanDoc];
-        const nickname = verifiedVoter ? voterNicknames[verifiedVoter.cleanDoc] : null;
+        const isPaidSupporter = verifiedVoter && paidSupporters[deviceFingerprint];
+        const nickname = verifiedVoter ? voterNicknames[deviceFingerprint] : null;
         
         document.getElementById('chat-user-badge').textContent = nickname ? `${nickname} (${verifiedVoter.uf})` : (verifiedVoter ? verifiedVoter.name.split(' ')[0] : "Visitante");
         
@@ -1285,7 +1221,7 @@
       
       errBox.classList.add('hidden');
 
-      if (!verifiedVoter || !paidSupporters[verifiedVoter.cleanDoc]) {
+      if (!verifiedVoter || !paidSupporters[deviceFingerprint]) {
         errBox.textContent = "⚠️ Você precisa adquirir o comprovante de apoiador via PIX para ter acesso ao chat.";
         errBox.classList.remove('hidden');
         return;
@@ -1296,15 +1232,15 @@
       const normalizedNewNick = nickname.toLowerCase();
       const existingEntries = Object.entries(voterNicknames);
       
-      for (let [cpfKey, nickVal] of existingEntries) {
-        if (cpfKey !== verifiedVoter.cleanDoc && nickVal.toLowerCase() === normalizedNewNick) {
+      for (let [devKey, nickVal] of existingEntries) {
+        if (devKey !== deviceFingerprint && nickVal.toLowerCase() === normalizedNewNick) {
           errBox.textContent = `⚠️ O apelido "${nickname}" já está em uso por outro participante.`;
           errBox.classList.remove('hidden');
           return;
         }
       }
 
-      voterNicknames[verifiedVoter.cleanDoc] = nickname;
+      voterNicknames[deviceFingerprint] = nickname;
       localStorage.setItem('simulador_voter_nicknames', JSON.stringify(voterNicknames));
 
       document.getElementById('chat-user-badge').textContent = `${nickname} (${verifiedVoter.uf})`;
@@ -1364,14 +1300,14 @@
     }
 
     function sendChatMessage() {
-      if (!verifiedVoter || !paidSupporters[verifiedVoter.cleanDoc]) return;
+      if (!verifiedVoter || !paidSupporters[deviceFingerprint]) return;
       
       const input = document.getElementById('chat-input');
       const text = input.value.trim();
       if (!text) return;
 
-      const nickname = voterNicknames[verifiedVoter.cleanDoc] || verifiedVoter.name.split(' ')[0];
-      const userVote = voterChoices[verifiedVoter.cleanDoc] || confirmedVoteData?.opcao || 'NULO';
+      const nickname = voterNicknames[deviceFingerprint] || verifiedVoter.name.split(' ')[0];
+      const userVote = voterChoices[deviceFingerprint] || confirmedVoteData?.opcao || 'NULO';
 
       const newMsg = {
         id: Date.now(),
@@ -1478,27 +1414,27 @@
     async function pressConfirma() {
       if (!verifiedVoter) return;
 
-      const dbRecord = await checkVoterInDatabase(verifiedVoter.cleanDoc);
-      const isAlreadyVoted = !!dbRecord || votedCPFs[verifiedVoter.cleanDoc];
+      const dbRecord = await checkVoterInDatabase(deviceFingerprint);
+      const isAlreadyVoted = !!dbRecord || votedDevices[deviceFingerprint];
 
       if (isAlreadyVoted) {
-        votedCPFs[verifiedVoter.cleanDoc] = true;
-        localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+        votedDevices[deviceFingerprint] = true;
+        localStorage.setItem('simulador_voted_devices', JSON.stringify(votedDevices));
 
-        let userOption = dbRecord?.opcao || voterChoices[verifiedVoter.cleanDoc] || 'NULO';
+        let userOption = dbRecord?.opcao || voterChoices[deviceFingerprint] || 'NULO';
 
-        const savedReceipt = localStorage.getItem('simulador_receipt_' + verifiedVoter.cleanDoc);
+        const savedReceipt = localStorage.getItem('simulador_receipt_' + deviceFingerprint);
         if (savedReceipt) {
           confirmedVoteData = JSON.parse(savedReceipt);
         } else {
           confirmedVoteData = {
             voterName: verifiedVoter.name,
-            voterCpf: verifiedVoter.doc,
+            voterCpf: "Dispositivo Verificado",
             cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
             opcao: userOption,
             time: new Date().toLocaleString('pt-BR')
           };
-          localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
+          localStorage.setItem('simulador_receipt_' + deviceFingerprint, JSON.stringify(confirmedVoteData));
         }
 
         document.getElementById('lcd-normal-view').classList.add('hidden');
@@ -1514,40 +1450,34 @@
       }
 
       let voteType = 'NULO';
-      let voteLabel = 'votou Nulo';
       if (isBranco) {
         voteType = 'BRANCO';
-        voteLabel = 'votou Branco';
       } else if (currentInput === '22') {
         voteType = '22';
-        voteLabel = 'votou 22';
       } else if (currentInput === '13') {
         voteType = '13';
-        voteLabel = 'votou 13';
       }
 
       pendingVoteObj = {
-        cpf: verifiedVoter.cleanDoc,
+        device_token: deviceFingerprint,
         opcao: voteType,
         uf: verifiedVoter.uf,
         cidade: verifiedVoter.city,
-        regiao: verifiedVoter.region,
-        voteLabel: voteLabel,
-        device_token: verifiedVoter.token
+        regiao: verifiedVoter.region
       };
 
       confirmedVoteData = {
         voterName: verifiedVoter.name,
-        voterCpf: verifiedVoter.doc,
+        voterCpf: "Dispositivo Verificado",
         cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
         opcao: voteType,
         time: new Date().toLocaleString('pt-BR')
       };
 
-      localStorage.setItem('simulador_receipt_' + verifiedVoter.cleanDoc, JSON.stringify(confirmedVoteData));
-      votedCPFs[verifiedVoter.cleanDoc] = true;
-      voterChoices[verifiedVoter.cleanDoc] = voteType;
-      localStorage.setItem('simulador_voted_cpfs', JSON.stringify(votedCPFs));
+      localStorage.setItem('simulador_receipt_' + deviceFingerprint, JSON.stringify(confirmedVoteData));
+      votedDevices[deviceFingerprint] = true;
+      voterChoices[deviceFingerprint] = voteType;
+      localStorage.setItem('simulador_voted_devices', JSON.stringify(votedDevices));
       localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
 
       const localVotes = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
@@ -1583,7 +1513,7 @@
     function openApoiadorModal() {
       document.getElementById('receipt-modal').classList.add('hidden');
       
-      const hasVoted = verifiedVoter && (votedCPFs[verifiedVoter.cleanDoc] || confirmedVoteData);
+      const hasVoted = verifiedVoter && (votedDevices[deviceFingerprint] || confirmedVoteData);
       const titleEl = document.getElementById('pix-title');
       const subtitleEl = document.getElementById('pix-subtitle');
       const iconEl = document.getElementById('pix-header-icon');
@@ -1627,7 +1557,7 @@
           body: JSON.stringify({
             name: verifiedVoter ? verifiedVoter.name : "Apoiador",
             email: "apoiador@painelbrasil.org",
-            cpf: verifiedVoter ? verifiedVoter.cleanDoc : "00000000000",
+            cpf: "00000000000",
             amount: amountValue
           })
         });
@@ -1683,7 +1613,7 @@
 
     function finalizePixSuccess() {
       if (verifiedVoter) {
-        paidSupporters[verifiedVoter.cleanDoc] = true;
+        paidSupporters[deviceFingerprint] = true;
         localStorage.setItem('simulador_paid_supporters', JSON.stringify(paidSupporters));
       }
 
@@ -1723,15 +1653,15 @@
         if (verifiedVoter) {
           confirmedVoteData = {
             voterName: verifiedVoter.name,
-            voterCpf: verifiedVoter.doc,
+            voterCpf: "Dispositivo Verificado",
             cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-            opcao: voterChoices[verifiedVoter.cleanDoc] || 'NULO',
+            opcao: voterChoices[deviceFingerprint] || 'NULO',
             time: new Date().toLocaleString('pt-BR')
           };
         } else {
           confirmedVoteData = {
             voterName: "PARTICIPANTE",
-            voterCpf: "000.000.000-00",
+            voterCpf: "Dispositivo Verificado",
             cityUf: "Rio de Janeiro / RJ",
             opcao: 'NULO',
             time: new Date().toLocaleString('pt-BR')
@@ -1747,7 +1677,7 @@
       const optionText = document.getElementById('receipt-option-text');
       const posControls = document.getElementById('receipt-pos-controls');
 
-      const isPaid = verifiedVoter && paidSupporters[verifiedVoter.cleanDoc];
+      const isPaid = verifiedVoter && paidSupporters[deviceFingerprint];
 
       updateReceiptTextDisplay();
 
