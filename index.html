@@ -7,6 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- SCRIPT OFICIAL DO CLOUDFLARE TURNSTILE -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   
   <style>
@@ -39,8 +41,28 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between antialiased selection:bg-blue-500 selection:text-white">
 
-  <!-- CONTEÚDO REAL DO SITE -->
-  <div id="main-site-content" class="flex-1 flex flex-col justify-between">
+  <!-- TELA PRÉVIA DE VERIFICAÇÃO (CLOUDFLARE TURNSTILE) -->
+  <div id="sec-turnstile-gate" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+      <div class="w-12 h-12 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl">
+        🛡️
+      </div>
+      <div>
+        <h2 class="text-lg font-extrabold text-white">Proteção contra Robôs</h2>
+        <p class="text-xs text-slate-400 mt-1">Por favor, conclua a verificação abaixo para acessar o Painel Brasil.</p>
+      </div>
+      
+      <!-- WIDGET DO TURNSTILE -->
+      <div class="flex justify-center py-2">
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAFcbW-OkldDEkMm2" data-callback="onTurnstileSuccess" data-theme="dark"></div>
+      </div>
+
+      <p class="text-[10px] text-slate-500">Cloudflare Security Gate</p>
+    </div>
+  </div>
+
+  <!-- CONTEÚDO REAL DO SITE (OCULTO ATÉ A VERIFICAÇÃO) -->
+  <div id="main-site-content" class="flex-1 flex flex-col justify-between hidden">
     
     <!-- TOP HEADER -->
     <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-40">
@@ -805,7 +827,11 @@
       { id: 1, sender: "Moderação", uf: "DF", vote: null, text: "Bem-vindo ao debate público independente. Mantenha o respeito.", time: "Agora", isSystem: true }
     ]));
 
-    window.addEventListener('DOMContentLoaded', async () => {
+    // FUNÇÃO ACIONADA QUANDO O TURNSTILE É CONCLUÍDO COM SUCESSO
+    async function onTurnstileSuccess(token) {
+      document.getElementById('sec-turnstile-gate').classList.add('hidden');
+      document.getElementById('main-site-content').classList.remove('hidden');
+
       populateQueryUFs();
       await loadCloudStats();
       renderChat();
@@ -824,9 +850,13 @@
       if (voterNicknames[deviceFingerprint]) {
         document.getElementById('voter-nickname').value = voterNicknames[deviceFingerprint];
       }
+    }
 
+    window.addEventListener('DOMContentLoaded', () => {
       setInterval(() => {
-        loadCloudStats();
+        if (!document.getElementById('main-site-content').classList.contains('hidden')) {
+          loadCloudStats();
+        }
       }, 10000);
 
       document.addEventListener('click', (e) => {
