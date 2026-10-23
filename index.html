@@ -869,7 +869,7 @@
     let cityVotes = {};
 
     let chatMessages = JSON.parse(localStorage.getItem('simulador_chat_msgs') || JSON.stringify([
-      { id: 1, sender: "Moderação", uf: "DF", vote: null, text: "Bem-vindo ao debate público independente. Mantenha o respeito.", time: "Agora", isSystem: true }
+      { id: 1, device_token: "system", sender: "Moderação", uf: "DF", vote: null, text: "Bem-vindo ao debate público independente. Mantenha o respeito.", time: "Agora", isSystem: true }
     ]));
 
     const palavrasProibidas = [
@@ -948,7 +948,7 @@
       reader.readAsDataURL(file);
     }
 
-    // 🗑️ FUNÇÃO PARA APAGAR FIGURINHA E REORGANIZAR ÍNDICES AUTOMATICAMENTE
+    // 🗑️ FUNÇÃO PARA APAGAR FIGURINHA E REORGANIZAR ÍNDICES
     function deleteCustomSticker(event, index) {
       event.stopPropagation();
       
@@ -993,6 +993,7 @@
 
       const newMsg = {
         id: Date.now(),
+        device_token: deviceSessionToken,
         replyToId: replyingToMsgId,
         sender: nickname,
         uf: verifiedVoter.uf,
@@ -1008,6 +1009,15 @@
       cancelReply();
       toggleStickerDrawer();
       renderChat();
+    }
+
+    // 🗑️ FUNÇÃO PARA APAGAR MENSAGEM DO CHAT PELO ID
+    function deleteChatMessage(msgId) {
+      if (confirm("Deseja realmente apagar esta mensagem?")) {
+        chatMessages = chatMessages.filter(msg => msg.id !== msgId);
+        localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
+        renderChat();
+      }
     }
 
     async function onTurnstileSuccess(token) {
@@ -1544,6 +1554,13 @@
 
         const cleanTextPreview = msg.isHtml ? '[Mídia]' : msg.text.replace(/'/g, "\\'");
 
+        // 🛡️ Verifica se a mensagem pertence ao dispositivo atual para liberar o botão de apagar
+        const isMyMessage = msg.device_token && msg.device_token === deviceSessionToken;
+        let deleteBtnHtml = "";
+        if (isMyMessage) {
+          deleteBtnHtml = `<button onclick="deleteChatMessage(${msg.id})" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold bg-rose-500/10 px-2 py-0.5 rounded transition ml-1">Apagar 🗑️</button>`;
+        }
+
         return `
           <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl space-y-1 relative group">
             <div class="flex justify-between items-center text-[10px]">
@@ -1552,9 +1569,10 @@
                 <span class="bg-slate-900 border border-slate-800 px-1.5 py-0.5 rounded text-slate-400 font-mono">${msg.uf || 'BR'}</span>
                 ${msg.vote ? `<span class="border px-1.5 py-0.5 rounded font-bold ${voteBadgeClass}">${voteLabelText}</span>` : ''}
               </div>
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5">
                 <span class="text-slate-500 font-mono">${msg.time}</span>
                 <button onclick="setReplyTo(${msg.id}, '${msg.sender || 'Participante'}', '${cleanTextPreview}')" class="text-blue-400 hover:text-blue-300 text-[10px] font-bold bg-blue-500/10 px-2 py-0.5 rounded transition">Responder ↩️</button>
+                ${deleteBtnHtml}
               </div>
             </div>
             ${replyHtml}
@@ -1589,6 +1607,7 @@
 
       const newMsg = {
         id: Date.now(),
+        device_token: deviceSessionToken, // 🛡️ Guarda o autor da mensagem
         replyToId: replyingToMsgId,
         sender: nickname,
         uf: verifiedVoter.uf,
