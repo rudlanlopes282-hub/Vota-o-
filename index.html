@@ -729,7 +729,7 @@
           </div>
         </div>
 
-        <!-- CAIXA DE COMENTÁRIO COM BARRA DE ÍCONES DO TIKTOK (SEM ENVIO GERAL DE FOTOS) -->
+        <!-- CAIXA DE COMENTÁRIO COM BARRA DE ÍCONES DO TIKTOK -->
         <div id="chat-input-container" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-2.5 space-y-2">
           <div class="flex items-center gap-2">
             <input type="text" id="chat-input" placeholder="Adicionar comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-transparent text-xs text-white placeholder-slate-500 outline-none px-2 py-1">
@@ -801,14 +801,10 @@
     let hideName = false;
     let hideLocation = false;
 
-    // VARIÁVEIS PARA CONTROLAR A POSIÇÃO DO SELO NO CARD PAGO
     let sealPosLeft = 48;
     let sealPosTop = 95;
-
-    // VARIÁVEL PARA O CONTROLE DE RESPOSTAS DIRETAS (REPLY)
     let replyingToMsgId = null;
 
-    // GERAÇÃO DA ASSINATURA DO NAVEGADOR (FINGERPRINT)
     const deviceFingerprint = `${navigator.language}-${screen.width}x${screen.height}-${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
 
     let deviceSessionToken = localStorage.getItem('simulador_device_token');
@@ -902,7 +898,7 @@
       input.focus();
     }
 
-    // FUNÇÃO COM ALERTA DE ERRO CASO A MODERAÇÃO FALHE NO TELEMÓVEL
+    // 🛡️ FUNÇÃO DE UPLOAD COM MODERAÇÃO AUTOMÁTICA (NSFWJS)
     async function handleNewStickerUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -952,11 +948,27 @@
       reader.readAsDataURL(file);
     }
 
+    // 🗑️ FUNÇÃO PARA APAGAR FIGURINHA E REORGANIZAR ÍNDICES AUTOMATICAMENTE
+    function deleteCustomSticker(event, index) {
+      event.stopPropagation();
+      
+      if (confirm("Deseja realmente apagar esta figurinha?")) {
+        customStickers.splice(index, 1);
+        localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
+        renderCustomStickers();
+      }
+    }
+
+    // 🎨 RENDERIZAR FIGURINHAS COM BOTÃO DE EXCLUSÃO
     function renderCustomStickers() {
       const grid = document.getElementById('stickers-grid');
+      
       let customHtml = customStickers.map((imgBase64, index) => `
-        <div onclick="sendStickerMessage('${imgBase64}', true)" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl overflow-hidden cursor-pointer transition relative group">
-          <img src="${imgBase64}" class="w-full h-full object-cover">
+        <div class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl overflow-hidden cursor-pointer transition relative group">
+          <img src="${imgBase64}" class="w-full h-full object-cover" onclick="sendStickerMessage('${imgBase64}', true)">
+          <button onclick="deleteCustomSticker(event, ${index})" class="absolute top-1 right-1 bg-rose-600/90 hover:bg-rose-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow transition" title="Apagar figurinha">
+            ✕
+          </button>
         </div>
       `).join('');
 
