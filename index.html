@@ -801,9 +801,7 @@
         loadCloudStats();
       })
       .subscribe();
-  }
 
-  if (supabaseClient) {
     supabaseClient
       .channel('mudancas-mensagens')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
@@ -1023,7 +1021,7 @@
 
       const newMsg = {
         device_token: deviceSessionToken,
-        reply_to_id: replyingToMsgId,
+        reply_to_id: replyingToMsgId ? parseInt(replyingToMsgId) : null,
         sender: nickname,
         uf: verifiedVoter.uf,
         vote: userVote,
@@ -1039,7 +1037,7 @@
         const { error } = await supabaseClient.from('mensagens').insert([newMsg]);
         if (error) {
           console.error("Erro ao enviar figurinha para o Supabase:", error);
-          alert("⚠️ Erro ao enviar figurinha para a nuvem.");
+          alert("⚠️ Erro Supabase: " + (error.message || JSON.stringify(error)));
         } else {
           loadCloudMessages();
         }
@@ -1641,7 +1639,7 @@
 
       const newMsg = {
         device_token: deviceSessionToken,
-        reply_to_id: replyingToMsgId,
+        reply_to_id: replyingToMsgId ? parseInt(replyingToMsgId) : null,
         sender: nickname,
         uf: verifiedVoter.uf,
         vote: userVote,
@@ -1657,7 +1655,7 @@
         const { error } = await supabaseClient.from('mensagens').insert([newMsg]);
         if (error) {
           console.error("Erro ao enviar mensagem para o Supabase:", error);
-          alert("⚠️ Erro ao enviar mensagem para a nuvem.");
+          alert("⚠️ Erro Supabase: " + (error.message || JSON.stringify(error)));
         } else {
           loadCloudMessages();
         }
@@ -2016,20 +2014,22 @@
 
       updateReceiptTextDisplay();
 
-      if (confirmedVoteData.opcao === '22') {
+      const userOption = confirmedVoteData.opcao;
+
+      if (userOption === '22') {
         optionText.textContent = "FLÁVIO BOLSONARO — 22";
         optionText.className = "text-lg font-black text-amber-400";
-      } else if (confirmedVoteData.opcao === '13') {
+      } else if (userOption === '13') {
         optionText.textContent = "LULA — 13";
         optionText.className = "text-lg font-black text-rose-500";
-      } else if (confirmedVoteData.opcao === 'BRANCO') {
+      } else if (userOption === 'BRANCO') {
         optionText.textContent = "VOTO EM BRANCO";
         optionText.className = "text-lg font-black text-slate-200";
-      } else if (confirmedVoteData.opcao === 'NULO') {
+      } else if (userOption === 'NULO') {
         optionText.textContent = "VOTO NULO";
         optionText.className = "text-lg font-black text-rose-400";
       } else {
-        optionText.textContent = "VOTO " + confirmedVoteData.opcao;
+        optionText.textContent = "VOTO " + userOption;
         optionText.className = "text-lg font-black text-slate-300";
       }
 
@@ -2039,14 +2039,13 @@
         topHeader.classList.add('hidden');
         if (posControls) posControls.classList.remove('hidden');
 
-        if (confirmedVoteData.opcao === '22') {
+        // LÓGICA DE DEFINIÇÃO DO IMAGEM DE BACKGROUND CONFORME VOTO
+        if (userOption === '22') {
           receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
-        } else if (confirmedVoteData.opcao === '13') {
+        } else if (userOption === '13') {
           receiptCard.style.backgroundImage = "url('comprovante-13.jpg')";
-        } else if (confirmedVoteData.opcao === 'BRANCO') {
+        } else if (userOption === 'BRANCO') {
           receiptCard.style.backgroundImage = "url('comprovante-em-branco.jpg')";
-        } else if (confirmedVoteData.opcao === 'NULO') {
-          receiptCard.style.backgroundImage = "url('comprovante-nulo.jpg')";
         } else {
           receiptCard.style.backgroundImage = "url('comprovante-nulo.jpg')";
         }
