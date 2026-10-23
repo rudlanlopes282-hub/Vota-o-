@@ -789,10 +789,11 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://SEU_PROJETO.supabase.co"; 
-    const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_SUPABASE"; 
-    const isSupabaseConfigured = window.supabase && SUPABASE_URL !== "https://SEU_PROJETO.supabase.co" && !SUPABASE_URL.includes("SEU_PROJETO");
-    const supabaseClient = isSupabaseConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+  const SUPABASE_URL = "https://eisnibawuzcgdpkrrzrr.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_8Uxo8QibKqSN-9fA9gt5Pw_1Urbvhpt";
+  const isSupabaseConfigured = window.supabase && SUPABASE_URL !== "https://SEU_PROJETO.supabase.co" && !SUPABASE_URL.includes("SEU_PROJETO");
+  const supabaseClient = isSupabaseConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
 
     let pixPollInterval = null;
     let pendingVoteObj = null;
