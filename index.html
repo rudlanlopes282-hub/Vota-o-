@@ -814,14 +814,13 @@
     let sealPosTop = 95;
     let replyingToMsgId = null;
 
-    const deviceFingerprint = deviceSessionToken;
-
-
     let deviceSessionToken = localStorage.getItem('simulador_device_token');
     if (!deviceSessionToken) {
       deviceSessionToken = 'tok_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
       localStorage.setItem('simulador_device_token', deviceSessionToken);
     }
+
+    const deviceFingerprint = deviceSessionToken;
 
     const stateCities = {
       "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal", "Parauapebas", "Abaetetuba", "Marituba", "Cametá", "Bragança", "Paragominas"],
