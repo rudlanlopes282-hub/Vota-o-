@@ -827,6 +827,19 @@
       { id: 1, sender: "Moderação", uf: "DF", vote: null, text: "Bem-vindo ao debate público independente. Mantenha o respeito.", time: "Agora", isSystem: true }
     ]));
 
+    // LISTA DE FILTRO RIGOROSO (MODERAÇÃO E PREVENÇÃO DE DESINFORMAÇÃO)
+    const palavrasProibidas = [
+      "navegador anônimo", "aba anônima", "janela anônima", "modo anônimo", 
+      "votar várias vezes", "votar mais de uma vez", "burlar o voto", "fraudar o voto",
+      "múltiplos votos", "voto duplo", "voto falso",
+      "lixo", "imbecil", "idiota", "vagabundo"
+    ];
+
+    function verificarConteudoChat(texto) {
+      const textoMinusculo = texto.toLowerCase();
+      return !palavrasProibidas.some(termo => textoMinusculo.includes(termo));
+    }
+
     // FUNÇÃO ACIONADA QUANDO O TURNSTILE É CONCLUÍDO COM SUCESSO
     async function onTurnstileSuccess(token) {
       document.getElementById('sec-turnstile-gate').classList.add('hidden');
@@ -1362,6 +1375,12 @@
       const input = document.getElementById('chat-input');
       const text = input.value.trim();
       if (!text) return;
+
+      // Validação do filtro rigoroso
+      if (!verificarConteudoChat(text)) {
+        alert("⚠️ Sua mensagem contém termos bloqueados pelas regras de moderação ou menções inválidas sobre o sistema de votação.");
+        return;
+      }
 
       const nickname = voterNicknames[deviceFingerprint] || verifiedVoter.nickname || verifiedVoter.name.split(' ')[0];
       const userVote = voterChoices[deviceFingerprint] || confirmedVoteData?.opcao || 'NULO';
