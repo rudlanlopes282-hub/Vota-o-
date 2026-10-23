@@ -793,1345 +793,1163 @@
   const SUPABASE_ANON_KEY = "sb_publishable_8Uxo8QibKqSN-9fA9gt5Pw_1Urbvhpt";
   const isSupabaseConfigured = window.supabase && SUPABASE_URL !== "https://SEU_PROJETO.supabase.co" && !SUPABASE_URL.includes("SEU_PROJETO");
   const supabaseClient = isSupabaseConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+  
   if (supabaseClient) {
-  supabaseClient
-    .channel('mudancas-votos')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votos' }, payload => {
-      loadCloudStats();
-    })
-    .subscribe();
+    supabaseClient
+      .channel('mudancas-votos')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votos' }, payload => {
+        loadCloudStats();
+      })
+      .subscribe();
+
+    supabaseClient
+      .channel('mudancas-mensagens')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
+        if (typeof loadCloudMessages === 'function') {
+          loadCloudMessages();
+        }
+      })
+      .subscribe();
   }
 
-  if (supabaseClient) {
-  supabaseClient
-    .channel('mudancas-mensagens')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
-      // Função que atualiza o chat na tela
-      if (typeof loadMessages === 'function') {
-        loadMessages();
-      }
-    })
-    .subscribe();
+  let pixPollInterval = null;
+  let pendingVoteObj = null;
+  let confirmedVoteData = null;
+
+  let hideName = false;
+  let hideLocation = false;
+
+  let sealPosLeft = 48;
+  let sealPosTop = 95;
+  let replyingToMsgId = null;
+
+  let deviceSessionToken = localStorage.getItem('simulador_device_token');
+  if (!deviceSessionToken) {
+    deviceSessionToken = 'tok_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+    localStorage.setItem('simulador_device_token', deviceSessionToken);
   }
 
+  const deviceFingerprint = deviceSessionToken;
 
-    let pixPollInterval = null;
-    let pendingVoteObj = null;
-    let confirmedVoteData = null;
+  const stateCities = {
+    "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal", "Parauapebas", "Abaetetuba", "Marituba", "Cametá", "Bragança", "Paragominas"],
+    "AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira", "Tarauacá"],
+    "AL": ["Maceió", "Arapiraca", "Rio Largo", "Palmeira dos Índios"],
+    "AP": ["Macapá", "Santana", "Laranjal do Jari"],
+    "AM": ["Manaus", "Parintins", "Itacoatiara", "Manacapuru"],
+    "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Itabuna"],
+    "CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral"],
+    "DF": ["Brasília", "Ceilândia", "Taguatinga", "Samambaia"],
+    "ES": ["Vitória", "Vila Velha", "Serra", "Cariacica", "Guarapari"],
+    "GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde"],
+    "MA": ["São Luís", "Imperatriz", "São José de Ribamar", "Timon", "Caxias"],
+    "MT": ["Cuiabá", "Várzea Grande", "Rondonópolis", "Sinop", "Tangará da Serra"],
+    "MS": ["Campo Grande", "Dourados", "Três Lagoas", "Corumbá"],
+    "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros"],
+    "PB": ["João Pessoa", "Campina Grande", "Santa Rita", "Patos"],
+    "PR": ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "Foz do Iguaçu"],
+    "PE": ["Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina"],
+    "PI": ["Teresina", "Parnaíba", "Picos", "Floriano"],
+    "RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Petropolis"],
+    "RN": ["Natal", "Mossoró", "Parnamirim", "São Gonçalo do Amarante"],
+    "RS": ["Porto Alegre", "Caxias do Sul", "Canoas", "Pelotas", "Santa Maria", "Gravataí"],
+    "RO": ["Porto Velho", "Ji-Paraná", "Ariquemes", "Vilhena"],
+    "RR": ["Boa Vista", "Rorainópolis", "Caracaraí"],
+    "SC": ["Florianópolis", "Joinville", "Blumenau", "São José", "Criciúma"],
+    "SP": ["São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo", "Santo André", "Osasco", "Ribeirão Preto", "Sorocaba"],
+    "SE": ["Aracaju", "Nossa Senhora do Socorro", "Lagarto", "Itabaiana"],
+    "TO": ["Palmas", "Araguaína", "Gurupi", "Porto Nacional"],
+    "ZZ": ["Exterior / Voto no Exterior"]
+  };
 
-    let hideName = false;
-    let hideLocation = false;
+  let verifiedVoter = null;
+  let currentInput = "";
+  let isBranco = false;
 
-    let sealPosLeft = 48;
-    let sealPosTop = 95;
-    let replyingToMsgId = null;
+  let votedDevices = JSON.parse(localStorage.getItem('simulador_voted_devices') || "{}");
+  let voterChoices = JSON.parse(localStorage.getItem('simulador_voter_choices') || "{}");
+  let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}");
+  let voterNames = JSON.parse(localStorage.getItem('simulador_voter_names') || "{}");
+  let voterDevicePins = JSON.parse(localStorage.getItem('simulador_voter_pins') || "{}");
+  let voterLocations = JSON.parse(localStorage.getItem('simulador_voter_locations') || "{}");
+  let paidSupporters = JSON.parse(localStorage.getItem('simulador_paid_supporters') || "{}");
+  let customStickers = JSON.parse(localStorage.getItem('simulador_custom_stickers') || "[]");
 
-    let deviceSessionToken = localStorage.getItem('simulador_device_token');
-    if (!deviceSessionToken) {
-      deviceSessionToken = 'tok_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
-      localStorage.setItem('simulador_device_token', deviceSessionToken);
+  let votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+  let regionalVotes = {
+    'Norte': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+    'Nordeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+    'Sudeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+    'Sul': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+    'Centro-Oeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+    'Exterior': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 }
+  };
+  let cityVotes = {};
+
+  let chatMessages = [];
+
+  async function loadCloudMessages() {
+    if (!supabaseClient) {
+      chatMessages = JSON.parse(localStorage.getItem('simulador_chat_msgs') || "[]");
+      renderChat();
+      return;
     }
-
-    const deviceFingerprint = deviceSessionToken;
-
-    const stateCities = {
-      "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal", "Parauapebas", "Abaetetuba", "Marituba", "Cametá", "Bragança", "Paragominas"],
-      "AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira", "Tarauacá"],
-      "AL": ["Maceió", "Arapiraca", "Rio Largo", "Palmeira dos Índios"],
-      "AP": ["Macapá", "Santana", "Laranjal do Jari"],
-      "AM": ["Manaus", "Parintins", "Itacoatiara", "Manacapuru"],
-      "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Itabuna"],
-      "CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral"],
-      "DF": ["Brasília", "Ceilândia", "Taguatinga", "Samambaia"],
-      "ES": ["Vitória", "Vila Velha", "Serra", "Cariacica", "Guarapari"],
-      "GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde"],
-      "MA": ["São Luís", "Imperatriz", "São José de Ribamar", "Timon", "Caxias"],
-      "MT": ["Cuiabá", "Várzea Grande", "Rondonópolis", "Sinop", "Tangará da Serra"],
-      "MS": ["Campo Grande", "Dourados", "Três Lagoas", "Corumbá"],
-      "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros"],
-      "PB": ["João Pessoa", "Campina Grande", "Santa Rita", "Patos"],
-      "PR": ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "Foz do Iguaçu"],
-      "PE": ["Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina"],
-      "PI": ["Teresina", "Parnaíba", "Picos", "Floriano"],
-      "RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Petropolis"],
-      "RN": ["Natal", "Mossoró", "Parnamirim", "São Gonçalo do Amarante"],
-      "RS": ["Porto Alegre", "Caxias do Sul", "Canoas", "Pelotas", "Santa Maria", "Gravataí"],
-      "RO": ["Porto Velho", "Ji-Paraná", "Ariquemes", "Vilhena"],
-      "RR": ["Boa Vista", "Rorainópolis", "Caracaraí"],
-      "SC": ["Florianópolis", "Joinville", "Blumenau", "São José", "Criciúma"],
-      "SP": ["São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo", "Santo André", "Osasco", "Ribeirão Preto", "Sorocaba"],
-      "SE": ["Aracaju", "Nossa Senhora do Socorro", "Lagarto", "Itabaiana"],
-      "TO": ["Palmas", "Araguaína", "Gurupi", "Porto Nacional"],
-      "ZZ": ["Exterior / Voto no Exterior"]
-    };
-
-    let verifiedVoter = null;
-    let currentInput = "";
-    let isBranco = false;
-
-    let votedDevices = JSON.parse(localStorage.getItem('simulador_voted_devices') || "{}");
-    let voterChoices = JSON.parse(localStorage.getItem('simulador_voter_choices') || "{}");
-    let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}");
-    let voterNames = JSON.parse(localStorage.getItem('simulador_voter_names') || "{}");
-    let voterDevicePins = JSON.parse(localStorage.getItem('simulador_voter_pins') || "{}");
-    let voterLocations = JSON.parse(localStorage.getItem('simulador_voter_locations') || "{}");
-    let paidSupporters = JSON.parse(localStorage.getItem('simulador_paid_supporters') || "{}");
-    let customStickers = JSON.parse(localStorage.getItem('simulador_custom_stickers') || "[]");
-
-    let votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-    let regionalVotes = {
-      'Norte': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Nordeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Sudeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Sul': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Centro-Oeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
-      'Exterior': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 }
-    };
-    let cityVotes = {};
-
-    let chatMessages = [];
-
-    async function loadCloudMessages() {
     const { data, error } = await supabaseClient
-    .from('mensagens')
-    .select('*')
-    .order('id', { ascending: true });
+      .from('mensagens')
+      .select('*')
+      .order('id', { ascending: true });
     
     if (!error && data) {
-    chatMessages = data;
-    // Função para atualizar as mensagens no ecrã
-    if (typeof renderChat === 'function') {
+      chatMessages = data;
       renderChat();
-      }
-     }
+    }
+  }
+
+  loadCloudMessages();
+
+  const palavrasProibidas = [
+    "navegador anônimo", "aba anônima", "janela anônima", "modo anônimo", 
+    "votar várias vezes", "votar mais de uma vez", "burlar o voto", "fraudar o voto",
+    "múltiplos votos", "voto duplo", "voto falso",
+    "lixo", "imbecil", "idiota", "vagabundo"
+  ];
+
+  function verificarConteudoChat(texto) {
+    const textoMinusculo = texto.toLowerCase();
+    return !palavrasProibidas.some(termo => textoMinusculo.includes(termo));
+  }
+
+  function toggleStickerDrawer() {
+    const drawer = document.getElementById('sticker-drawer');
+    drawer.classList.toggle('hidden');
+    if (!drawer.classList.contains('hidden')) {
+      renderCustomStickers();
+    }
+  }
+
+  function insertAtSymbol() {
+    const input = document.getElementById('chat-input');
+    input.value += "@";
+    input.focus();
+  }
+
+  async function handleNewStickerUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert("⚠️ Por favor, selecione apenas arquivos de imagem válidos.");
+      return;
     }
 
-    loadCloudMessages();
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const imgDataUrl = e.target.result;
 
+      const btnIcon = document.getElementById('sticker-btn-icon');
+      const btnText = document.getElementById('sticker-btn-text');
+      if (btnIcon) btnIcon.textContent = "⏳";
+      if (btnText) btnText.textContent = "Analisando...";
 
-    const palavrasProibidas = [
-      "navegador anônimo", "aba anônima", "janela anônima", "modo anônimo", 
-      "votar várias vezes", "votar mais de uma vez", "burlar o voto", "fraudar o voto",
-      "múltiplos votos", "voto duplo", "voto falso",
-      "lixo", "imbecil", "idiota", "vagabundo"
-    ];
+      const img = new Image();
+      img.src = imgDataUrl;
 
-    function verificarConteudoChat(texto) {
-      const textoMinusculo = texto.toLowerCase();
-      return !palavrasProibidas.some(termo => textoMinusculo.includes(termo));
-    }
-
-    function toggleStickerDrawer() {
-      const drawer = document.getElementById('sticker-drawer');
-      drawer.classList.toggle('hidden');
-      if (!drawer.classList.contains('hidden')) {
-        renderCustomStickers();
-      }
-    }
-
-    function insertAtSymbol() {
-      const input = document.getElementById('chat-input');
-      input.value += "@";
-      input.focus();
-    }
-
-    // 🛡️ FUNÇÃO DE UPLOAD COM MODERAÇÃO AUTOMÁTICA (NSFWJS)
-    async function handleNewStickerUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        alert("⚠️ Por favor, selecione apenas arquivos de imagem válidos.");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = async function(e) {
-        const imgDataUrl = e.target.result;
-
-        const btnIcon = document.getElementById('sticker-btn-icon');
-        const btnText = document.getElementById('sticker-btn-text');
-        if (btnIcon) btnIcon.textContent = "⏳";
-        if (btnText) btnText.textContent = "Analisando...";
-
-        const img = new Image();
-        img.src = imgDataUrl;
-
-        img.onload = async function() {
-          try {
+      img.onload = async function() {
+        try {
+          if (window.nsfw) {
             const model = await nsfw.load();
             const predictions = await model.classify(img);
-            
             const isAdult = predictions.some(p => (p.className === 'Porn' || p.className === 'Sexy') && p.probability > 0.6);
 
             if (isAdult) {
               alert("🚫 Conteúdo impróprio detectado! Esta imagem foi bloqueada pelas regras de moderação.");
               return;
             }
-
-            customStickers.push(imgDataUrl);
-            localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
-            renderCustomStickers();
-
-          } catch (err) {
-            console.error("Erro na verificação da imagem:", err);
-            alert("⚠️ Erro na moderação da imagem no dispositivo: " + err.message);
-          } finally {
-            if (btnIcon) btnIcon.textContent = "+";
-            if (btnText) btnText.textContent = "Adicionar";
           }
-        };
+
+          customStickers.push(imgDataUrl);
+          localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
+          renderCustomStickers();
+
+        } catch (err) {
+          console.error("Erro na verificação da imagem:", err);
+          alert("⚠️ Erro na moderação da imagem no dispositivo: " + err.message);
+        } finally {
+          if (btnIcon) btnIcon.textContent = "+";
+          if (btnText) btnText.textContent = "Adicionar";
+        }
       };
-      reader.readAsDataURL(file);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function deleteCustomSticker(event, index) {
+    event.stopPropagation();
+    if (confirm("Deseja realmente apagar esta figurinha?")) {
+      customStickers.splice(index, 1);
+      localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
+      renderCustomStickers();
+    }
+  }
+
+  function renderCustomStickers() {
+    const grid = document.getElementById('stickers-grid');
+    
+    let customHtml = customStickers.map((imgBase64, index) => `
+      <div class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl overflow-hidden cursor-pointer transition relative group">
+        <img src="${imgBase64}" class="w-full h-full object-cover" onclick="sendStickerMessage('${imgBase64}', true)">
+        <button onclick="deleteCustomSticker(event, ${index})" class="absolute top-1 right-1 bg-rose-600/90 hover:bg-rose-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow transition" title="Apagar figurinha">
+          ✕
+        </button>
+      </div>
+    `).join('');
+
+    grid.innerHTML = `
+      <label class="aspect-square bg-slate-950 hover:bg-slate-800 border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl flex flex-col items-center justify-center cursor-pointer transition group">
+        <span id="sticker-btn-icon" class="text-xl text-slate-400 group-hover:text-blue-400 font-bold">+</span>
+        <span id="sticker-btn-text" class="text-[9px] text-slate-500 mt-1 uppercase font-semibold">Adicionar</span>
+        <input type="file" id="sticker-file-input" accept="image/*" class="hidden" onchange="handleNewStickerUpload(event)">
+      </label>
+      <div onclick="sendStickerMessage('🔥')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">🔥</div>
+      <div onclick="sendStickerMessage('🇧🇷')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">🇧🇷</div>
+      <div onclick="sendStickerMessage('⭐')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">⭐</div>
+      ${customHtml}
+    `;
+  }
+
+  async function sendStickerMessage(content, isImage = false) {
+    if (!verifiedVoter || !paidSupporters[deviceFingerprint]) return;
+
+    const nickname = voterNicknames[deviceFingerprint] || verifiedVoter.nickname || verifiedVoter.name.split(' ')[0];
+    const userVote = voterChoices[deviceFingerprint] || confirmedVoteData?.opcao || 'NULO';
+
+    const newMsg = {
+      device_token: deviceSessionToken,
+      replyToId: replyingToMsgId,
+      sender: nickname,
+      uf: verifiedVoter.uf,
+      vote: userVote,
+      text: isImage ? `<img src="${content}" class="w-24 h-24 rounded-lg object-cover mt-1">` : content,
+      isHtml: isImage,
+      time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    if (supabaseClient) {
+      await supabaseClient.from('mensagens').insert([newMsg]);
+    } else {
+      newMsg.id = Date.now();
+      chatMessages.push(newMsg);
+      localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
+      renderChat();
     }
 
-    // 🗑️ FUNÇÃO PARA APAGAR FIGURINHA E REORGANIZAR ÍNDICES
-    function deleteCustomSticker(event, index) {
-      event.stopPropagation();
-      
-      if (confirm("Deseja realmente apagar esta figurinha?")) {
-        customStickers.splice(index, 1);
-        localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
-        renderCustomStickers();
+    cancelReply();
+    toggleStickerDrawer();
+  }
+
+  async function deleteChatMessage(msgId) {
+    if (confirm("Deseja realmente apagar esta mensagem?")) {
+      if (supabaseClient) {
+        await supabaseClient.from('mensagens').delete().eq('id', msgId);
+      }
+      chatMessages = chatMessages.filter(msg => msg.id !== msgId);
+      localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
+      renderChat();
+    }
+  }
+
+  async function onTurnstileSuccess(token) {
+    document.getElementById('sec-turnstile-gate').classList.add('hidden');
+    document.getElementById('main-site-content').classList.remove('hidden');
+
+    populateQueryUFs();
+    await loadCloudStats();
+    renderChat();
+
+    if (voterLocations[deviceFingerprint]) {
+      const loc = voterLocations[deviceFingerprint];
+      document.getElementById('voter-uf-select').value = loc.uf;
+      document.getElementById('voter-city-search').value = loc.city;
+      document.getElementById('selected-city-val').value = loc.city;
+    }
+
+    if (voterNames[deviceFingerprint]) {
+      document.getElementById('voter-name').value = voterNames[deviceFingerprint];
+    }
+
+    if (voterNicknames[deviceFingerprint]) {
+      document.getElementById('voter-nickname').value = voterNicknames[deviceFingerprint];
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    setInterval(() => {
+      if (!document.getElementById('main-site-content').classList.contains('hidden')) {
+        loadCloudStats();
+      }
+    }, 10000);
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#voter-city-search') && !e.target.closest('#city-suggestions-container')) {
+        document.getElementById('city-suggestions-container').classList.add('hidden');
+      }
+    });
+  });
+
+  async function checkVoterInDatabase(fingerprintKey) {
+    if (!supabaseClient) return null;
+    try {
+      const { data, error } = await supabaseClient
+        .from('votos')
+        .select('device_token, opcao, cidade, uf, created_at')
+        .eq('device_token', fingerprintKey)
+        .maybeSingle();
+
+      if (error || !data) return null;
+      return data;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  async function loadCloudStats() {
+    const btnRefresh = document.getElementById('btn-refresh-stats');
+    const iconEl = document.getElementById('refresh-icon');
+    const spinnerEl = document.getElementById('refresh-spinner');
+
+    if (btnRefresh && iconEl && spinnerEl) {
+      btnRefresh.disabled = true;
+      iconEl.classList.add('hidden');
+      spinnerEl.classList.remove('hidden');
+    }
+
+    let allVotesData = [];
+
+    try {
+      if (supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient.from('votos').select('*');
+          if (!error && data) allVotesData = data;
+          else allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+        } catch (err) {
+          allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+        }
+      } else {
+        allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+      }
+    } finally {
+      if (btnRefresh && iconEl && spinnerEl) {
+        setTimeout(() => {
+          btnRefresh.disabled = false;
+          iconEl.classList.remove('hidden');
+          spinnerEl.classList.add('hidden');
+        }, 300);
       }
     }
 
-    // 🎨 RENDERIZAR FIGURINHAS COM BOTÃO DE EXCLUSÃO
-    function renderCustomStickers() {
-      const grid = document.getElementById('stickers-grid');
-      
-      let customHtml = customStickers.map((imgBase64, index) => `
-        <div class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl overflow-hidden cursor-pointer transition relative group">
-          <img src="${imgBase64}" class="w-full h-full object-cover" onclick="sendStickerMessage('${imgBase64}', true)">
-          <button onclick="deleteCustomSticker(event, ${index})" class="absolute top-1 right-1 bg-rose-600/90 hover:bg-rose-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow transition" title="Apagar figurinha">
-            ✕
-          </button>
+    votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+    cityVotes = {};
+    Object.keys(regionalVotes).forEach(r => {
+      regionalVotes[r] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+    });
+
+    allVotesData.forEach(item => {
+      const op = item.opcao;
+      if (votes[op] !== undefined) votes[op]++;
+      else votes['NULO']++;
+
+      const reg = item.regiao || 'Norte';
+      if (regionalVotes[reg]) {
+        if (regionalVotes[reg][op] !== undefined) regionalVotes[reg][op]++;
+        else regionalVotes[reg]['NULO']++;
+      }
+
+      const cityKey = `${item.cidade || 'Capital'} - ${item.uf || 'PA'}`;
+      if (!cityVotes[cityKey]) {
+        cityVotes[cityKey] = { uf: item.uf || 'PA', city: item.cidade || 'Capital', '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+      }
+      if (cityVotes[cityKey][op] !== undefined) cityVotes[cityKey][op]++;
+      else cityVotes[cityKey]['NULO']++;
+
+      if (item.device_token) votedDevices[item.device_token] = true;
+    });
+
+    localStorage.setItem('simulador_voted_devices', JSON.stringify(votedDevices));
+    renderStats();
+    renderCityResults();
+  }
+
+  function renderStats() {
+    const total = votes['22'] + votes['13'] + votes['BRANCO'] + votes['NULO'];
+    const validos = votes['22'] + votes['13'];
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-validos').textContent = validos;
+    document.getElementById('stat-branco').textContent = votes['BRANCO'];
+    document.getElementById('stat-nulo').textContent = votes['NULO'];
+
+    const pct22 = validos > 0 ? ((votes['22'] / validos) * 100).toFixed(1) : "0.0";
+    const pct13 = validos > 0 ? ((votes['13'] / validos) * 100).toFixed(1) : "0.0";
+
+    document.getElementById('pct-22').textContent = `${pct22}%`;
+    document.getElementById('bar-22').style.width = `${pct22}%`;
+    document.getElementById('count-22').textContent = `${votes['22']} votos`;
+
+    document.getElementById('pct-13').textContent = `${pct13}%`;
+    document.getElementById('bar-13').style.width = `${pct13}%`;
+    document.getElementById('count-13').textContent = `${votes['13']} votos`;
+
+    const regContainer = document.getElementById('regional-stats-container');
+    regContainer.innerHTML = "";
+
+    Object.entries(regionalVotes).forEach(([regionName, regData]) => {
+      const regValidos = regData['22'] + regData['13'];
+      const rPct22 = regValidos > 0 ? ((regData['22'] / regValidos) * 100).toFixed(1) : "0.0";
+      const rPct13 = regValidos > 0 ? ((regData['13'] / regValidos) * 100).toFixed(1) : "0.0";
+
+      regContainer.innerHTML += `
+        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5 text-xs">
+          <div class="flex justify-between font-bold text-slate-300">
+            <span>${regionName}</span>
+            <span class="text-[10px] text-slate-500 font-mono">${regValidos} votos válidos</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded">
+              <span class="text-amber-400 font-extrabold">22: ${rPct22}%</span>
+              <span class="text-slate-500 font-mono">(${regData['22']})</span>
+            </div>
+            <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded">
+              <span class="text-rose-400 font-extrabold">13: ${rPct13}%</span>
+              <span class="text-slate-500 font-mono">(${regData['13']})</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  function populateQueryUFs() {
+    const select = document.getElementById('query-uf-select');
+    select.innerHTML = '<option value="">Todas as UFs</option>';
+    Object.keys(stateCities).forEach(uf => {
+      select.innerHTML += `<option value="${uf}">${uf}</option>`;
+    });
+  }
+
+  function renderCityResults() {
+    const selectedUf = document.getElementById('query-uf-select').value;
+    const query = document.getElementById('query-city-filter').value.toLowerCase().trim();
+    const listEl = document.getElementById('city-results-list');
+
+    const entries = Object.values(cityVotes);
+    const filtered = entries.filter(item => {
+      const matchUf = selectedUf === "" || item.uf === selectedUf;
+      const matchCity = query === "" || item.city.toLowerCase().includes(query);
+      return matchUf && matchCity;
+    });
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-3">Nenhum município encontrado com voto registrado.</p>`;
+      return;
+    }
+
+    listEl.innerHTML = filtered.map(item => {
+      const validos = item['22'] + item['13'];
+      const p22 = validos > 0 ? ((item['22'] / validos) * 100).toFixed(1) : "0.0";
+      const p13 = validos > 0 ? ((item['13'] / validos) * 100).toFixed(1) : "0.0";
+
+      return `
+        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1 text-xs">
+          <div class="flex justify-between font-bold text-slate-200">
+            <span class="truncate">${item.city} (${item.uf})</span>
+            <span class="text-[10px] text-slate-500 font-mono">${validos} válidos</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-[10px]">
+            <div class="text-amber-400 font-extrabold">22: ${p22}% <span class="text-slate-500">(${item['22']})</span></div>
+            <div class="text-rose-400 font-extrabold">13: ${p13}% <span class="text-slate-500">(${item['13']})</span></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function onUFChange() {
+    const ufSelect = document.getElementById('voter-uf-select');
+    const selectedUf = ufSelect.value;
+    const cities = stateCities[selectedUf] || ["Capital"];
+    
+    const cityInput = document.getElementById('voter-city-search');
+    cityInput.value = cities[0];
+    cityInput.dataset.touched = ""; 
+    
+    document.getElementById('selected-city-val').value = cities[0];
+  }
+
+  function filterCityOptions() {
+    const uf = document.getElementById('voter-uf-select').value;
+    const cities = stateCities[uf] || [];
+    const query = document.getElementById('voter-city-search').value.toLowerCase().trim();
+    const container = document.getElementById('city-suggestions-container');
+
+    const filtered = query === "" ? cities : cities.filter(c => c.toLowerCase().includes(query));
+
+    let html = "";
+    if (filtered.length > 0) {
+      html = filtered.map(c => `
+        <div onclick="selectCity('${c}')" class="p-2.5 text-xs text-slate-200 hover:bg-slate-900 rounded-lg cursor-pointer flex items-center gap-2">
+          <span>📍</span>
+          <span class="font-medium">${c}</span>
         </div>
       `).join('');
-
-      grid.innerHTML = `
-        <label class="aspect-square bg-slate-950 hover:bg-slate-800 border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl flex flex-col items-center justify-center cursor-pointer transition group">
-          <span id="sticker-btn-icon" class="text-xl text-slate-400 group-hover:text-blue-400 font-bold">+</span>
-          <span id="sticker-btn-text" class="text-[9px] text-slate-500 mt-1 uppercase font-semibold">Adicionar</span>
-          <input type="file" id="sticker-file-input" accept="image/*" class="hidden" onchange="handleNewStickerUpload(event)">
-        </label>
-        <div onclick="sendStickerMessage('🔥')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">🔥</div>
-        <div onclick="sendStickerMessage('🇧🇷')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">🇧🇷</div>
-        <div onclick="sendStickerMessage('⭐')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">⭐</div>
-        ${customHtml}
+    } else {
+      html = `
+        <div onclick="selectCity('${document.getElementById('voter-city-search').value}')" class="p-2.5 text-xs text-blue-400 hover:bg-slate-900 rounded-lg cursor-pointer font-bold">
+          📍 Usar: "${document.getElementById('voter-city-search').value}"
+        </div>
       `;
     }
 
-    function sendStickerMessage(content, isImage = false) {
-      if (!verifiedVoter || !paidSupporters[deviceFingerprint]) return;
+    container.innerHTML = html;
+    container.classList.remove('hidden');
+  }
 
-      const nickname = voterNicknames[deviceFingerprint] || verifiedVoter.nickname || verifiedVoter.name.split(' ')[0];
-      const userVote = voterChoices[deviceFingerprint] || confirmedVoteData?.opcao || 'NULO';
+  function selectCity(cityName) {
+    document.getElementById('voter-city-search').value = cityName;
+    document.getElementById('selected-city-val').value = cityName;
+    document.getElementById('city-suggestions-container').classList.add('hidden');
+  }
 
-      const newMsg = {
-        id: Date.now(),
-        device_token: deviceSessionToken,
-        replyToId: replyingToMsgId,
-        sender: nickname,
-        uf: verifiedVoter.uf,
-        vote: userVote,
-        text: isImage ? `<img src="${content}" class="w-24 h-24 rounded-lg object-cover mt-1">` : content,
-        isHtml: isImage,
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-      };
+  async function submitStep1() {
+    const name = document.getElementById('voter-name').value.trim();
+    const nickname = document.getElementById('voter-nickname').value.trim() || name.split(' ')[0];
+    const pin = document.getElementById('voter-pin').value.trim();
+    const ufSelect = document.getElementById('voter-uf-select');
+    const city = document.getElementById('voter-city-search').value.trim() || "Capital";
+    const errBox = document.getElementById('auth-error');
 
-      chatMessages.push(newMsg);
-      localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
+    errBox.classList.add('hidden');
 
-      cancelReply();
-      toggleStickerDrawer();
-      renderChat();
+    if (!name) {
+      errBox.textContent = "Por favor, digite seu nome completo.";
+      errBox.classList.remove('hidden');
+      return;
     }
 
-    // 🗑️ FUNÇÃO PARA APAGAR MENSAGEM DO CHAT PELO ID
-    function deleteChatMessage(msgId) {
-      if (confirm("Deseja realmente apagar esta mensagem?")) {
-        chatMessages = chatMessages.filter(msg => msg.id !== msgId);
-        localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
-        renderChat();
-      }
+    if (!pin || pin.length < 4) {
+      errBox.textContent = "⚠️ Digite um PIN de segurança com 4 dígitos para proteger sua sessão.";
+      errBox.classList.remove('hidden');
+      return;
     }
 
-    async function onTurnstileSuccess(token) {
-      document.getElementById('sec-turnstile-gate').classList.add('hidden');
-      document.getElementById('main-site-content').classList.remove('hidden');
-
-      populateQueryUFs();
-      await loadCloudStats();
-      renderChat();
-
-      if (voterLocations[deviceFingerprint]) {
-        const loc = voterLocations[deviceFingerprint];
-        document.getElementById('voter-uf-select').value = loc.uf;
-        document.getElementById('voter-city-search').value = loc.city;
-        document.getElementById('selected-city-val').value = loc.city;
-      }
-
-      if (voterNames[deviceFingerprint]) {
-        document.getElementById('voter-name').value = voterNames[deviceFingerprint];
-      }
-
-      if (voterNicknames[deviceFingerprint]) {
-        document.getElementById('voter-nickname').value = voterNicknames[deviceFingerprint];
-      }
+    if (voterDevicePins[deviceFingerprint] && voterDevicePins[deviceFingerprint] !== pin) {
+      errBox.textContent = "❌ PIN incorreto para este dispositivo! Outro PIN foi cadastrado anteriormente.";
+      errBox.classList.remove('hidden');
+      return;
+    } else if (!voterDevicePins[deviceFingerprint]) {
+      voterDevicePins[deviceFingerprint] = pin;
+      localStorage.setItem('simulador_voter_pins', JSON.stringify(voterDevicePins));
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      setInterval(() => {
-        if (!document.getElementById('main-site-content').classList.contains('hidden')) {
-          loadCloudStats();
-        }
-      }, 10000);
-
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('#voter-city-search') && !e.target.closest('#city-suggestions-container')) {
-          document.getElementById('city-suggestions-container').classList.add('hidden');
-        }
-      });
-    });
-
-    async function checkVoterInDatabase(fingerprintKey) {
-      if (!supabaseClient) return null;
-      try {
-        const { data, error } = await supabaseClient
-          .from('votos')
-          .select('device_token, opcao, cidade, uf, created_at')
-          .eq('device_token', fingerprintKey)
-          .maybeSingle();
-
-        if (error || !data) return null;
-        return data;
-      } catch (err) {
-        return null;
-      }
+    if (!voterNames[deviceFingerprint]) {
+      voterNames[deviceFingerprint] = name;
+      localStorage.setItem('simulador_voter_names', JSON.stringify(voterNames));
     }
 
-    async function loadCloudStats() {
-      const btnRefresh = document.getElementById('btn-refresh-stats');
-      const iconEl = document.getElementById('refresh-icon');
-      const spinnerEl = document.getElementById('refresh-spinner');
-
-      if (btnRefresh && iconEl && spinnerEl) {
-        btnRefresh.disabled = true;
-        iconEl.classList.add('hidden');
-        spinnerEl.classList.remove('hidden');
-      }
-
-      let allVotesData = [];
-
-      try {
-        if (supabaseClient) {
-          try {
-            const { data, error } = await supabaseClient.from('votos').select('*');
-            if (!error && data) allVotesData = data;
-            else allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-          } catch (err) {
-            allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-          }
-        } else {
-          allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-        }
-      } finally {
-        if (btnRefresh && iconEl && spinnerEl) {
-          setTimeout(() => {
-            btnRefresh.disabled = false;
-            iconEl.classList.remove('hidden');
-            spinnerEl.classList.add('hidden');
-          }, 300);
-        }
-      }
-
-      votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-      cityVotes = {};
-      Object.keys(regionalVotes).forEach(r => {
-        regionalVotes[r] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-      });
-
-      allVotesData.forEach(item => {
-        const op = item.opcao;
-        if (votes[op] !== undefined) votes[op]++;
-        else votes['NULO']++;
-
-        const reg = item.regiao || 'Norte';
-        if (regionalVotes[reg]) {
-          if (regionalVotes[reg][op] !== undefined) regionalVotes[reg][op]++;
-          else regionalVotes[reg]['NULO']++;
-        }
-
-        const cityKey = `${item.cidade || 'Capital'} - ${item.uf || 'PA'}`;
-        if (!cityVotes[cityKey]) {
-          cityVotes[cityKey] = { uf: item.uf || 'PA', city: item.cidade || 'Capital', '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
-        }
-        if (cityVotes[cityKey][op] !== undefined) cityVotes[cityKey][op]++;
-        else cityVotes[cityKey]['NULO']++;
-
-        if (item.device_token) votedDevices[item.device_token] = true;
-      });
-
-      localStorage.setItem('simulador_voted_devices', JSON.stringify(votedDevices));
-      renderStats();
-      renderCityResults();
-    }
-
-    function renderStats() {
-      const total = votes['22'] + votes['13'] + votes['BRANCO'] + votes['NULO'];
-      const validos = votes['22'] + votes['13'];
-
-      document.getElementById('stat-total').textContent = total;
-      document.getElementById('stat-validos').textContent = validos;
-      document.getElementById('stat-branco').textContent = votes['BRANCO'];
-      document.getElementById('stat-nulo').textContent = votes['NULO'];
-
-      const pct22 = validos > 0 ? ((votes['22'] / validos) * 100).toFixed(1) : "0.0";
-      const pct13 = validos > 0 ? ((votes['13'] / validos) * 100).toFixed(1) : "0.0";
-
-      document.getElementById('pct-22').textContent = `${pct22}%`;
-      document.getElementById('bar-22').style.width = `${pct22}%`;
-      document.getElementById('count-22').textContent = `${votes['22']} votos`;
-
-      document.getElementById('pct-13').textContent = `${pct13}%`;
-      document.getElementById('bar-13').style.width = `${pct13}%`;
-      document.getElementById('count-13').textContent = `${votes['13']} votos`;
-
-      const regContainer = document.getElementById('regional-stats-container');
-      regContainer.innerHTML = "";
-
-      Object.entries(regionalVotes).forEach(([regionName, regData]) => {
-        const regValidos = regData['22'] + regData['13'];
-        const rPct22 = regValidos > 0 ? ((regData['22'] / regValidos) * 100).toFixed(1) : "0.0";
-        const rPct13 = regValidos > 0 ? ((regData['13'] / regValidos) * 100).toFixed(1) : "0.0";
-
-        regContainer.innerHTML += `
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5 text-xs">
-            <div class="flex justify-between font-bold text-slate-300">
-              <span>${regionName}</span>
-              <span class="text-[10px] text-slate-500 font-mono">${regValidos} votos válidos</span>
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-[11px]">
-              <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded">
-                <span class="text-amber-400 font-extrabold">22: ${rPct22}%</span>
-                <span class="text-slate-500 font-mono">(${regData['22']})</span>
-              </div>
-              <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded">
-                <span class="text-rose-400 font-extrabold">13: ${rPct13}%</span>
-                <span class="text-slate-500 font-mono">(${regData['13']})</span>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    function populateQueryUFs() {
-      const select = document.getElementById('query-uf-select');
-      select.innerHTML = '<option value="">Todas as UFs</option>';
-      Object.keys(stateCities).forEach(uf => {
-        select.innerHTML += `<option value="${uf}">${uf}</option>`;
-      });
-    }
-
-    function renderCityResults() {
-      const selectedUf = document.getElementById('query-uf-select').value;
-      const query = document.getElementById('query-city-filter').value.toLowerCase().trim();
-      const listEl = document.getElementById('city-results-list');
-
-      const entries = Object.values(cityVotes);
-      const filtered = entries.filter(item => {
-        const matchUf = selectedUf === "" || item.uf === selectedUf;
-        const matchCity = query === "" || item.city.toLowerCase().includes(query);
-        return matchUf && matchCity;
-      });
-
-      if (filtered.length === 0) {
-        listEl.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-3">Nenhum município encontrado com voto registrado.</p>`;
-        return;
-      }
-
-      listEl.innerHTML = filtered.map(item => {
-        const validos = item['22'] + item['13'];
-        const p22 = validos > 0 ? ((item['22'] / validos) * 100).toFixed(1) : "0.0";
-        const p13 = validos > 0 ? ((item['13'] / validos) * 100).toFixed(1) : "0.0";
-
-        return `
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1 text-xs">
-            <div class="flex justify-between font-bold text-slate-200">
-              <span class="truncate">${item.city} (${item.uf})</span>
-              <span class="text-[10px] text-slate-500 font-mono">${validos} válidos</span>
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-[10px]">
-              <div class="text-amber-400 font-extrabold">22: ${p22}% <span class="text-slate-500">(${item['22']})</span></div>
-              <div class="text-rose-400 font-extrabold">13: ${p13}% <span class="text-slate-500">(${item['13']})</span></div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function onUFChange() {
-      const ufSelect = document.getElementById('voter-uf-select');
-      const selectedUf = ufSelect.value;
-      const cities = stateCities[selectedUf] || ["Capital"];
-      
-      const cityInput = document.getElementById('voter-city-search');
-      cityInput.value = cities[0];
-      cityInput.dataset.touched = ""; 
-      
-      document.getElementById('selected-city-val').value = cities[0];
-    }
-
-    function filterCityOptions() {
-      const uf = document.getElementById('voter-uf-select').value;
-      const cities = stateCities[uf] || [];
-      const query = document.getElementById('voter-city-search').value.toLowerCase().trim();
-      const container = document.getElementById('city-suggestions-container');
-
-      const filtered = query === "" ? cities : cities.filter(c => c.toLowerCase().includes(query));
-
-      let html = "";
-      if (filtered.length > 0) {
-        html = filtered.map(c => `
-          <div onclick="selectCity('${c}')" class="p-2.5 text-xs text-slate-200 hover:bg-slate-900 rounded-lg cursor-pointer flex items-center gap-2">
-            <span>📍</span>
-            <span class="font-medium">${c}</span>
-          </div>
-        `).join('');
-      } else {
-        html = `
-          <div onclick="selectCity('${document.getElementById('voter-city-search').value}')" class="p-2.5 text-xs text-blue-400 hover:bg-slate-900 rounded-lg cursor-pointer font-bold">
-            📍 Usar: "${document.getElementById('voter-city-search').value}"
-          </div>
-        `;
-      }
-
-      container.innerHTML = html;
-      container.classList.remove('hidden');
-    }
-
-    function selectCity(cityName) {
-      document.getElementById('voter-city-search').value = cityName;
-      document.getElementById('selected-city-val').value = cityName;
-      document.getElementById('city-suggestions-container').classList.add('hidden');
-    }
-
-    async function submitStep1() {
-      const name = document.getElementById('voter-name').value.trim();
-      const nickname = document.getElementById('voter-nickname').value.trim() || name.split(' ')[0];
-      const pin = document.getElementById('voter-pin').value.trim();
-      const ufSelect = document.getElementById('voter-uf-select');
-      const city = document.getElementById('voter-city-search').value.trim() || "Capital";
-      const errBox = document.getElementById('auth-error');
-
-      errBox.classList.add('hidden');
-
-      if (!name) {
-        errBox.textContent = "Por favor, digite seu nome completo.";
-        errBox.classList.remove('hidden');
-        return;
-      }
-
-      if (!pin || pin.length < 4) {
-        errBox.textContent = "⚠️ Digite um PIN de segurança com 4 dígitos para proteger sua sessão.";
-        errBox.classList.remove('hidden');
-        return;
-      }
-
-      if (voterDevicePins[deviceFingerprint] && voterDevicePins[deviceFingerprint] !== pin) {
-        errBox.textContent = "❌ PIN incorreto para este dispositivo! Outro PIN foi cadastrado anteriormente.";
-        errBox.classList.remove('hidden');
-        return;
-      } else if (!voterDevicePins[deviceFingerprint]) {
-        voterDevicePins[deviceFingerprint] = pin;
-        localStorage.setItem('simulador_voter_pins', JSON.stringify(voterDevicePins));
-      }
-
-      if (!voterNames[deviceFingerprint]) {
-        voterNames[deviceFingerprint] = name;
-        localStorage.setItem('simulador_voter_names', JSON.stringify(voterNames));
-      }
-
-      if (!voterNicknames[deviceFingerprint]) {
-        voterNicknames[deviceFingerprint] = nickname;
-        localStorage.setItem('simulador_voter_nicknames', JSON.stringify(voterNicknames));
-      }
-
-      if (!voterLocations[deviceFingerprint]) {
-        voterLocations[deviceFingerprint] = { uf: ufSelect.value, city: city };
-        localStorage.setItem('simulador_voter_locations', JSON.stringify(voterLocations));
-      }
-
-      document.getElementById('auth-step-1').classList.add('hidden');
-      document.getElementById('auth-step-2').classList.remove('hidden');
-
-      const dbRecord = await checkVoterInDatabase(deviceFingerprint);
-      const isAlreadyVoted = !!dbRecord || !!votedDevices[deviceFingerprint];
-
-      setTimeout(() => {
-        document.getElementById('auth-step-2').classList.add('hidden');
-
-        const lockedName = voterNames[deviceFingerprint] || name;
-        const lockedNick = voterNicknames[deviceFingerprint] || nickname;
-        const lockedLoc = voterLocations[deviceFingerprint] || { uf: ufSelect.value, city: city };
-        const selectedOpt = ufSelect.querySelector(`option[value="${lockedLoc.uf}"]`);
-        const region = selectedOpt ? selectedOpt.getAttribute('data-region') : 'Norte';
-
-        verifiedVoter = { name: lockedName, nickname: lockedNick, pin, uf: lockedLoc.uf, city: lockedLoc.city, region, token: deviceFingerprint };
-
-        document.getElementById('summary-name').textContent = lockedName;
-        document.getElementById('summary-nickname').textContent = lockedNick;
-        document.getElementById('summary-state').textContent = `${lockedLoc.city} / ${lockedLoc.uf} (${region})`;
-
-        const statusEl = document.getElementById('summary-vote-status');
-
-        if (isAlreadyVoted) {
-          statusEl.textContent = "JÁ VOTOU (Sessão Segura Protegida)";
-          statusEl.className = "text-amber-400 font-bold";
-
-          const savedReceipt = localStorage.getItem('simulador_receipt_' + deviceFingerprint);
-          if (savedReceipt) {
-            confirmedVoteData = JSON.parse(savedReceipt);
-          } else if (dbRecord) {
-            confirmedVoteData = {
-              voterName: lockedName,
-              voterCpf: "Dispositivo Verificado",
-              cityUf: `${dbRecord.cidade || lockedLoc.city} / ${dbRecord.uf || lockedLoc.uf}`,
-              opcao: dbRecord.opcao,
-              time: dbRecord.created_at ? new Date(dbRecord.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')
-            };
-            localStorage.setItem('simulador_receipt_' + deviceFingerprint, JSON.stringify(confirmedVoteData));
-          }
-        } else {
-          statusEl.textContent = "APTO PARA VOTAR";
-          statusEl.className = "text-blue-400 font-bold";
-        }
-
-        document.getElementById('auth-step-3').classList.remove('hidden');
-
-        document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-blue-500/30 text-blue-400 font-bold text-xs flex items-center justify-center";
-        document.getElementById('step-dot-3').className = "w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center";
-      }, 1000);
-    }
-
-    async function startVotingSession() {
-      document.getElementById('nav-tabs').classList.remove('hidden');
-
-      document.getElementById('sec-auth').classList.add('hidden');
-      document.getElementById('sec-urna').classList.remove('hidden');
-      switchTab('urna');
-
-      if (verifiedVoter) {
-        const dbRecord = await checkVoterInDatabase(deviceFingerprint);
-        const isAlreadyVoted = !!dbRecord || !!votedDevices[deviceFingerprint];
-        if (isAlreadyVoted) {
-          document.getElementById('lcd-normal-view').classList.add('hidden');
-          document.getElementById('lcd-fim-msg').classList.add('hidden');
-          document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
-          document.getElementById('post-vote-receipt-container').classList.remove('hidden');
-        } else {
-          resetUrna();
-          document.getElementById('post-vote-receipt-container').classList.add('hidden');
-        }
-      }
-    }
-
-    function switchTab(tab) {
-      ['sec-auth', 'sec-urna', 'sec-dados', 'sec-chat'].forEach(s => {
-        const el = document.getElementById(s);
-        if (el) el.classList.add('hidden');
-      });
-
-      ['btn-tab-urna', 'btn-tab-dados', 'btn-tab-chat'].forEach(b => {
-        const el = document.getElementById(b);
-        if (el) el.className = "px-3 py-1 rounded-md text-slate-400 hover:text-white transition font-semibold";
-      });
-
-      if (tab === 'urna') {
-        document.getElementById('sec-urna').classList.remove('hidden');
-        document.getElementById('btn-tab-urna').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
-        
-        if (verifiedVoter && (votedDevices[deviceFingerprint] || confirmedVoteData)) {
-          document.getElementById('lcd-normal-view').classList.add('hidden');
-          document.getElementById('lcd-fim-msg').classList.add('hidden');
-          document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
-          document.getElementById('post-vote-receipt-container').classList.remove('hidden');
-        } else {
-          resetUrna();
-        }
-      } else if (tab === 'dados') {
-        document.getElementById('sec-dados').classList.remove('hidden');
-        document.getElementById('btn-tab-dados').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
-        loadCloudStats();
-      } else if (tab === 'chat') {
-        document.getElementById('sec-chat').classList.remove('hidden');
-        document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition flex items-center gap-1";
-        
-        const isPaidSupporter = verifiedVoter && paidSupporters[deviceFingerprint];
-        const nickname = verifiedVoter ? (voterNicknames[deviceFingerprint] || verifiedVoter.nickname) : null;
-        
-        document.getElementById('chat-user-badge').textContent = nickname ? `${nickname} (${verifiedVoter.uf})` : (verifiedVoter ? verifiedVoter.name.split(' ')[0] : "Visitante");
-        
-        const lockWarning = document.getElementById('chat-locked-warning');
-        const nicknameBox = document.getElementById('nickname-setup-box');
-        const inputContainer = document.getElementById('chat-input-container');
-        const nickErrBox = document.getElementById('nickname-error');
-
-        nickErrBox.classList.add('hidden');
-
-        if (!isPaidSupporter) {
-          lockWarning.classList.remove('hidden');
-          nicknameBox.classList.add('hidden');
-          inputContainer.classList.add('hidden');
-          document.getElementById('replying-banner').classList.add('hidden');
-        } else {
-          lockWarning.classList.add('hidden');
-          if (!nickname) {
-            nicknameBox.classList.remove('hidden');
-            inputContainer.classList.add('hidden');
-            document.getElementById('replying-banner').classList.add('hidden');
-          } else {
-            nicknameBox.classList.add('hidden');
-            inputContainer.classList.remove('hidden');
-          }
-        }
-
-        renderChat();
-      }
-    }
-
-    function saveNickname() {
-      const input = document.getElementById('chat-nickname-input');
-      const nickname = input.value.trim();
-      const errBox = document.getElementById('nickname-error');
-      
-      errBox.classList.add('hidden');
-
-      if (!verifiedVoter || !paidSupporters[deviceFingerprint]) {
-        errBox.textContent = "⚠️ Você precisa adquirir o comprovante de apoiador via PIX para ter acesso ao chat.";
-        errBox.classList.remove('hidden');
-        return;
-      }
-
-      if (!nickname) return;
-
-      const normalizedNewNick = nickname.toLowerCase();
-      const existingEntries = Object.entries(voterNicknames);
-      
-      for (let [devKey, nickVal] of existingEntries) {
-        if (devKey !== deviceFingerprint && nickVal.toLowerCase() === normalizedNewNick) {
-          errBox.textContent = `⚠️ O apelido "${nickname}" já está em uso por outro participante.`;
-          errBox.classList.remove('hidden');
-          return;
-        }
-      }
-
+    if (!voterNicknames[deviceFingerprint]) {
       voterNicknames[deviceFingerprint] = nickname;
       localStorage.setItem('simulador_voter_nicknames', JSON.stringify(voterNicknames));
-
-      document.getElementById('chat-user-badge').textContent = `${nickname} (${verifiedVoter.uf})`;
-      document.getElementById('nickname-setup-box').classList.add('hidden');
-      document.getElementById('chat-input-container').classList.remove('hidden');
     }
 
-    function setReplyTo(msgId, senderName, msgText) {
-      replyingToMsgId = msgId;
-      const banner = document.getElementById('replying-banner');
-      const targetText = document.getElementById('replying-target-text');
-      targetText.textContent = `${senderName}: "${msgText}"`;
-      banner.classList.remove('hidden');
-      document.getElementById('chat-input').focus();
+    if (!voterLocations[deviceFingerprint]) {
+      voterLocations[deviceFingerprint] = { uf: ufSelect.value, city: city };
+      localStorage.setItem('simulador_voter_locations', JSON.stringify(voterLocations));
     }
 
-    function cancelReply() {
-      replyingToMsgId = null;
-      document.getElementById('replying-banner').classList.add('hidden');
-    }
+    document.getElementById('auth-step-1').classList.add('hidden');
+    document.getElementById('auth-step-2').classList.remove('hidden');
 
-    function renderChat() {
-      const chatBox = document.getElementById('chat-messages');
-      if (!chatBox) return;
+    const dbRecord = await checkVoterInDatabase(deviceFingerprint);
+    const isAlreadyVoted = !!dbRecord || !!votedDevices[deviceFingerprint];
 
-      if (chatMessages.length === 0) {
-        chatBox.innerHTML = '<p class="text-slate-500 italic text-center my-auto">Nenhuma mensagem ainda.</p>';
-        return;
-      }
+    setTimeout(() => {
+      document.getElementById('auth-step-2').classList.add('hidden');
 
-      chatBox.innerHTML = chatMessages.map(msg => {
-        if (msg.isSystem) {
-          return `
-            <div class="bg-blue-950/40 border border-blue-500/20 rounded-xl p-2 text-center text-blue-300 text-[11px]">
-              📢 ${msg.text}
-            </div>
-          `;
-        }
+      const lockedName = voterNames[deviceFingerprint] || name;
+      const lockedNick = voterNicknames[deviceFingerprint] || nickname;
+      const lockedLoc = voterLocations[deviceFingerprint] || { uf: ufSelect.value, city: city };
+      const selectedOpt = ufSelect.querySelector(`option[value="${lockedLoc.uf}"]`);
+      const region = selectedOpt ? selectedOpt.getAttribute('data-region') : 'Norte';
 
-        let voteBadgeClass = "bg-slate-800 text-slate-300 border-slate-700";
-        let voteLabelText = msg.vote ? `votou ${msg.vote}` : "";
-        
-        if (msg.vote === '22') {
-          voteBadgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/40";
-        } else if (msg.vote === '13') {
-          voteBadgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/40";
-        }
+      verifiedVoter = { name: lockedName, nickname: lockedNick, pin, uf: lockedLoc.uf, city: lockedLoc.city, region, token: deviceFingerprint };
 
-        let replyHtml = "";
-        if (msg.replyToId) {
-          const originalMsg = chatMessages.find(m => m.id === msg.replyToId);
-          if (originalMsg) {
-            replyHtml = `
-              <div class="bg-slate-900/90 border-l-2 border-blue-500 p-1.5 rounded my-1 text-[11px] text-slate-400">
-                <span class="font-bold text-blue-400">@${originalMsg.sender}:</span> ${originalMsg.isHtml ? '[Mídia]' : originalMsg.text}
-              </div>
-            `;
-          }
-        }
+      document.getElementById('summary-name').textContent = lockedName;
+      document.getElementById('summary-nickname').textContent = lockedNick;
+      document.getElementById('summary-state').textContent = `${lockedLoc.city} / ${lockedLoc.uf} (${region})`;
 
-        const cleanTextPreview = msg.isHtml ? '[Mídia]' : msg.text.replace(/'/g, "\\'");
-
-        // 🛡️ Verifica se a mensagem pertence ao dispositivo atual para liberar o botão de apagar
-        const isMyMessage = msg.device_token && msg.device_token === deviceSessionToken;
-        let deleteBtnHtml = "";
-        if (isMyMessage) {
-          deleteBtnHtml = `<button onclick="deleteChatMessage(${msg.id})" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold bg-rose-500/10 px-2 py-0.5 rounded transition ml-1">Apagar 🗑️</button>`;
-        }
-
-        return `
-          <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl space-y-1 relative group">
-            <div class="flex justify-between items-center text-[10px]">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="font-extrabold text-blue-400">${msg.sender || 'Participante'}</span>
-                <span class="bg-slate-900 border border-slate-800 px-1.5 py-0.5 rounded text-slate-400 font-mono">${msg.uf || 'BR'}</span>
-                ${msg.vote ? `<span class="border px-1.5 py-0.5 rounded font-bold ${voteBadgeClass}">${voteLabelText}</span>` : ''}
-              </div>
-              <div class="flex items-center gap-1.5">
-                <span class="text-slate-500 font-mono">${msg.time}</span>
-                <button onclick="setReplyTo(${msg.id}, '${msg.sender || 'Participante'}', '${cleanTextPreview}')" class="text-blue-400 hover:text-blue-300 text-[10px] font-bold bg-blue-500/10 px-2 py-0.5 rounded transition">Responder ↩️</button>
-                ${deleteBtnHtml}
-              </div>
-            </div>
-            ${replyHtml}
-            <div class="text-slate-200 text-xs leading-normal">${msg.text}</div>
-          </div>
-        `;
-      }).join('');
-
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function handleChatKeyPress(event) {
-      if (event.key === 'Enter') {
-        sendChatMessage();
-      }
-    }
-
-    function sendChatMessage() {
-      if (!verifiedVoter || !paidSupporters[deviceFingerprint]) return;
-      
-      const input = document.getElementById('chat-input');
-      const text = input.value.trim();
-      if (!text) return;
-
-      if (!verificarConteudoChat(text)) {
-        alert("⚠️ Sua mensagem contém termos bloqueados pelas regras de moderação ou menções inválidas sobre o sistema de votação.");
-        return;
-      }
-
-      const nickname = voterNicknames[deviceFingerprint] || verifiedVoter.nickname || verifiedVoter.name.split(' ')[0];
-      const userVote = voterChoices[deviceFingerprint] || confirmedVoteData?.opcao || 'NULO';
-
-      const newMsg = {
-        id: Date.now(),
-        device_token: deviceSessionToken, // 🛡️ Guarda o autor da mensagem
-        replyToId: replyingToMsgId,
-        sender: nickname,
-        uf: verifiedVoter.uf,
-        vote: userVote,
-        text: text,
-        isHtml: false,
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-      };
-
-      chatMessages.push(newMsg);
-      localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
-
-      input.value = "";
-      cancelReply();
-      renderChat();
-    }
-
-    function resetUrna() {
-      currentInput = "";
-      isBranco = false;
-      document.getElementById('lcd-normal-view').classList.remove('hidden');
-      document.getElementById('lcd-duplicate-msg').classList.add('hidden');
-      document.getElementById('lcd-fim-msg').classList.add('hidden');
-      renderUrnaScreen();
-    }
-
-    function pressKey(n) {
-      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) {
-        return;
-      }
-      if (isBranco) return;
-      if (currentInput.length < 2) {
-        currentInput += n;
-        renderUrnaScreen();
-      }
-    }
-
-    function quickSelect(num) {
-      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) {
-        return;
-      }
-      resetUrna();
-      currentInput = num;
-      isBranco = false;
-      renderUrnaScreen();
-    }
-
-    function pressBranco() {
-      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) {
-        return;
-      }
-      resetUrna();
-      currentInput = "";
-      isBranco = true;
-      renderUrnaScreen();
-    }
-
-    function pressCorrige() {
-      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) {
-        return;
-      }
-      resetUrna();
-    }
-
-    function renderUrnaScreen() {
-      const d1 = document.getElementById('digit-1');
-      const d2 = document.getElementById('digit-2');
-      const info = document.getElementById('candidate-info');
-      const special = document.getElementById('vote-special-msg');
-      const specialText = document.getElementById('special-text');
-      const candName = document.getElementById('cand-name');
-      const candParty = document.getElementById('cand-party');
-
-      if (isBranco) {
-        d1.textContent = "B";
-        d2.textContent = "R";
-        info.classList.add('hidden');
-        special.classList.remove('hidden');
-        specialText.textContent = "VOTO EM BRANCO";
-        return;
-      }
-
-      special.classList.add('hidden');
-      d1.textContent = currentInput.length > 0 ? currentInput[0] : "";
-      d2.textContent = currentInput.length > 1 ? currentInput[1] : "";
-
-      if (currentInput.length === 2) {
-        info.classList.remove('hidden');
-        if (currentInput === '22') {
-          candName.textContent = "Flávio Bolsonaro";
-          candParty.textContent = "Partido Liberal (PL)";
-        } else if (currentInput === '13') {
-          candName.textContent = "Lula";
-          candParty.textContent = "Partido dos Trabalhadores (PT)";
-        } else {
-          candName.textContent = "Voto Nulo";
-          candParty.textContent = "Legenda Inexistente";
-        }
-      } else {
-        info.classList.add('hidden');
-      }
-    }
-
-    async function pressConfirma() {
-      if (!verifiedVoter) return;
-
-      const dbRecord = await checkVoterInDatabase(deviceFingerprint);
-      const isAlreadyVoted = !!dbRecord || votedDevices[deviceFingerprint];
+      const statusEl = document.getElementById('summary-vote-status');
 
       if (isAlreadyVoted) {
-        votedDevices[deviceFingerprint] = true;
-        localStorage.setItem('simulador_voted_devices', JSON.stringify(votedDevices));
-
-        let userOption = dbRecord?.opcao || voterChoices[deviceFingerprint] || 'NULO';
+        statusEl.textContent = "JÁ VOTOU (Sessão Segura Protegida)";
+        statusEl.className = "text-amber-400 font-bold";
 
         const savedReceipt = localStorage.getItem('simulador_receipt_' + deviceFingerprint);
         if (savedReceipt) {
           confirmedVoteData = JSON.parse(savedReceipt);
-        } else {
+        } else if (dbRecord) {
           confirmedVoteData = {
-            voterName: verifiedVoter.name,
+            voterName: lockedName,
             voterCpf: "Dispositivo Verificado",
-            cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-            opcao: userOption,
-            time: new Date().toLocaleString('pt-BR')
+            cityUf: `${dbRecord.cidade || lockedLoc.city} / ${dbRecord.uf || lockedLoc.uf}`,
+            opcao: dbRecord.opcao,
+            time: dbRecord.created_at ? new Date(dbRecord.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')
           };
           localStorage.setItem('simulador_receipt_' + deviceFingerprint, JSON.stringify(confirmedVoteData));
         }
+      } else {
+        statusEl.textContent = "APTO PARA VOTAR";
+        statusEl.className = "text-blue-400 font-bold";
+      }
 
+      document.getElementById('auth-step-3').classList.remove('hidden');
+
+      document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-blue-500/30 text-blue-400 font-bold text-xs flex items-center justify-center";
+      document.getElementById('step-dot-3').className = "w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center";
+    }, 1000);
+  }
+
+  async function startVotingSession() {
+    document.getElementById('nav-tabs').classList.remove('hidden');
+
+    document.getElementById('sec-auth').classList.add('hidden');
+    document.getElementById('sec-urna').classList.remove('hidden');
+    switchTab('urna');
+
+    if (verifiedVoter) {
+      const dbRecord = await checkVoterInDatabase(deviceFingerprint);
+      const isAlreadyVoted = !!dbRecord || !!votedDevices[deviceFingerprint];
+      if (isAlreadyVoted) {
         document.getElementById('lcd-normal-view').classList.add('hidden');
         document.getElementById('lcd-fim-msg').classList.add('hidden');
         document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
-
         document.getElementById('post-vote-receipt-container').classList.remove('hidden');
-        return;
-      }
-
-      if (!isBranco && currentInput.length < 2) {
-        return;
-      }
-
-      let voteType = 'NULO';
-      if (isBranco) {
-        voteType = 'BRANCO';
-      } else if (currentInput === '22') {
-        voteType = '22';
-      } else if (currentInput === '13') {
-        voteType = '13';
-      }
-
-      pendingVoteObj = {
-        device_token: deviceFingerprint,
-        opcao: voteType,
-        uf: verifiedVoter.uf,
-        cidade: verifiedVoter.city,
-        regiao: verifiedVoter.region
-      };
-
-      confirmedVoteData = {
-        voterName: verifiedVoter.name,
-        voterCpf: "Dispositivo Verificado",
-        cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-        opcao: voteType,
-        time: new Date().toLocaleString('pt-BR')
-      };
-
-      localStorage.setItem('simulador_receipt_' + deviceFingerprint, JSON.stringify(confirmedVoteData));
-      votedDevices[deviceFingerprint] = true;
-      voterChoices[deviceFingerprint] = voteType;
-      localStorage.setItem('simulador_voted_devices', JSON.stringify(votedDevices));
-      localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
-
-      const localVotes = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
-      localVotes.push(pendingVoteObj);
-      localStorage.setItem('simulador_all_votes', JSON.stringify(localVotes));
-
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('votos').insert([pendingVoteObj]);
-        } catch (err) {
-          console.error("Falha ao gravar voto no Supabase:", err);
-        }
-      }
-
-      await loadCloudStats();
-
-      document.getElementById('lcd-normal-view').classList.add('hidden');
-      document.getElementById('lcd-duplicate-msg').classList.add('hidden');
-      document.getElementById('lcd-fim-msg').classList.remove('hidden');
-
-      document.getElementById('post-vote-receipt-container').classList.remove('hidden');
-
-      openApoiadorModal();
-    }
-
-    function gerarValorMenorSyncPay() {
-      const min = 1.01;
-      const max = 1.99;
-      const valorAleatorio = (Math.random() * (max - min) + min).toFixed(2);
-      return parseFloat(valorAleatorio);
-    }
-
-    function openApoiadorModal() {
-      document.getElementById('receipt-modal').classList.add('hidden');
-      
-      const hasVoted = verifiedVoter && (votedDevices[deviceFingerprint] || confirmedVoteData);
-      const titleEl = document.getElementById('pix-title');
-      const subtitleEl = document.getElementById('pix-subtitle');
-      const iconEl = document.getElementById('pix-header-icon');
-      const unvotedWarn = document.getElementById('pix-unvoted-warning');
-
-      if (hasVoted) {
-        iconEl.textContent = "🎉";
-        titleEl.textContent = "Voto Registrado com Sucesso!";
-        subtitleEl.textContent = "Sua opinião já foi computada na pesquisa.";
-        unvotedWarn.classList.add('hidden');
       } else {
-        iconEl.textContent = "💬";
-        titleEl.textContent = "Acesso ao Chat VIP de Debate";
-        subtitleEl.textContent = "Adquira o Card de Apoiador para participar das conversas ao vivo.";
-        unvotedWarn.classList.remove('hidden');
+        resetUrna();
+        document.getElementById('post-vote-receipt-container').classList.add('hidden');
       }
-
-      document.getElementById('pix-modal').classList.remove('hidden');
-      document.getElementById('pix-options-box').classList.remove('hidden');
-      document.getElementById('pix-loading').classList.add('hidden');
-      document.getElementById('pix-content').classList.add('hidden');
-      document.getElementById('msg-vote-success').classList.add('hidden');
-      document.getElementById('btn-cancel-pix').classList.remove('hidden');
     }
+  }
 
-    function openApoiadorModalFromReceipt() {
-      closeReceiptModal();
-      switchTab('urna');
-      openApoiadorModal();
-    }
+  function switchTab(tab) {
+    ['sec-auth', 'sec-urna', 'sec-dados', 'sec-chat'].forEach(s => {
+      const el = document.getElementById(s);
+      if (el) el.classList.add('hidden');
+    });
 
-    async function requestPixCheckout(amountValue) {
-      document.getElementById('pix-options-box').classList.add('hidden');
-      document.getElementById('pix-loading').classList.remove('hidden');
-      document.getElementById('pix-display-amount').textContent = `R$ ${amountValue.toFixed(2).replace('.', ',')}`;
+    ['btn-tab-urna', 'btn-tab-dados', 'btn-tab-chat'].forEach(b => {
+      const el = document.getElementById(b);
+      if (el) el.className = "px-3 py-1 rounded-md text-slate-400 hover:text-white transition font-semibold";
+    });
 
-      try {
-        const response = await fetch('/api/gerar-pix', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: verifiedVoter ? verifiedVoter.name : "Apoiador",
-            email: "apoiador@painelbrasil.org",
-            cpf: "00000000000",
-            amount: amountValue
-          })
-        });
+    if (tab === 'urna') {
+      document.getElementById('sec-urna').classList.remove('hidden');
+      document.getElementById('btn-tab-urna').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
+      
+      if (verifiedVoter && (votedDevices[deviceFingerprint] || confirmedVoteData)) {
+        document.getElementById('lcd-normal-view').classList.add('hidden');
+        document.getElementById('lcd-fim-msg').classList.add('hidden');
+        document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
+        document.getElementById('post-vote-receipt-container').classList.remove('hidden');
+      } else {
+        resetUrna();
+      }
+    } else if (tab === 'dados') {
+      document.getElementById('sec-dados').classList.remove('hidden');
+      document.getElementById('btn-tab-dados').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
+      loadCloudStats();
+    } else if (tab === 'chat') {
+      document.getElementById('sec-chat').classList.remove('hidden');
+      document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition flex items-center gap-1";
+      
+      const isPaidSupporter = verifiedVoter && paidSupporters[deviceFingerprint];
+      const nickname = verifiedVoter ? (voterNicknames[deviceFingerprint] || verifiedVoter.nickname) : null;
+      
+      document.getElementById('chat-user-badge').textContent = nickname ? `${nickname} (${verifiedVoter.uf})` : (verifiedVoter ? verifiedVoter.name.split(' ')[0] : "Visitante");
+      
+      const lockWarning = document.getElementById('chat-locked-warning');
+      const nicknameBox = document.getElementById('nickname-setup-box');
+      const inputContainer = document.getElementById('chat-input-container');
+      const nickErrBox = document.getElementById('nickname-error');
 
-        const data = await response.json();
+      nickErrBox.classList.add('hidden');
 
-        if (data && data.pix_code) {
-          document.getElementById('pix-code-input').value = data.pix_code;
-          document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.pix_code)}`;
-          
-          document.getElementById('pix-loading').classList.add('hidden');
-          document.getElementById('pix-content').classList.remove('hidden');
-
-          startPixStatusPolling(data.identifier);
+      if (!isPaidSupporter) {
+        lockWarning.classList.remove('hidden');
+        nicknameBox.classList.add('hidden');
+        inputContainer.classList.add('hidden');
+        document.getElementById('replying-banner').classList.add('hidden');
+      } else {
+        lockWarning.classList.add('hidden');
+        if (!nickname) {
+          nicknameBox.classList.remove('hidden');
+          inputContainer.classList.add('hidden');
+          document.getElementById('replying-banner').classList.add('hidden');
         } else {
-          fallbackPixSimulated(amountValue);
+          nicknameBox.classList.add('hidden');
+          inputContainer.classList.remove('hidden');
         }
-      } catch (err) {
-        fallbackPixSimulated(amountValue);
+      }
+
+      renderChat();
+    }
+  }
+
+  function saveNickname() {
+    const input = document.getElementById('chat-nickname-input');
+    const nickname = input.value.trim();
+    const errBox = document.getElementById('nickname-error');
+    
+    errBox.classList.add('hidden');
+
+    if (!verifiedVoter || !paidSupporters[deviceFingerprint]) {
+      errBox.textContent = "⚠️ Você precisa adquirir o comprovante de apoiador via PIX para ter acesso ao chat.";
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    if (!nickname) return;
+
+    const normalizedNewNick = nickname.toLowerCase();
+    const existingEntries = Object.entries(voterNicknames);
+    
+    for (let [devKey, nickVal] of existingEntries) {
+      if (devKey !== deviceFingerprint && nickVal.toLowerCase() === normalizedNewNick) {
+        errBox.textContent = `⚠️ O apelido "${nickname}" já está em uso por outro participante.`;
+        errBox.classList.remove('hidden');
+        return;
       }
     }
 
-    function fallbackPixSimulated(amount) {
-      const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865402BR5920PAINEL BRASIL MEDIA6009SAO PAULO62070503***6304E2CA";
-      document.getElementById('pix-code-input').value = mockPix;
-      document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mockPix)}`;
+    voterNicknames[deviceFingerprint] = nickname;
+    localStorage.setItem('simulador_voter_nicknames', JSON.stringify(voterNicknames));
 
+    document.getElementById('chat-user-badge').textContent = `${nickname} (${verifiedVoter.uf})`;
+    document.getElementById('nickname-setup-box').classList.add('hidden');
+    document.getElementById('chat-input-container').classList.remove('hidden');
+  }
+
+  function setReplyTo(msgId, senderName, msgText) {
+    replyingToMsgId = msgId;
+    const banner = document.getElementById('replying-banner');
+    const targetText = document.getElementById('replying-target-text');
+    targetText.textContent = `${senderName}: "${msgText}"`;
+    banner.classList.remove('hidden');
+    document.getElementById('chat-input').focus();
+  }
+
+  function cancelReply() {
+    replyingToMsgId = null;
+    document.getElementById('replying-banner').classList.add('hidden');
+  }
+
+  function renderChat() {
+    const chatBox = document.getElementById('chat-messages');
+    if (!chatBox) return;
+
+    if (chatMessages.length === 0) {
+      chatBox.innerHTML = '<p class="text-slate-500 italic text-center my-auto">Nenhuma mensagem ainda.</p>';
+      return;
+    }
+
+    chatBox.innerHTML = chatMessages.map(msg => {
+      if (msg.isSystem) {
+        return `
+          <div class="bg-blue-950/40 border border-blue-500/20 rounded-xl p-2 text-center text-blue-300 text-[11px]">
+            📢 ${msg.text}
+          </div>
+        `;
+      }
+
+      let voteBadgeClass = "bg-slate-800 text-slate-300 border-slate-700";
+      let voteLabelText = msg.vote ? `votou ${msg.vote}` : "";
+      
+      if (msg.vote === '22') {
+        voteBadgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/40";
+      } else if (msg.vote === '13') {
+        voteBadgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/40";
+      }
+
+      let replyHtml = "";
+      if (msg.replyToId) {
+        const originalMsg = chatMessages.find(m => m.id === msg.replyToId);
+        if (originalMsg) {
+          replyHtml = `
+            <div class="bg-slate-900/90 border-l-2 border-blue-500 p-1.5 rounded my-1 text-[11px] text-slate-400">
+              <span class="font-bold text-blue-400">@${originalMsg.sender}:</span> ${originalMsg.isHtml ? '[Mídia]' : originalMsg.text}
+            </div>
+          `;
+        }
+      }
+
+      const cleanTextPreview = msg.isHtml ? '[Mídia]' : msg.text.replace(/'/g, "\\'");
+
+      const isMyMessage = msg.device_token && msg.device_token === deviceSessionToken;
+      let deleteBtnHtml = "";
+      if (isMyMessage) {
+        deleteBtnHtml = `<button onclick="deleteChatMessage(${msg.id})" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold bg-rose-500/10 px-2 py-0.5 rounded transition ml-1">Apagar 🗑️</button>`;
+      }
+
+      return `
+        <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl space-y-1 relative group">
+          <div class="flex justify-between items-center text-[10px]">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-extrabold text-blue-400">${msg.sender || 'Participante'}</span>
+              <span class="bg-slate-900 border border-slate-800 px-1.5 py-0.5 rounded text-slate-400 font-mono">${msg.uf || 'BR'}</span>
+              ${msg.vote ? `<span class="border px-1.5 py-0.5 rounded font-bold ${voteBadgeClass}">${voteLabelText}</span>` : ''}
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-slate-500 font-mono">${msg.time}</span>
+              <button onclick="setReplyTo(${msg.id}, '${msg.sender || 'Participante'}', '${cleanTextPreview}')" class="text-blue-400 hover:text-blue-300 text-[10px] font-bold bg-blue-500/10 px-2 py-0.5 rounded transition">Responder ↩️</button>
+              ${deleteBtnHtml}
+            </div>
+          </div>
+          ${replyHtml}
+          <div class="text-slate-200 text-xs leading-normal">${msg.text}</div>
+        </div>
+      `;
+    }).join('');
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function handleChatKeyPress(event) {
+    if (event.key === 'Enter') {
+      sendChatMessage();
+    }
+  }
+
+  async function sendChatMessage() {
+    if (!verifiedVoter || !paidSupporters[deviceFingerprint]) return;
+    
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    if (!verificarConteudoChat(text)) {
+      alert("⚠️ Sua mensagem contém termos bloqueados pelas regras de moderação ou menções inválidas sobre o sistema de votação.");
+      return;
+    }
+
+    const nickname = voterNicknames[deviceFingerprint] || verifiedVoter.nickname || verifiedVoter.name.split(' ')[0];
+    const userVote = voterChoices[deviceFingerprint] || confirmedVoteData?.opcao || 'NULO';
+
+    const newMsg = {
+      device_token: deviceSessionToken,
+      replyToId: replyingToMsgId,
+      sender: nickname,
+      uf: verifiedVoter.uf,
+      vote: userVote,
+      text: text,
+      isHtml: false,
+      time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    if (supabaseClient) {
+      await supabaseClient.from('mensagens').insert([newMsg]);
+    } else {
+      newMsg.id = Date.now();
+      chatMessages.push(newMsg);
+      localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
+      renderChat();
+    }
+
+    input.value = "";
+    cancelReply();
+  }
+
+  function resetUrna() {
+    currentInput = "";
+    isBranco = false;
+    document.getElementById('lcd-normal-view').classList.remove('hidden');
+    document.getElementById('lcd-duplicate-msg').classList.add('hidden');
+    document.getElementById('lcd-fim-msg').classList.add('hidden');
+    renderUrnaScreen();
+  }
+
+  function pressKey(n) {
+    if (!document.getElementById('lcd-duplicate-msg').classList.contains('hidden')) {
+      return;
+    }
+    if (isBranco) return;
+    if (currentInput.length < 2) {
+      currentInput += n;
+      renderUrnaScreen();
+    }
+  }
+
+  function quickSelect(num) {
+    if (!document.getElementById('lcd-duplicate-msg').classList.contains('hidden')) {
+      return;
+    }
+    resetUrna();
+    currentInput = num;
+    isBranco = false;
+    renderUrnaScreen();
+  }
+
+  function pressBranco() {
+    if (!document.getElementById('lcd-duplicate-msg').classList.contains('hidden')) {
+      return;
+    }
+    resetUrna();
+    currentInput = "";
+    isBranco = true;
+    renderUrnaScreen();
+  }
+
+  function pressCorrige() {
+    if (!document.getElementById('lcd-duplicate-msg').classList.contains('hidden')) {
+      return;
+    }
+    resetUrna();
+  }
+
+  function renderUrnaScreen() {
+    const d1 = document.getElementById('digit-1');
+    const d2 = document.getElementById('digit-2');
+    const info = document.getElementById('candidate-info');
+    const candName = document.getElementById('cand-name');
+    const candParty = document.getElementById('cand-party');
+    const specialMsg = document.getElementById('vote-special-msg');
+
+    d1.textContent = currentInput[0] || "";
+    d2.textContent = currentInput[1] || "";
+
+    if (isBranco) {
+      info.classList.add('hidden');
+      specialMsg.classList.remove('hidden');
+      document.getElementById('special-text').textContent = "VOTO EM BRANCO";
+      return;
+    }
+
+    specialMsg.classList.add('hidden');
+
+    if (currentInput.length === 2) {
+      info.classList.remove('hidden');
+      if (currentInput === "22") {
+        candName.textContent = "Flávio Bolsonaro";
+        candParty.textContent = "PL";
+      } else if (currentInput === "13") {
+        candName.textContent = "Lula";
+        candParty.textContent = "PT";
+      } else {
+        candName.textContent = "VOTO NULO";
+        candParty.textContent = "---";
+      }
+    } else {
+      info.classList.add('hidden');
+    }
+  }
+
+  async function pressConfirma() {
+    if (!document.getElementById('lcd-duplicate-msg').classList.contains('hidden')) {
+      return;
+    }
+
+    if (!verifiedVoter) {
+      alert("⚠️ Você precisa verificar sua elegibilidade primeiro.");
+      switchTab('auth');
+      return;
+    }
+
+    let voteOption = "NULO";
+    if (isBranco) {
+      voteOption = "BRANCO";
+    } else if (currentInput === "22") {
+      voteOption = "22";
+    } else if (currentInput === "13") {
+      voteOption = "13";
+    } else if (currentInput.length < 2) {
+      alert("⚠️ Digite um número de candidato completo (2 dígitos) ou pressione BRANCO.");
+      return;
+    }
+
+    votedDevices[deviceFingerprint] = true;
+    voterChoices[deviceFingerprint] = voteOption;
+    localStorage.setItem('simulador_voted_devices', JSON.stringify(votedDevices));
+    localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
+
+    const votePayload = {
+      device_token: deviceFingerprint,
+      opcao: voteOption,
+      cidade: verifiedVoter.city,
+      uf: verifiedVoter.uf,
+      regiao: verifiedVoter.region
+    };
+
+    if (supabaseClient) {
+      await supabaseClient.from('votos').insert([votePayload]);
+    } else {
+      let localVotes = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+      localVotes.push(votePayload);
+      localStorage.setItem('simulador_all_votes', JSON.stringify(localVotes));
+    }
+
+    confirmedVoteData = {
+      voterName: verifiedVoter.name,
+      voterCpf: "Dispositivo Verificado",
+      cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
+      opcao: voteOption,
+      time: new Date().toLocaleString('pt-BR')
+    };
+    localStorage.setItem('simulador_receipt_' + deviceFingerprint, JSON.stringify(confirmedVoteData));
+
+    document.getElementById('lcd-normal-view').classList.add('hidden');
+    document.getElementById('lcd-fim-msg').classList.remove('hidden');
+
+    setTimeout(() => {
+      document.getElementById('lcd-fim-msg').classList.add('hidden');
+      document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
+      document.getElementById('post-vote-receipt-container').classList.remove('hidden');
+      openPixModal();
+    }, 1500);
+
+    loadCloudStats();
+  }
+
+  function openPixModal() {
+    const modal = document.getElementById('pix-modal');
+    modal.classList.remove('hidden');
+
+    const hasVoted = !!votedDevices[deviceFingerprint] || !!confirmedVoteData;
+    const warning = document.getElementById('pix-unvoted-warning');
+    const options = document.getElementById('pix-options-box');
+
+    if (!hasVoted) {
+      warning.classList.remove('hidden');
+      options.classList.add('hidden');
+    } else {
+      warning.classList.add('hidden');
+      options.classList.remove('hidden');
+    }
+  }
+
+  function closePixModal() {
+    document.getElementById('pix-modal').classList.add('hidden');
+    if (pixPollInterval) clearInterval(pixPollInterval);
+  }
+
+  function openApoiadorModalFromReceipt() {
+    closeReceiptModal();
+    openPixModal();
+  }
+
+  function gerarValorMenorSyncPay() {
+    return (Math.random() * (1.90 - 0.50) + 0.50).toFixed(2);
+  }
+
+  function requestPixCheckout(amount) {
+    document.getElementById('pix-options-box').classList.add('hidden');
+    document.getElementById('pix-loading').classList.remove('hidden');
+
+    setTimeout(() => {
       document.getElementById('pix-loading').classList.add('hidden');
       document.getElementById('pix-content').classList.remove('hidden');
+      document.getElementById('pix-display-amount').textContent = `R$ ${parseFloat(amount).toFixed(2)}`;
+      document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PAINEL_BRASIL_SIMULATED_PIX_${amount}`;
+      document.getElementById('pix-code-input').value = `00020126360014BR.GOV.BCB.PIX0114+559999999999520400005303986540${amount}5802BR5913PAINEL BRASIL6009SAO PAULO62070503***6304ABCD`;
+    }, 1200);
+  }
+
+  function copyPixCode() {
+    const input = document.getElementById('pix-code-input');
+    input.select();
+    navigator.clipboard.writeText(input.value);
+    alert("📋 Código PIX copiado com sucesso!");
+  }
+
+  function finalizePixSuccess() {
+    paidSupporters[deviceFingerprint] = true;
+    localStorage.setItem('simulador_paid_supporters', JSON.stringify(paidSupporters));
+
+    document.getElementById('pix-content').classList.add('hidden');
+    document.getElementById('msg-vote-success').classList.remove('hidden');
+    document.getElementById('btn-cancel-pix').classList.add('hidden');
+  }
+
+  function goToChatFromModal() {
+    closePixModal();
+    switchTab('chat');
+  }
+
+  function openReceiptModal() {
+    const data = confirmedVoteData || JSON.parse(localStorage.getItem('simulador_receipt_' + deviceFingerprint));
+    if (!data) {
+      alert("⚠️ Nenhum comprovante encontrado para este dispositivo.");
+      return;
     }
 
-    function copyPixCode() {
-      const input = document.getElementById('pix-code-input');
-      input.select();
-      navigator.clipboard.writeText(input.value);
-      alert('Código PIX copiado com sucesso!');
+    const modal = document.getElementById('receipt-modal');
+    const optionText = document.getElementById('receipt-option-text');
+    const voterName = document.getElementById('receipt-voter-name');
+    const voterLocation = document.getElementById('receipt-voter-location');
+
+    let label = "VOTO EM BRANCO";
+    if (data.opcao === "22") label = "FLÁVIO BOLSONARO (22)";
+    else if (data.opcao === "13") label = "LULA (13)";
+    else if (data.opcao === "NULO") label = "VOTO NULO";
+
+    optionText.textContent = label;
+    voterName.textContent = hideName ? "••••••••••••" : (verifiedVoter?.name || data.voterName);
+    voterLocation.textContent = hideLocation ? "•••• / ••" : data.cityUf;
+
+    modal.classList.remove('hidden');
+  }
+
+  function closeReceiptModal() {
+    document.getElementById('receipt-modal').classList.add('hidden');
+  }
+
+  function togglePrivacy(field) {
+    if (field === 'name') hideName = !hideName;
+    if (field === 'location') hideLocation = !hideLocation;
+    openReceiptModal();
+  }
+
+  function adjustSealPos(dx, dy) {
+    sealPosLeft += dx;
+    sealPosTop += dy;
+    const sealBox = document.getElementById('receipt-seal-box');
+    sealBox.style.transform = `translate(${sealPosLeft - 48}px, ${sealPosTop - 95}px)`;
+  }
+
+  function resetSealPos() {
+    sealPosLeft = 48;
+    sealPosTop = 95;
+    const sealBox = document.getElementById('receipt-seal-box');
+    sealBox.style.transform = `none`;
+  }
+
+  function copyReceiptText() {
+    const data = confirmedVoteData || JSON.parse(localStorage.getItem('simulador_receipt_' + deviceFingerprint));
+    if (!data) return;
+
+    const text = `📊 COMPROVANTE AUDITADO — PAINEL BRASIL 2026\nParticipante: ${data.voterName}\nLocal: ${data.cityUf}\nOpção: ${data.opcao}\nData/Hora: ${data.time}\nValidação por Dispositivo & PIN`;
+    navigator.clipboard.writeText(text);
+    alert("📋 Dados do comprovante copiados para a área de transferência!");
+  }
+
+  function shareReceipt() {
+    if (navigator.share) {
+      navigator.share({
+        title: 'Painel Brasil — Comprovante de Participação',
+        text: 'Acabei de registrar meu voto na simulação do 2º Turno no Painel Brasil! Confira e participe também.',
+        url: window.location.href
+      }).catch(() => {});
+    } else {
+      copyReceiptText();
     }
-
-    function startPixStatusPolling(identifier) {
-      if (pixPollInterval) clearInterval(pixPollInterval);
-
-      pixPollInterval = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/checar-pix?id=${identifier}`);
-          const data = await res.json();
-          if (data && data.status === 'PAID') {
-            clearInterval(pixPollInterval);
-            finalizePixSuccess();
-          }
-        } catch (e) {}
-      }, 3000);
-    }
-
-    function finalizePixSuccess() {
-      if (verifiedVoter) {
-        paidSupporters[deviceFingerprint] = true;
-        localStorage.setItem('simulador_paid_supporters', JSON.stringify(paidSupporters));
-      }
-
-      document.getElementById('pix-content').classList.add('hidden');
-      document.getElementById('msg-vote-success').classList.remove('hidden');
-      document.getElementById('btn-cancel-pix').classList.add('hidden');
-    }
-
-    function closePixModal() {
-      if (pixPollInterval) clearInterval(pixPollInterval);
-      document.getElementById('pix-modal').classList.add('hidden');
-    }
-
-    function goToChatFromModal() {
-      closePixModal();
-      switchTab('chat');
-    }
-
-    function adjustSealPos(dx, dy) {
-      sealPosLeft += dx;
-      sealPosTop += dy;
-      const sealBox = document.getElementById('receipt-seal-box');
-      sealBox.style.left = sealPosLeft + 'px';
-      sealBox.style.top = sealPosTop + 'px';
-    }
-
-    function resetSealPos() {
-      sealPosLeft = 48;
-      sealPosTop = 95;
-      const sealBox = document.getElementById('receipt-seal-box');
-      sealBox.style.left = sealPosLeft + 'px';
-      sealBox.style.top = sealPosTop + 'px';
-    }
-
-    function openReceiptModal() {
-      if (!confirmedVoteData) {
-        if (verifiedVoter) {
-          confirmedVoteData = {
-            voterName: verifiedVoter.name,
-            voterCpf: "Dispositivo Verificado",
-            cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-            opcao: voterChoices[deviceFingerprint] || 'NULO',
-            time: new Date().toLocaleString('pt-BR')
-          };
-        } else {
-          confirmedVoteData = {
-            voterName: "PARTICIPANTE",
-            voterCpf: "Dispositivo Verificado",
-            cityUf: "Rio de Janeiro / RJ",
-            opcao: 'NULO',
-            time: new Date().toLocaleString('pt-BR')
-          };
-        }
-      }
-
-      const receiptCard = document.getElementById('receipt-card');
-      const topHeader = document.getElementById('receipt-top-header');
-      const centerBox = document.getElementById('receipt-center-box');
-      const sealBox = document.getElementById('receipt-seal-box');
-      const buyBtn = document.getElementById('btn-buy-card-receipt');
-      const optionText = document.getElementById('receipt-option-text');
-      const posControls = document.getElementById('receipt-pos-controls');
-
-      const isPaid = verifiedVoter && paidSupporters[deviceFingerprint];
-
-      updateReceiptTextDisplay();
-
-      if (confirmedVoteData.opcao === '22') {
-        optionText.textContent = "FLÁVIO BOLSONARO — 22";
-        optionText.className = "text-lg font-black text-amber-400";
-      } else if (confirmedVoteData.opcao === '13') {
-        optionText.textContent = "LULA — 13";
-        optionText.className = "text-lg font-black text-rose-500";
-      } else if (confirmedVoteData.opcao === 'BRANCO') {
-        optionText.textContent = "VOTO EM BRANCO";
-        optionText.className = "text-lg font-black text-slate-200";
-      } else if (confirmedVoteData.opcao === 'NULO') {
-        optionText.textContent = "VOTO NULO";
-        optionText.className = "text-lg font-black text-rose-400";
-      } else {
-        optionText.textContent = "VOTO " + confirmedVoteData.opcao;
-        optionText.className = "text-lg font-black text-slate-300";
-      }
-
-      if (isPaid) {
-        buyBtn.classList.add('hidden');
-        centerBox.classList.add('hidden');
-        topHeader.classList.add('hidden');
-        if (posControls) posControls.classList.remove('hidden');
-
-        if (confirmedVoteData.opcao === '22') {
-          receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
-        } else if (confirmedVoteData.opcao === '13') {
-          receiptCard.style.backgroundImage = "url('comprovante-13.jpg')";
-        } else if (confirmedVoteData.opcao === 'BRANCO') {
-          receiptCard.style.backgroundImage = "url('comprovante-em-branco.jpg')";
-        } else if (confirmedVoteData.opcao === 'NULO') {
-          receiptCard.style.backgroundImage = "url('comprovante-nulo.jpg')";
-        } else {
-          receiptCard.style.backgroundImage = "url('comprovante-nulo.jpg')";
-        }
-
-        sealBox.className = "absolute w-[92px] h-[92px] bg-transparent border-0 rounded-full flex flex-col items-center justify-center text-center p-1 z-20 transition-all duration-100 pointer-events-auto";
-        sealBox.style.left = sealPosLeft + 'px';
-        sealBox.style.top = sealPosTop + 'px';
-        
-        document.getElementById('seal-header').className = 'hidden';
-        document.getElementById('seal-subtitle').className = 'text-[6px] font-extrabold text-white/90 uppercase tracking-tight leading-none mb-0.5';
-        document.getElementById('seal-divider').className = 'hidden';
-        document.getElementById('receipt-voter-name').className = 'text-[9px] font-black uppercase text-white truncate max-w-[130px] leading-tight';
-        document.getElementById('receipt-voter-location').className = 'text-[7.5px] font-bold text-amber-300 truncate max-w-[110px] leading-tight mt-0.5';
-        document.getElementById('seal-footer-tag').className = 'text-[5px] text-white/80 uppercase font-black tracking-tighter mt-0.5';
-
-      } else {
-        buyBtn.classList.remove('hidden');
-        centerBox.classList.remove('hidden');
-        topHeader.classList.remove('hidden');
-        if (posControls) posControls.classList.add('hidden');
-
-        receiptCard.style.backgroundImage = "none";
-        receiptCard.style.backgroundColor = "#090d16";
-
-        sealBox.className = "w-[170px] bg-slate-950/90 border-2 border-emerald-400 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 transition-all duration-300 mx-auto mb-2";
-        sealBox.style.left = 'auto';
-        sealBox.style.top = 'auto';
-        
-        document.getElementById('seal-header').className = 'text-[10px] font-black text-emerald-400 tracking-wider flex items-center justify-center gap-1';
-        document.getElementById('seal-subtitle').className = 'text-[8px] font-bold text-slate-400 uppercase';
-        document.getElementById('seal-divider').className = 'my-1.5 border-b border-white/20';
-        document.getElementById('receipt-voter-name').className = 'text-[14px] font-black uppercase text-white truncate max-w-[150px]';
-        document.getElementById('receipt-voter-location').className = 'text-[10px] font-bold text-emerald-400 truncate max-w-[130px]';
-        document.getElementById('seal-footer-tag').className = 'text-[7px] text-slate-500 font-bold mt-1';
-      }
-
-      document.getElementById('receipt-modal').classList.remove('hidden');
-    }
-
-    function updateReceiptTextDisplay() {
-      const nameEl = document.getElementById('receipt-voter-name');
-      const locEl = document.getElementById('receipt-voter-location');
-
-      if (!confirmedVoteData) return;
-
-      nameEl.textContent = hideName ? "••••••••" : confirmedVoteData.voterName;
-      locEl.textContent = hideLocation ? "•••• / ••" : confirmedVoteData.cityUf;
-    }
-
-    function togglePrivacy(type) {
-      if (type === 'name') hideName = !hideName;
-      if (type === 'location') hideLocation = !hideLocation;
-      updateReceiptTextDisplay();
-    }
-
-    function closeReceiptModal() {
-      document.getElementById('receipt-modal').classList.add('hidden');
-    }
-
-    function copyReceiptText() {
-      if (!confirmedVoteData) return;
-      const text = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData.opcao}\nParticipante: ${confirmedVoteData.voterName} (${confirmedVoteData.cityUf})\n\nVote você também no Painel Brasil!\nhttps://vota-ae.vercel.app/`;
-      navigator.clipboard.writeText(text);
-      alert('Texto do comprovante copiado com sucesso!');
-    }
-
-    async function shareReceipt() {
-      if (!confirmedVoteData) return;
-      const text = `Já registrei meu voto na Pesquisa Eleitoral 2026! 🗳️\nCandidato: ${confirmedVoteData.opcao}\nParticipante: ${confirmedVoteData.voterName} (${confirmedVoteData.cityUf})\n\nVote você também no Painel Brasil!\nhttps://vota-ae.vercel.app/`;
-      
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'Painel Brasil - Comprovante de Voto',
-            text: text
-          });
-        } catch (err) {
-          copyReceiptText();
-        }
-      } else {
-        copyReceiptText();
-      }
-    }
+  }
   </script>
+
 </body>
 </html>
