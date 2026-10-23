@@ -73,7 +73,7 @@
 
       <div class="bg-blue-950/40 border border-blue-500/30 rounded-xl p-2.5 text-center">
         <p class="text-[10px] text-blue-300 font-medium leading-tight">
-          ℹ️ <b>Plataforma Independente:</b> Esta é uma simulação e pesquisa de opinião não oficial, sem recolha de dados sensíveis.
+          ℹ️ <b>Plataforma Independente:</b> Esta é uma simulação e pesquisa de opinião não oficial, sem recolha de dados sensíveis[span_1](start_span)[span_1](end_span).
         </p>
       </div>
 
@@ -105,6 +105,12 @@
             <div>
               <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nome Completo</label>
               <input type="text" id="voter-name" placeholder="Ex: Maria da Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nome de Usuário / Apelido</label>
+              <input type="text" id="voter-nickname" placeholder="Ex: MariaRJ" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
+              <p class="text-[10px] text-blue-400 mt-1">ℹ️ Vai aparecer no comprovante exatamente assim.</p>
             </div>
 
             <div>
@@ -184,7 +190,7 @@
 
             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-left text-xs font-mono space-y-1">
               <p class="text-slate-400">PARTICIPANTE: <span id="summary-name" class="text-white font-bold"></span></p>
-              <p class="text-slate-400">DISPOSITIVO: <span id="summary-doc" class="text-blue-400 font-bold">VERIFICADO</span></p>
+              <p class="text-slate-400">APELIDO: <span id="summary-nickname" class="text-blue-400 font-bold"></span></p>
               <p class="text-slate-400">MUNICIPIO / UF: <span id="summary-state" class="text-blue-400 font-bold"></span></p>
               <p class="text-slate-400">STATUS: <span id="summary-vote-status" class="text-blue-400 font-bold">APTO PARA VOTAR</span></p>
             </div>
@@ -779,6 +785,7 @@
     let votedDevices = JSON.parse(localStorage.getItem('simulador_voted_devices') || "{}");
     let voterChoices = JSON.parse(localStorage.getItem('simulador_voter_choices') || "{}");
     let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}");
+    let voterNames = JSON.parse(localStorage.getItem('simulador_voter_names') || "{}");
     let voterDevicePins = JSON.parse(localStorage.getItem('simulador_voter_pins') || "{}");
     let voterLocations = JSON.parse(localStorage.getItem('simulador_voter_locations') || "{}");
     let paidSupporters = JSON.parse(localStorage.getItem('simulador_paid_supporters') || "{}");
@@ -803,12 +810,20 @@
       await loadCloudStats();
       renderChat();
 
-      // Preenche automaticamente o local se já houver registo neste dispositivo
+      // Preenche automaticamente o local e o nome se já houver registo neste dispositivo
       if (voterLocations[deviceFingerprint]) {
         const loc = voterLocations[deviceFingerprint];
         document.getElementById('voter-uf-select').value = loc.uf;
         document.getElementById('voter-city-search').value = loc.city;
         document.getElementById('selected-city-val').value = loc.city;
+      }
+
+      if (voterNames[deviceFingerprint]) {
+        document.getElementById('voter-name').value = voterNames[deviceFingerprint];
+      }
+
+      if (voterNicknames[deviceFingerprint]) {
+        document.getElementById('voter-nickname').value = voterNicknames[deviceFingerprint];
       }
 
       setInterval(() => {
@@ -1047,6 +1062,7 @@
 
     async function submitStep1() {
       const name = document.getElementById('voter-name').value.trim();
+      const nickname = document.getElementById('voter-nickname').value.trim() || name.split(' ')[0];
       const pin = document.getElementById('voter-pin').value.trim();
       const ufSelect = document.getElementById('voter-uf-select');
       const city = document.getElementById('voter-city-search').value.trim() || "Capital";
@@ -1075,6 +1091,16 @@
         localStorage.setItem('simulador_voter_pins', JSON.stringify(voterDevicePins));
       }
 
+      if (!voterNames[deviceFingerprint]) {
+        voterNames[deviceFingerprint] = name;
+        localStorage.setItem('simulador_voter_names', JSON.stringify(voterNames));
+      }
+
+      if (!voterNicknames[deviceFingerprint]) {
+        voterNicknames[deviceFingerprint] = nickname;
+        localStorage.setItem('simulador_voter_nicknames', JSON.stringify(voterNicknames));
+      }
+
       if (!voterLocations[deviceFingerprint]) {
         voterLocations[deviceFingerprint] = { uf: ufSelect.value, city: city };
         localStorage.setItem('simulador_voter_locations', JSON.stringify(voterLocations));
@@ -1089,14 +1115,16 @@
       setTimeout(() => {
         document.getElementById('auth-step-2').classList.add('hidden');
 
+        const lockedName = voterNames[deviceFingerprint] || name;
+        const lockedNick = voterNicknames[deviceFingerprint] || nickname;
         const lockedLoc = voterLocations[deviceFingerprint] || { uf: ufSelect.value, city: city };
         const selectedOpt = ufSelect.querySelector(`option[value="${lockedLoc.uf}"]`);
         const region = selectedOpt ? selectedOpt.getAttribute('data-region') : 'Norte';
 
-        verifiedVoter = { name, pin, uf: lockedLoc.uf, city: lockedLoc.city, region, token: deviceFingerprint };
+        verifiedVoter = { name: lockedName, nickname: lockedNick, pin, uf: lockedLoc.uf, city: lockedLoc.city, region, token: deviceFingerprint };
 
-        document.getElementById('summary-name').textContent = name;
-        document.getElementById('summary-doc').textContent = "Dispositivo Seguro";
+        document.getElementById('summary-name').textContent = lockedName;
+        document.getElementById('summary-nickname').textContent = lockedNick;
         document.getElementById('summary-state').textContent = `${lockedLoc.city} / ${lockedLoc.uf} (${region})`;
 
         const statusEl = document.getElementById('summary-vote-status');
@@ -1110,7 +1138,7 @@
             confirmedVoteData = JSON.parse(savedReceipt);
           } else if (dbRecord) {
             confirmedVoteData = {
-              voterName: name,
+              voterName: lockedName,
               voterCpf: "Dispositivo Verificado",
               cityUf: `${dbRecord.cidade || lockedLoc.city} / ${dbRecord.uf || lockedLoc.uf}`,
               opcao: dbRecord.opcao,
@@ -1184,7 +1212,7 @@
         document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition flex items-center gap-1";
         
         const isPaidSupporter = verifiedVoter && paidSupporters[deviceFingerprint];
-        const nickname = verifiedVoter ? voterNicknames[deviceFingerprint] : null;
+        const nickname = verifiedVoter ? (voterNicknames[deviceFingerprint] || verifiedVoter.nickname) : null;
         
         document.getElementById('chat-user-badge').textContent = nickname ? `${nickname} (${verifiedVoter.uf})` : (verifiedVoter ? verifiedVoter.name.split(' ')[0] : "Visitante");
         
@@ -1306,7 +1334,7 @@
       const text = input.value.trim();
       if (!text) return;
 
-      const nickname = voterNicknames[deviceFingerprint] || verifiedVoter.name.split(' ')[0];
+      const nickname = voterNicknames[deviceFingerprint] || verifiedVoter.nickname || verifiedVoter.name.split(' ')[0];
       const userVote = voterChoices[deviceFingerprint] || confirmedVoteData?.opcao || 'NULO';
 
       const newMsg = {
