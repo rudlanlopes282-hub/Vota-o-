@@ -695,6 +695,15 @@
           </div>
         </div>
 
+        <!-- PAINEL DE RESPOSTA ATIVA (REPLY CONTEXT) -->
+        <div id="replying-banner" class="hidden bg-slate-900 border border-blue-500/40 p-2.5 rounded-xl flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2 truncate">
+            <span class="text-blue-400 font-bold">↩️ Respondendo a:</span>
+            <span id="replying-target-text" class="text-slate-300 truncate font-medium">---</span>
+          </div>
+          <button onclick="cancelReply()" class="text-slate-400 hover:text-white font-bold px-1.5 py-0.5 rounded">✕</button>
+        </div>
+
         <div id="chat-input-container" class="hidden flex gap-2">
           <input type="text" id="chat-input" placeholder="Digite seu comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-blue-500">
           <button onclick="sendChatMessage()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-lg shadow-blue-600/20">
@@ -759,6 +768,9 @@
     // VARIÁVEIS PARA CONTROLAR A POSIÇÃO DO SELO NO CARD PAGO
     let sealPosLeft = 48;
     let sealPosTop = 95;
+
+    // VARIÁVEL PARA O CONTROLE DE RESPOSTAS DIRETAS (REPLY)
+    let replyingToMsgId = null;
 
     // GERAÇÃO DA ASSINATURA DO NAVEGADOR (FINGERPRINT)
     const deviceFingerprint = `${navigator.language}-${screen.width}x${screen.height}-${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
@@ -1269,11 +1281,13 @@
           lockWarning.classList.remove('hidden');
           nicknameBox.classList.add('hidden');
           inputContainer.classList.add('hidden');
+          document.getElementById('replying-banner').classList.add('hidden');
         } else {
           lockWarning.classList.add('hidden');
           if (!nickname) {
             nicknameBox.classList.remove('hidden');
             inputContainer.classList.add('hidden');
+            document.getElementById('replying-banner').classList.add('hidden');
           } else {
             nicknameBox.classList.add('hidden');
             inputContainer.classList.remove('hidden');
@@ -1318,6 +1332,21 @@
       document.getElementById('chat-input-container').classList.remove('hidden');
     }
 
+    // FUNÇÕES PARA GERENCIAR RESPOSTAS DIRETAS (REPLY)
+    function setReplyTo(msgId, senderName, msgText) {
+      replyingToMsgId = msgId;
+      const banner = document.getElementById('replying-banner');
+      const targetText = document.getElementById('replying-target-text');
+      targetText.textContent = `${senderName}: "${msgText}"`;
+      banner.classList.remove('hidden');
+      document.getElementById('chat-input').focus();
+    }
+
+    function cancelReply() {
+      replyingToMsgId = null;
+      document.getElementById('replying-banner').classList.add('hidden');
+    }
+
     function renderChat() {
       const chatBox = document.getElementById('chat-messages');
       if (!chatBox) return;
@@ -1345,16 +1374,33 @@
           voteBadgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/40";
         }
 
+        // Bloco de citação caso seja uma resposta direta
+        let replyHtml = "";
+        if (msg.replyToId) {
+          const originalMsg = chatMessages.find(m => m.id === msg.replyToId);
+          if (originalMsg) {
+            replyHtml = `
+              <div class="bg-slate-900/90 border-l-2 border-blue-500 p-1.5 rounded my-1 text-[11px] text-slate-400">
+                <span class="font-bold text-blue-400">@${originalMsg.sender}:</span> ${originalMsg.text}
+              </div>
+            `;
+          }
+        }
+
         return `
-          <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl space-y-1">
+          <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl space-y-1 relative group">
             <div class="flex justify-between items-center text-[10px]">
               <div class="flex items-center gap-1.5 flex-wrap">
                 <span class="font-extrabold text-blue-400">${msg.sender || 'Participante'}</span>
                 <span class="bg-slate-900 border border-slate-800 px-1.5 py-0.5 rounded text-slate-400 font-mono">${msg.uf || 'BR'}</span>
                 ${msg.vote ? `<span class="border px-1.5 py-0.5 rounded font-bold ${voteBadgeClass}">${voteLabelText}</span>` : ''}
               </div>
-              <span class="text-slate-500 font-mono">${msg.time}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-slate-500 font-mono">${msg.time}</span>
+                <button onclick="setReplyTo(${msg.id}, '${msg.sender || 'Participante'}', '${msg.text.replace(/'/g, "\\'")}')" class="text-blue-400 hover:text-blue-300 text-[10px] font-bold bg-blue-500/10 px-2 py-0.5 rounded transition">Responder ↩️</button>
+              </div>
             </div>
+            ${replyHtml}
             <p class="text-slate-200 text-xs leading-normal">${msg.text}</p>
           </div>
         `;
@@ -1387,6 +1433,7 @@
 
       const newMsg = {
         id: Date.now(),
+        replyToId: replyingToMsgId,
         sender: nickname,
         uf: verifiedVoter.uf,
         vote: userVote,
@@ -1398,6 +1445,7 @@
       localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
 
       input.value = "";
+      cancelReply();
       renderChat();
     }
 
