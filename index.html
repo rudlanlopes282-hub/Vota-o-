@@ -800,7 +800,7 @@
       loadCloudStats();
     })
     .subscribe();
-}
+  }
 
   if (supabaseClient) {
   supabaseClient
@@ -812,7 +812,7 @@
       }
     })
     .subscribe();
-}
+  }
 
 
     let pixPollInterval = null;
@@ -889,9 +889,25 @@
     };
     let cityVotes = {};
 
-    let chatMessages = JSON.parse(localStorage.getItem('simulador_chat_msgs') || JSON.stringify([
-      { id: 1, device_token: "system", sender: "Moderação", uf: "DF", vote: null, text: "Bem-vindo ao debate público independente. Mantenha o respeito.", time: "Agora", isSystem: true }
-    ]));
+    let chatMessages = [];
+
+    async function loadCloudMessages() {
+    const { data, error } = await supabaseClient
+    .from('mensagens')
+    .select('*')
+    .order('id', { ascending: true });
+    
+    if (!error && data) {
+    chatMessages = data;
+    // Função para atualizar as mensagens no ecrã
+    if (typeof renderChat === 'function') {
+      renderChat();
+      }
+     }
+    }
+
+    loadCloudMessages();
+
 
     const palavrasProibidas = [
       "navegador anônimo", "aba anônima", "janela anônima", "modo anônimo", 
