@@ -704,11 +704,26 @@
           <button onclick="cancelReply()" class="text-slate-400 hover:text-white font-bold px-1.5 py-0.5 rounded">✕</button>
         </div>
 
-        <div id="chat-input-container" class="hidden flex gap-2">
-          <input type="text" id="chat-input" placeholder="Digite seu comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-blue-500">
-          <button onclick="sendChatMessage()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-lg shadow-blue-600/20">
-            Enviar 🚀
-          </button>
+        <!-- PAINEL FLUTUANTE DE EMOJIS / FIGURINHAS RÁPIDAS -->
+        <div id="chat-input-container" class="hidden space-y-2">
+          <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-800 p-1.5 rounded-xl overflow-x-auto custom-scrollbar">
+            <span class="text-[10px] text-slate-400 font-bold pl-1 uppercase">Reações:</span>
+            <button onclick="insertEmoji('👍')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">👍</button>
+            <button onclick="insertEmoji('👏')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">👏</button>
+            <button onclick="insertEmoji('🔥')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">🔥</button>
+            <button onclick="insertEmoji('❤️')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">❤️</button>
+            <button onclick="insertEmoji('🇧🇷')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">🇧🇷</button>
+            <button onclick="insertEmoji('🗳️')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">🗳️</button>
+            <button onclick="insertEmoji('🚀')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">🚀</button>
+            <button onclick="insertEmoji('⭐')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">⭐</button>
+          </div>
+
+          <div class="flex gap-2">
+            <input type="text" id="chat-input" placeholder="Digite seu comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-blue-500">
+            <button onclick="sendChatMessage()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-lg shadow-blue-600/20">
+              Enviar 🚀
+            </button>
+          </div>
         </div>
       </section>
 
@@ -850,6 +865,13 @@
     function verificarConteudoChat(texto) {
       const textoMinusculo = texto.toLowerCase();
       return !palavrasProibidas.some(termo => textoMinusculo.includes(termo));
+    }
+
+    // FUNÇÃO PARA INSERIR EMOJIS RÁPIDOS NO CAMPO DE TEXTO
+    function insertEmoji(emoji) {
+      const input = document.getElementById('chat-input');
+      input.value += emoji;
+      input.focus();
     }
 
     // FUNÇÃO ACIONADA QUANDO O TURNSTILE É CONCLUÍDO COM SUCESSO
