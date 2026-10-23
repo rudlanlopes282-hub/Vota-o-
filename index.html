@@ -21,6 +21,7 @@
     }
     .custom-scrollbar::-webkit-scrollbar {
       width: 6px;
+      height: 6px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
       background: #020617;
@@ -704,26 +705,44 @@
           <button onclick="cancelReply()" class="text-slate-400 hover:text-white font-bold px-1.5 py-0.5 rounded">✕</button>
         </div>
 
-        <!-- PAINEL FLUTUANTE DE EMOJIS / FIGURINHAS RÁPIDAS -->
-        <div id="chat-input-container" class="hidden space-y-2">
-          <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-800 p-1.5 rounded-xl overflow-x-auto custom-scrollbar">
-            <span class="text-[10px] text-slate-400 font-bold pl-1 uppercase">Reações:</span>
-            <button onclick="insertEmoji('👍')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">👍</button>
-            <button onclick="insertEmoji('👏')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">👏</button>
-            <button onclick="insertEmoji('🔥')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">🔥</button>
-            <button onclick="insertEmoji('❤️')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">❤️</button>
-            <button onclick="insertEmoji('🇧🇷')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">🇧🇷</button>
-            <button onclick="insertEmoji('🗳️')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">🗳️</button>
-            <button onclick="insertEmoji('🚀')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">🚀</button>
-            <button onclick="insertEmoji('⭐')" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-lg text-sm transition">⭐</button>
+        <!-- GAVETA FLUTUANTE DE FIGURINHAS (ESTILO TIKTOK) -->
+        <div id="sticker-drawer" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-3 shadow-2xl">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="text-xs font-bold text-white uppercase tracking-wider">🗂️ Minhas Figurinhas & Salvos</span>
+            <button onclick="toggleStickerDrawer()" class="text-slate-400 hover:text-white text-xs font-bold px-2 py-0.5 rounded">✕</button>
           </div>
+          <div id="stickers-grid" class="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto custom-scrollbar p-1">
+            <!-- BOTÃO "+" PARA ADICIONAR NOVA FIGURINHA -->
+            <label class="aspect-square bg-slate-950 hover:bg-slate-800 border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl flex flex-col items-center justify-center cursor-pointer transition group">
+              <span class="text-xl text-slate-400 group-hover:text-blue-400 font-bold">+</span>
+              <span class="text-[9px] text-slate-500 mt-1 uppercase font-semibold">Adicionar</span>
+              <input type="file" id="sticker-file-input" accept="image/*" class="hidden" onchange="handleNewStickerUpload(event)">
+            </label>
+            <!-- FIGURINHAS PADRÃO PRÉ-CARREGADAS -->
+            <div onclick="sendStickerMessage('🔥')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">🔥</div>
+            <div onclick="sendStickerMessage('🇧🇷')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">🇧🇷</div>
+            <div onclick="sendStickerMessage('⭐')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">⭐</div>
+          </div>
+        </div>
 
-          <div class="flex gap-2">
-            <input type="text" id="chat-input" placeholder="Digite seu comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-blue-500">
-            <button onclick="sendChatMessage()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-lg shadow-blue-600/20">
-              Enviar 🚀
+        <!-- CAIXA DE COMENTÁRIO COM BARRA DE ÍCONES DO TIKTOK -->
+        <div id="chat-input-container" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-2.5 space-y-2">
+          <div class="flex items-center gap-2">
+            <input type="text" id="chat-input" placeholder="Adicionar comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-transparent text-xs text-white placeholder-slate-500 outline-none px-2 py-1">
+            <button onclick="sendChatMessage()" class="bg-rose-400 hover:bg-rose-500 text-slate-950 font-bold w-8 h-8 rounded-full flex items-center justify-center transition shadow">
+              ↑
             </button>
           </div>
+          
+          <div class="flex items-center justify-between border-t border-slate-800 pt-2 px-1 text-slate-400">
+            <div class="flex items-center gap-4 text-lg">
+              <button onclick="triggerFileSelect()" class="hover:text-white transition" title="Enviar Imagem">🖼️</button>
+              <button onclick="toggleStickerDrawer()" class="hover:text-white transition" title="Figurinhas">🤡</button>
+              <button onclick="insertAtSymbol()" class="hover:text-white transition font-bold text-sm" title="Menção">@</button>
+            </div>
+            <span class="text-[10px] text-slate-500">Painel Brasil Chat</span>
+          </div>
+          <input type="file" id="general-file-input" accept="image/*" class="hidden" onchange="handleGeneralImageUpload(event)">
         </div>
       </section>
 
@@ -838,6 +857,7 @@
     let voterDevicePins = JSON.parse(localStorage.getItem('simulador_voter_pins') || "{}");
     let voterLocations = JSON.parse(localStorage.getItem('simulador_voter_locations') || "{}");
     let paidSupporters = JSON.parse(localStorage.getItem('simulador_paid_supporters') || "{}");
+    let customStickers = JSON.parse(localStorage.getItem('simulador_custom_stickers') || "[]");
 
     let votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
     let regionalVotes = {
@@ -867,11 +887,115 @@
       return !palavrasProibidas.some(termo => textoMinusculo.includes(termo));
     }
 
-    // FUNÇÃO PARA INSERIR EMOJIS RÁPIDOS NO CAMPO DE TEXTO
-    function insertEmoji(emoji) {
+    // FUNÇÕES DA GAVETA DE FIGURINHAS
+    function toggleStickerDrawer() {
+      const drawer = document.getElementById('sticker-drawer');
+      drawer.classList.toggle('hidden');
+      if (!drawer.classList.contains('hidden')) {
+        renderCustomStickers();
+      }
+    }
+
+    function triggerFileSelect() {
+      document.getElementById('general-file-input').click();
+    }
+
+    function insertAtSymbol() {
       const input = document.getElementById('chat-input');
-      input.value += emoji;
+      input.value += "@";
       input.focus();
+    }
+
+    function handleGeneralImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        sendChatMessageWithImage(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleNewStickerUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        customStickers.push(e.target.result);
+        localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
+        renderCustomStickers();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function renderCustomStickers() {
+      const grid = document.getElementById('stickers-grid');
+      let customHtml = customStickers.map((imgBase64, index) => `
+        <div onclick="sendStickerMessage('${imgBase64}', true)" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl overflow-hidden cursor-pointer transition relative group">
+          <img src="${imgBase64}" class="w-full h-full object-cover">
+        </div>
+      `).join('');
+
+      grid.innerHTML = `
+        <label class="aspect-square bg-slate-950 hover:bg-slate-800 border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl flex flex-col items-center justify-center cursor-pointer transition group">
+          <span class="text-xl text-slate-400 group-hover:text-blue-400 font-bold">+</span>
+          <span class="text-[9px] text-slate-500 mt-1 uppercase font-semibold">Adicionar</span>
+          <input type="file" id="sticker-file-input" accept="image/*" class="hidden" onchange="handleNewStickerUpload(event)">
+        </label>
+        <div onclick="sendStickerMessage('🔥')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">🔥</div>
+        <div onclick="sendStickerMessage('🇧🇷')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">🇧🇷</div>
+        <div onclick="sendStickerMessage('⭐')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">⭐</div>
+        ${customHtml}
+      `;
+    }
+
+    function sendStickerMessage(content, isImage = false) {
+      if (!verifiedVoter || !paidSupporters[deviceFingerprint]) return;
+
+      const nickname = voterNicknames[deviceFingerprint] || verifiedVoter.nickname || verifiedVoter.name.split(' ')[0];
+      const userVote = voterChoices[deviceFingerprint] || confirmedVoteData?.opcao || 'NULO';
+
+      const newMsg = {
+        id: Date.now(),
+        replyToId: replyingToMsgId,
+        sender: nickname,
+        uf: verifiedVoter.uf,
+        vote: userVote,
+        text: isImage ? `<img src="${content}" class="w-24 h-24 rounded-lg object-cover mt-1">` : content,
+        isHtml: isImage,
+        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      chatMessages.push(newMsg);
+      localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
+
+      cancelReply();
+      toggleStickerDrawer();
+      renderChat();
+    }
+
+    function sendChatMessageWithImage(imgBase64) {
+      if (!verifiedVoter || !paidSupporters[deviceFingerprint]) return;
+
+      const nickname = voterNicknames[deviceFingerprint] || verifiedVoter.nickname || verifiedVoter.name.split(' ')[0];
+      const userVote = voterChoices[deviceFingerprint] || confirmedVoteData?.opcao || 'NULO';
+
+      const newMsg = {
+        id: Date.now(),
+        replyToId: replyingToMsgId,
+        sender: nickname,
+        uf: verifiedVoter.uf,
+        vote: userVote,
+        text: `<img src="${imgBase64}" class="w-32 h-32 rounded-xl object-cover mt-1">`,
+        isHtml: true,
+        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      chatMessages.push(newMsg);
+      localStorage.setItem('simulador_chat_msgs', JSON.stringify(chatMessages));
+
+      cancelReply();
+      renderChat();
     }
 
     // FUNÇÃO ACIONADA QUANDO O TURNSTILE É CONCLUÍDO COM SUCESSO
@@ -1403,11 +1527,13 @@
           if (originalMsg) {
             replyHtml = `
               <div class="bg-slate-900/90 border-l-2 border-blue-500 p-1.5 rounded my-1 text-[11px] text-slate-400">
-                <span class="font-bold text-blue-400">@${originalMsg.sender}:</span> ${originalMsg.text}
+                <span class="font-bold text-blue-400">@${originalMsg.sender}:</span> ${originalMsg.isHtml ? '[Mídia]' : originalMsg.text}
               </div>
             `;
           }
         }
+
+        const cleanTextPreview = msg.isHtml ? '[Mídia]' : msg.text.replace(/'/g, "\\'");
 
         return `
           <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl space-y-1 relative group">
@@ -1419,11 +1545,11 @@
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-slate-500 font-mono">${msg.time}</span>
-                <button onclick="setReplyTo(${msg.id}, '${msg.sender || 'Participante'}', '${msg.text.replace(/'/g, "\\'")}')" class="text-blue-400 hover:text-blue-300 text-[10px] font-bold bg-blue-500/10 px-2 py-0.5 rounded transition">Responder ↩️</button>
+                <button onclick="setReplyTo(${msg.id}, '${msg.sender || 'Participante'}', '${cleanTextPreview}')" class="text-blue-400 hover:text-blue-300 text-[10px] font-bold bg-blue-500/10 px-2 py-0.5 rounded transition">Responder ↩️</button>
               </div>
             </div>
             ${replyHtml}
-            <p class="text-slate-200 text-xs leading-normal">${msg.text}</p>
+            <div class="text-slate-200 text-xs leading-normal">${msg.text}</div>
           </div>
         `;
       }).join('');
@@ -1460,6 +1586,7 @@
         uf: verifiedVoter.uf,
         vote: userVote,
         text: text,
+        isHtml: false,
         time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       };
 
