@@ -814,7 +814,8 @@
     let sealPosTop = 95;
     let replyingToMsgId = null;
 
-    const deviceFingerprint = `${navigator.language}-${screen.width}x${screen.height}-${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
+    const deviceFingerprint = deviceSessionToken;
+
 
     let deviceSessionToken = localStorage.getItem('simulador_device_token');
     if (!deviceSessionToken) {
