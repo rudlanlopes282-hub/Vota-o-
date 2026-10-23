@@ -802,6 +802,18 @@
     .subscribe();
 }
 
+  if (supabaseClient) {
+  supabaseClient
+    .channel('mudancas-mensagens')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
+      // Função que atualiza o chat na tela
+      if (typeof loadMessages === 'function') {
+        loadMessages();
+      }
+    })
+    .subscribe();
+}
+
 
     let pixPollInterval = null;
     let pendingVoteObj = null;
