@@ -73,7 +73,7 @@
 
       <div class="bg-blue-950/40 border border-blue-500/30 rounded-xl p-2.5 text-center">
         <p class="text-[10px] text-blue-300 font-medium leading-tight">
-          ℹ️ <b>Plataforma Independente:</b> Esta é uma simulação e pesquisa de opinião não oficial, sem recolha de dados sensíveis[span_1](start_span)[span_1](end_span).
+          ℹ️ <b>Plataforma Independente:</b> Esta é uma simulação e pesquisa de opinião não oficial, sem recolha de dados sensíveis.
         </p>
       </div>
 
@@ -810,7 +810,6 @@
       await loadCloudStats();
       renderChat();
 
-      // Preenche automaticamente o local e o nome se já houver registo neste dispositivo
       if (voterLocations[deviceFingerprint]) {
         const loc = voterLocations[deviceFingerprint];
         document.getElementById('voter-uf-select').value = loc.uf;
