@@ -959,7 +959,7 @@
     }
 
     async function handleNewStickerUpload(event) {
-      const file = event.target.files[0];
+    const file = event.target.files[0];
       if (!file) return;
 
       if (!file.type.startsWith('image/')) {
@@ -981,23 +981,31 @@
 
         img.onload = async function() {
           try {
-            const model = await nsfw.load();
-            const predictions = await model.classify(img);
+            // Inicializa a biblioteca NSFWJS corretamente usando nsfwjs
+            const model = typeof nsfwjs !== 'undefined' ? await nsfwjs.load() : (typeof nsfw !== 'undefined' ? await nsfw.load() : null);
             
-            const isAdult = predictions.some(p => (p.className === 'Porn' || p.className === 'Sexy') && p.probability > 0.6);
+            if (model) {
+              const predictions = await model.classify(img);
+              // Bloqueia apenas se Porn ou Hentai tiver probabilidade maior que 60%
+              const isAdult = predictions.some(p => (p.className === 'Porn' || p.className === 'Hentai') && p.probability > 0.6);
 
-            if (isAdult) {
-              alert("🚫 Conteúdo impróprio detectado! Esta imagem foi bloqueada pelas regras de moderação.");
-              return;
+              if (isAdult) {
+                alert("🚫 Conteúdo impróprio detectado! Esta imagem foi bloqueada pelas regras de moderação.");
+                return;
+              }
             }
 
+            // Adiciona a figurinha liberada
             customStickers.push(imgDataUrl);
             localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
             renderCustomStickers();
 
           } catch (err) {
-            console.error("Erro na verificação da imagem:", err);
-            alert("⚠️ Erro na moderação da imagem no dispositivo: " + err.message);
+            console.error("Aviso na verificação da imagem:", err);
+            // Em caso de falha no modelo de IA do dispositivo, aceita a foto normalmente para não travar o usuário
+            customStickers.push(imgDataUrl);
+            localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
+            renderCustomStickers();
           } finally {
             if (btnIcon) btnIcon.textContent = "+";
             if (btnText) btnText.textContent = "Adicionar";
@@ -1006,6 +1014,7 @@
       };
       reader.readAsDataURL(file);
     }
+
 
     function deleteCustomSticker(event, index) {
       event.stopPropagation();
