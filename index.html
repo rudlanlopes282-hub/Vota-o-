@@ -1,582 +1,2010 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Brasil - Pesquisa de Opinião</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0284c7',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            900: '#0c4a6e',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- FontAwesome Font -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase JS Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- FingerprintJS for Device Fingerprinting -->
-    <script src="https://openfpcdn.io/fingerprintjs/v3/i.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Painel Brasil — Pesquisa & Voto Independente</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- SCRIPT OFICIAL DO CLOUDFLARE TURNSTILE -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <!-- BIBLIOTECAS DE IA PARA MODERAÇÃO DE FOTOS (NSFWJS / TENSORFLOW) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nsfwjs@2.4.0/dist/nsfwjs.min.js"></script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      touch-action: manipulation;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .urn-lcd-font {
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #020617;
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #3b82f6;
+    }
+    input:disabled, select:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-500 selection:text-white pb-12">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between antialiased selection:bg-blue-500 selection:text-white">
 
-    <!-- Top Banner Notification -->
-    <div class="bg-amber-500/10 border-b border-amber-500/20 text-amber-300 px-4 py-2 text-xs sm:text-sm text-center flex items-center justify-center gap-2">
-        <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
-        <span><strong>Plataforma Independente:</strong> Esta é uma simulação e pesquisa de opinião não oficial, sem recolha de dados sensíveis.</span>
+  <!-- TELA PRÉVIA DE VERIFICAÇÃO (CLOUDFLARE TURNSTILE) -->
+  <div id="sec-turnstile-gate" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+      <div class="w-12 h-12 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl">
+        🛡️
+      </div>
+      <div>
+        <h2 class="text-lg font-extrabold text-white">Verificação de Segurança</h2>
+        <p class="text-xs text-slate-400 mt-1">Por favor, conclua a verificação abaixo para acessar o Painel Brasil.</p>
+      </div>
+      
+      <!-- WIDGET DO TURNSTILE -->
+      <div class="flex justify-center py-2">
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAFcbW-OkldDEkMm2" data-callback="onTurnstileSuccess" data-theme="dark"></div>
+      </div>
+
+      <p class="text-[10px] text-slate-500">Cloudflare Security Gate</p>
     </div>
+  </div>
 
-    <!-- Header / Navbar -->
-    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                    <i class="fa-solid fa-chart-column text-xl text-white"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-lg text-slate-100 leading-tight">Painel Brasil</h1>
-                    <p class="text-xs text-blue-400 font-medium">Pesquisa de Opinião — Simulação 2º Turno</p>
-                </div>
-            </div>
-            <div id="admin-badge-header" class="hidden">
-                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-1 rounded-full font-mono flex items-center gap-1.5">
-                    <i class="fa-solid fa-shield-halved text-xs"></i> Admin
-                </span>
-            </div>
+  <!-- CONTEÚDO REAL DO SITE (OCULTO ATÉ A VERIFICAÇÃO) -->
+  <div id="main-site-content" class="flex-1 flex flex-col justify-between hidden">
+    
+    <!-- TOP HEADER -->
+    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-40">
+      <div class="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-lg">
+            📊
+          </div>
+          <div>
+            <h1 class="text-sm font-bold text-white leading-tight">Painel Brasil</h1>
+            <p class="text-[10px] text-blue-400 font-semibold flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+              Pesquisa de Opinião — Simulação 2º Turno
+            </p>
+          </div>
         </div>
+        <!-- BARRA DE ABAS OCULTA ATÉ A AUTENTICAÇÃO -->
+        <div id="nav-tabs" class="hidden flex bg-slate-800 p-1 rounded-lg text-xs font-semibold">
+          <button id="btn-tab-urna" onclick="switchTab('urna')" class="px-3 py-1 rounded-md bg-blue-600 text-white transition font-bold">Votar</button>
+          <button id="btn-tab-dados" onclick="switchTab('dados')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition">Placar</button>
+          <button id="btn-tab-chat" onclick="switchTab('chat')" class="px-3 py-1 rounded-md text-slate-400 hover:text-white transition flex items-center gap-1">
+            <span>Debate</span>
+            <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+          </button>
+        </div>
+      </div>
     </header>
 
-    <main class="max-w-2xl mx-auto px-4 mt-6">
+    <main class="max-w-lg mx-auto w-full px-3 py-3 flex-1 flex flex-col justify-center space-y-4">
 
-        <!-- STEP 1: AUTH & IDENTIFICATION -->
-        <section id="step-auth" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-7 shadow-xl backdrop-blur-sm">
-            <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 mb-3">
-                    <i class="fa-solid fa-shield-halved text-xl"></i>
+      <div class="bg-blue-950/40 border border-blue-500/30 rounded-xl p-2.5 text-center">
+        <p class="text-[10px] text-blue-300 font-medium leading-tight">
+          ℹ️ <b>Plataforma Independente:</b> Esta é uma simulação e pesquisa de opinião não oficial, sem recolha de dados sensíveis.
+        </p>
+      </div>
+
+      <!-- STEP 1: ETAPA DE VERIFICAÇÃO -->
+      <section id="sec-auth" class="w-full">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
+          <div class="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div class="text-center mb-5">
+            <div class="inline-flex p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-2xl mb-2">
+              🛡️
+            </div>
+            <h2 class="text-xl font-extrabold text-white">Identificação do Participante</h2>
+            <p class="text-xs text-slate-400 mt-1">Validação segura por Dispositivo e PIN</p>
+          </div>
+
+          <div class="flex items-center justify-center gap-2 mb-6">
+            <div id="step-dot-1" class="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">1</div>
+            <div class="w-8 h-0.5 bg-slate-800"></div>
+            <div id="step-dot-2" class="w-7 h-7 rounded-full bg-slate-800 text-slate-500 font-bold text-xs flex items-center justify-center">2</div>
+            <div class="w-8 h-0.5 bg-slate-800"></div>
+            <div id="step-dot-3" class="w-7 h-7 rounded-full bg-slate-800 text-slate-500 font-bold text-xs flex items-center justify-center">3</div>
+          </div>
+
+          <div id="auth-error" class="hidden mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl text-center font-medium"></div>
+
+          <!-- FORMULÁRIO PASSO 1 -->
+          <div id="auth-step-1" class="space-y-4">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nome Completo</label>
+              <input type="text" id="voter-name" placeholder="Ex: Maria da Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nome de Usuário / Apelido</label>
+              <input type="text" id="voter-nickname" placeholder="Ex: MariaRJ" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
+              <p class="text-[10px] text-blue-400 mt-1">ℹ️ Vai aparecer no comprovante exatamente assim.</p>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">PIN / Senha de Acesso (4 dígitos)</label>
+              <input type="password" id="voter-pin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" class="w-full bg-slate-950 border border-blue-500/40 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition text-center tracking-widest text-lg">
+              <p class="text-[10px] text-slate-400 mt-1">Crie um PIN para proteger o seu voto e recuperar a sessão neste aparelho.</p>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">1. Selecione o Estado (UF)</label>
+              <select id="voter-uf-select" onchange="onUFChange()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+                <option value="PA" data-region="Norte">Pará (PA) — Norte</option>
+                <option value="SP" data-region="Sudeste">São Paulo (SP) — Sudeste</option>
+                <option value="RJ" data-region="Sudeste" selected>Rio de Janeiro (RJ) — Sudeste</option>
+                <option value="MG" data-region="Sudeste">Minas Gerais (MG) — Sudeste</option>
+                <option value="ES" data-region="Sudeste">Espírito Santo (ES) — Sudeste</option>
+                <option value="BA" data-region="Nordeste">Bahia (BA) — Nordeste</option>
+                <option value="PE" data-region="Nordeste">Pernambuco (PE) — Nordeste</option>
+                <option value="CE" data-region="Nordeste">Ceará (CE) — Nordeste</option>
+                <option value="MA" data-region="Nordeste">Maranhão (MA) — Nordeste</option>
+                <option value="PB" data-region="Nordeste">Paraíba (PB) — Nordeste</option>
+                <option value="RN" data-region="Nordeste">Rio Grande do Norte (RN) — Nordeste</option>
+                <option value="AL" data-region="Nordeste">Alagoas (AL) — Nordeste</option>
+                <option value="SE" data-region="Nordeste">Sergipe (SE) — Nordeste</option>
+                <option value="PI" data-region="Nordeste">Piauí (PI) — Nordeste</option>
+                <option value="PR" data-region="Sul">Paraná (PR) — Sul</option>
+                <option value="RS" data-region="Sul">Rio Grande do Sul (RS) — Sul</option>
+                <option value="SC" data-region="Sul">Santa Catarina (SC) — Sul</option>
+                <option value="GO" data-region="Centro-Oeste">Goiás (GO) — Centro-Oeste</option>
+                <option value="DF" data-region="Centro-Oeste">Distrito Federal (DF) — Centro-Oeste</option>
+                <option value="MT" data-region="Centro-Oeste">Mato Grosso (MT) — Centro-Oeste</option>
+                <option value="MS" data-region="Centro-Oeste">Mato Grosso do Sul (MS) — Centro-Oeste</option>
+                <option value="AM" data-region="Norte">Amazonas (AM) — Norte</option>
+                <option value="RO" data-region="Norte">Rondônia (RO) — Norte</option>
+                <option value="AP" data-region="Norte">Amapá (AP) — Norte</option>
+                <option value="AC" data-region="Norte">Acre (AC) — Norte</option>
+                <option value="RR" data-region="Norte">Roraima (RR) — Norte</option>
+                <option value="TO" data-region="Norte">Tocantins (TO) — Norte</option>
+                <option value="ZZ" data-region="Exterior">Exterior (ZZ) — Votação no Exterior</option>
+              </select>
+            </div>
+
+            <div id="city-group" class="space-y-1.5 relative">
+              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                2. Cidade / Município
+              </label>
+              <input type="text" id="voter-city-search" placeholder="Digite sua cidade..." oninput="filterCityOptions()" onfocus="if(!this.dataset.touched){ this.value=''; this.dataset.touched='true'; } filterCityOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
+              
+              <div id="city-suggestions-container" class="hidden absolute left-0 right-0 top-full bg-slate-950 border border-blue-500/40 rounded-xl max-h-48 overflow-y-auto custom-scrollbar p-1 space-y-1 shadow-2xl z-50 mt-1">
+              </div>
+
+              <input type="hidden" id="selected-city-val" value="">
+            </div>
+
+            <button onclick="submitStep1()" type="button" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 text-sm transition active:scale-[0.99] mt-2">
+              Verificar Elegibilidade &rarr;
+            </button>
+          </div>
+
+          <div id="auth-step-2" class="hidden text-center py-4 space-y-4">
+            <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+              <div class="absolute inset-0 rounded-full border-2 border-blue-500/20 border-t-blue-500 animate-spin"></div>
+              <div class="text-3xl">👤</div>
+            </div>
+            <p class="text-xs text-slate-300 font-semibold">Validando Assinatura do Aparelho...</p>
+            <p class="text-[11px] text-slate-500">Aguarde alguns segundos...</p>
+          </div>
+
+          <div id="auth-step-3" class="hidden text-center py-3 space-y-4">
+            <div class="w-12 h-12 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+              ✓
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white">Sessão Autenticada com Segurança!</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Dispositivo vinculado com sucesso ao seu PIN pessoal.</p>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-left text-xs font-mono space-y-1">
+              <p class="text-slate-400">PARTICIPANTE: <span id="summary-name" class="text-white font-bold"></span></p>
+              <p class="text-slate-400">APELIDO: <span id="summary-nickname" class="text-blue-400 font-bold"></span></p>
+              <p class="text-slate-400">MUNICIPIO / UF: <span id="summary-state" class="text-blue-400 font-bold"></span></p>
+              <p class="text-slate-400">STATUS: <span id="summary-vote-status" class="text-blue-400 font-bold">APTO PARA VOTAR</span></p>
+            </div>
+
+            <button onclick="startVotingSession()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 text-sm transition active:scale-[0.99]">
+              Acessar Cabine de Votação 🗳️
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- STEP 2: SIMULADOR DE VOTO -->
+      <section id="sec-urna" class="hidden w-full space-y-3">
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 text-center">Clique para Votar Direto</p>
+          <div class="grid grid-cols-2 gap-2">
+            
+            <button onclick="quickSelect('22')" class="flex items-center gap-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 p-2 rounded-xl text-left transition group">
+              <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-sm">
+                🏛️
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-white truncate group-hover:text-amber-400">Flávio Bolsonaro</p>
+                <p class="text-[10px] text-slate-400">PL — 22</p>
+              </div>
+              <span class="text-xs font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">22</span>
+            </button>
+
+            <button onclick="quickSelect('13')" class="flex items-center gap-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 p-2 rounded-xl text-left transition group">
+              <div class="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-sm">
+                🚩
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-white truncate group-hover:text-rose-400">Lula</p>
+                <p class="text-[10px] text-slate-400">PT — 13</p>
+              </div>
+              <span class="text-xs font-black text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">13</span>
+            </button>
+
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-2xl space-y-3">
+          
+          <div class="bg-[#c3e2c2] border-4 border-slate-800 rounded-xl p-3 text-[#051406] urn-lcd-font shadow-inner min-h-[170px] flex flex-col justify-between relative overflow-hidden">
+            
+            <div class="flex items-center justify-between border-b border-black/15 pb-1">
+              <span class="text-[11px] font-black uppercase tracking-wider text-black">PAINEL BRASIL</span>
+              <span class="text-[10px] font-black text-black/70 bg-black/10 px-1.5 py-0.5 rounded">2º TURNO</span>
+            </div>
+
+            <div id="lcd-content" class="py-2">
+              <div id="lcd-normal-view">
+                <p class="text-[11px] font-extrabold uppercase text-black/70 text-center">PRESIDENTE</p>
+                
+                <div class="flex justify-center gap-2 my-2">
+                  <div id="digit-1" class="w-9 h-11 border-2 border-black/80 bg-white/80 rounded flex items-center justify-center text-xl font-black text-black"></div>
+                  <div id="digit-2" class="w-9 h-11 border-2 border-black/80 bg-white/80 rounded flex items-center justify-center text-xl font-black text-black"></div>
                 </div>
-                <h2 class="text-xl font-bold text-slate-100">Identificação do Participante</h2>
-                <p class="text-xs text-slate-400 mt-1">Validação segura por Dispositivo e PIN</p>
+
+                <div id="candidate-info" class="hidden space-y-0.5 text-left bg-black/5 p-2 rounded border border-black/10">
+                  <p class="text-[11px] font-extrabold text-black">Nome: <span id="cand-name" class="font-black text-black uppercase">---</span></p>
+                  <p class="text-[11px] font-extrabold text-black">Partido: <span id="cand-party" class="font-black text-black uppercase">---</span></p>
+                </div>
+
+                <div id="vote-special-msg" class="hidden text-center my-2">
+                  <p id="special-text" class="text-lg font-black text-black uppercase">VOTO EM BRANCO</p>
+                </div>
+              </div>
+
+              <!-- ALERTA DE VOTO DUPLICADO -->
+              <div id="lcd-duplicate-msg" class="hidden text-center py-1 space-y-1">
+                <p class="text-xs font-black text-red-800 uppercase tracking-wide">⚠️ VOTO JÁ REGISTRADO</p>
+                <p class="text-[10px] font-bold text-black leading-tight">Este dispositivo já computou voto nesta pesquisa.</p>
+                <div class="pt-1 flex justify-center gap-2">
+                  <button onclick="openReceiptModal()" class="bg-black/80 hover:bg-black text-white font-bold py-1 px-2.5 rounded text-[10px] uppercase transition">
+                    📄 Comprovante
+                  </button>
+                  <button onclick="switchTab('chat')" class="bg-blue-800 hover:bg-blue-900 text-white font-bold py-1 px-2.5 rounded text-[10px] uppercase transition">
+                    💬 Debate
+                  </button>
+                </div>
+              </div>
+
+              <!-- MENSAGEM FIM DE SUCESSO -->
+              <div id="lcd-fim-msg" class="hidden text-center py-4 animate-pulse">
+                <p class="text-3xl font-black text-black">FIM</p>
+                <p class="text-xs font-bold text-black mt-1">VOTO COMPUTADO COM SUCESSO</p>
+              </div>
             </div>
 
-            <!-- Wizard Steps Progress -->
-            <div class="flex items-center justify-center gap-2 mb-8">
-                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">1</div>
-                <div class="w-12 h-0.5 bg-slate-800"></div>
-                <div class="w-8 h-8 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center text-xs font-bold">2</div>
-                <div class="w-12 h-0.5 bg-slate-800"></div>
-                <div class="w-8 h-8 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center text-xs font-bold">3</div>
+            <div class="border-t border-black/15 pt-1 text-[10px] font-black text-black/80 flex justify-between items-end">
+              <div>
+                <p>CONFIRMA = Votado</p>
+                <p>CORRIGE = Reiniciar</p>
+              </div>
+              <div class="w-3 h-3 rounded-full bg-blue-700 animate-ping opacity-75"></div>
             </div>
 
-            <!-- Status Alert Messages -->
-            <div id="auth-alert" class="hidden mb-6 p-4 rounded-xl text-xs sm:text-sm border"></div>
+          </div>
 
-            <form id="form-auth" onsubmit="handleAuth(event)" class="space-y-4">
+          <!-- MODAL DO KIT APOIADOR & CHAT VIP -->
+          <div id="pix-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+            <div class="bg-slate-900 border border-blue-500/30 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4 text-center my-auto">
+              
+              <div id="pix-header-icon" class="w-12 h-12 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto text-2xl">
+                🎉
+              </div>
+
+              <div id="pix-header-text" class="space-y-1">
+                <h3 id="pix-title" class="text-base font-extrabold text-white">Voto Registrado com Sucesso!</h3>
+                <p id="pix-subtitle" class="text-xs text-slate-300">Sua opinião já foi computada na pesquisa.</p>
+              </div>
+
+              <!-- ALERTA QUANDO O USUÁRIO AINDA NÃO VOTOU -->
+              <div id="pix-unvoted-warning" class="hidden bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl text-amber-300 text-xs text-left space-y-1.5 font-medium">
+                <p class="font-bold flex items-center gap-1.5 text-amber-400">
+                  <span>⚠️</span>
+                  <span>Você ainda não votou nesta pesquisa!</span>
+                </p>
+                <p class="text-[11px] leading-relaxed text-slate-300">
+                  Para emitir o seu comprovante com o seu candidato e ter validade de voto, é necessário registrar seu voto na cabine primeiro.
+                </p>
+                <button onclick="closePixModal(); switchTab('urna');" class="w-full mt-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-lg text-xs transition">
+                  Ir para Cabine de Votação 🗳️
+                </button>
+              </div>
+
+              <div id="pix-options-box" class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl text-left space-y-3">
+                <p class="text-xs font-bold text-blue-400 uppercase tracking-wider text-center">💬 Quer entrar no Chat e Viralizar seu Apoio?</p>
+
+                <div class="text-[11px] text-slate-300 space-y-1.5 leading-relaxed">
+                  <p>✔️ <b>Card Exclusivo de Apoiador</b> para compartilhar nas redes.</p>
+                  <p>✔️ <b>Acesso Imediato ao Chat VIP</b> de debate em tempo real.</p>
+                  <p class="text-[10px] text-slate-400 pt-1 border-t border-slate-900">
+                    💡 <i>100% da contribuição cobre os custos de tráfego pago do site.</i>
+                  </p>
+                </div>
+
+                <button onclick="requestPixCheckout(2.00)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+                  <span>🎨</span>
+                  <span>Adquirir Card com Foto e Apoiar a Causa (R$ 2,00)</span>
+                </button>
+
+                <button onclick="requestPixCheckout(gerarValorMenorSyncPay())" class="w-full text-slate-400 hover:text-slate-200 font-semibold text-[11px] underline text-center block pt-1 transition">
+                  Não tenho R$ 2,00 (Gerar valor menor dinâmico) &rarr;
+                </button>
+              </div>
+
+              <div id="pix-loading" class="hidden py-6 space-y-2">
+                <div class="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
+                <p class="text-xs text-slate-400">Gerando QR Code PIX via SyncPay...</p>
+              </div>
+
+              <div id="pix-content" class="hidden space-y-3">
+                <p class="text-xs text-slate-300 font-semibold">Contribuição: <b id="pix-display-amount" class="text-emerald-400">R$ 2,00</b></p>
+                
+                <div class="bg-white p-3 rounded-xl inline-block shadow-inner mx-auto">
+                  <img id="pix-qr-img" src="" alt="QR Code PIX" class="w-44 h-44 mx-auto">
+                </div>
+
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1 uppercase tracking-wider">Nome Completo</label>
-                    <input type="text" id="input-fullname" required placeholder="Ex: João da Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors">
+                  <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Código PIX Copia e Cola</p>
+                  <div class="flex items-center gap-1.5 bg-slate-950 border border-slate-800 p-2 rounded-xl">
+                    <input type="text" id="pix-code-input" readonly class="bg-transparent text-[10px] font-mono text-slate-300 flex-1 outline-none truncate">
+                    <button onclick="copyPixCode()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] px-2.5 py-1 rounded-lg transition">Copiar</button>
+                  </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1 uppercase tracking-wider">Nome de Usuário / Apelido</label>
-                    <input type="text" id="input-username" required placeholder="Ex: João123 ou Maria_PA" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors">
-                    <p class="text-[11px] text-slate-500 mt-1"><i class="fa-solid fa-circle-info mr-1"></i>Vai aparecer no comprovante exatamente assim.</p>
+                <div class="bg-slate-950 border border-slate-800 p-2 rounded-xl flex items-center justify-center gap-2">
+                  <div id="pix-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
+                  <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1 uppercase tracking-wider">PIN / Senha de Acesso (4 dígitos)</label>
-                    <input type="password" maxlength="4" pattern="[0-9]*" inputmode="numeric" id="input-pin" required placeholder="••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-widest focus:outline-none focus:border-blue-500 transition-colors">
-                    <p class="text-[11px] text-slate-500 mt-1">Crie um PIN para proteger o seu voto e recuperar a sessão neste aparelho.</p>
-                </div>
-
-                <div class="pt-2">
-                    <label class="block text-xs font-semibold text-slate-300 mb-1 uppercase tracking-wider">1. Selecione o Estado (UF)</label>
-                    <select id="select-uf" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors text-slate-200">
-                        <option value="">Selecione...</option>
-                        <option value="PA">Pará (PA) — Norte</option>
-                        <option value="SP">São Paulo (SP) — Sudeste</option>
-                        <option value="RJ">Rio de Janeiro (RJ) — Sudeste</option>
-                        <option value="MG">Minas Gerais (MG) — Sudeste</option>
-                        <option value="BA">Bahia (BA) — Nordeste</option>
-                        <option value="PR">Paraná (PR) — Sul</option>
-                        <option value="RS">Rio Grande do Sul (RS) — Sul</option>
-                        <option value="CE">Ceará (CE) — Nordeste</option>
-                        <option value="PE">Pernambuco (PE) — Nordeste</option>
-                        <option value="DF">Distrito Federal (DF) — Centro-Oeste</option>
-                        <option value="OUTRO">Outro Estado</option>
-                    </select>
-                </div>
-
-                <div id="container-municipio">
-                    <label class="block text-xs font-semibold text-slate-300 mb-1 uppercase tracking-wider">2. Município</label>
-                    <input type="text" id="input-municipio" required placeholder="Ex: Parauapebas, Belém, São Paulo..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors">
-                </div>
-
-                <button type="submit" id="btn-auth" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-medium py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 active:scale-[0.99]">
-                    <span>Verificar Elegibilidade</span>
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                <button onclick="finalizePixSuccess()" type="button" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider shadow-md transition active:scale-95 border-2 border-amber-300">
+                  🧪 [MODO TESTE] Simular Pagamento Aprovado
                 </button>
-            </form>
-        </section>
+              </div>
 
-        <!-- STEP 2: VOTING CABIN (HIDDEN BY DEFAULT) -->
-        <section id="step-vote" class="hidden bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-7 shadow-xl backdrop-blur-sm">
-            <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 mb-3">
-                    <i class="fa-solid fa-check-to-slot text-xl"></i>
+              <div id="msg-vote-success" class="hidden space-y-4 pt-1">
+                <div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
+                  <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wide">
+                    <span>✅</span>
+                    <span>PAGAMENTO CONFIRMADO!</span>
+                  </div>
+                  <p class="text-xs text-slate-200 leading-relaxed font-medium">
+                    Seu Kit Apoiador e o Acesso ao Chat VIP foram liberados!
+                  </p>
                 </div>
-                <h2 class="text-xl font-bold text-slate-100">Cabine de Votação</h2>
-                <p class="text-xs text-slate-400 mt-1">Escolha uma opção para registar o seu voto de simulação</p>
+
+                <canvas id="cardCanvas" width="800" height="1422" class="hidden"></canvas>
+
+                <div class="space-y-2">
+                  <button onclick="openReceiptModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+                    <span>📥</span>
+                    <span>VER E BAIXAR CARD DE APOIADOR 9:16</span>
+                  </button>
+                  <button onclick="goToChatFromModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
+                    Entrar no Chat VIP de Debate 💬
+                  </button>
+                </div>
+              </div>
+
+              <button id="btn-cancel-pix" onclick="closePixModal()" class="text-xs text-slate-500 hover:text-slate-300 font-medium transition underline pt-1 block mx-auto">
+                Pular / Voltar ao Início
+              </button>
             </div>
+          </div>
 
-            <!-- Wizard Steps Progress -->
-            <div class="flex items-center justify-center gap-2 mb-8">
-                <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold"><i class="fa-solid fa-check"></i></div>
-                <div class="w-12 h-0.5 bg-blue-600"></div>
-                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">2</div>
-                <div class="w-12 h-0.5 bg-slate-800"></div>
-                <div class="w-8 h-8 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center text-xs font-bold">3</div>
-            </div>
-
-            <div class="space-y-4">
-                <button onclick="castVote('Candidato A')" class="w-full p-4 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/80 hover:border-slate-700 transition-all flex items-center justify-between group">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">A</div>
-                        <div class="text-left">
-                            <div class="font-bold text-slate-200 group-hover:text-white">Candidato A</div>
-                            <div class="text-xs text-slate-400">Opção Simulação 01</div>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-slate-600 group-hover:text-blue-400 transition-colors"></i>
-                </button>
-
-                <button onclick="castVote('Candidato B')" class="w-full p-4 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/80 hover:border-slate-700 transition-all flex items-center justify-between group">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">B</div>
-                        <div class="text-left">
-                            <div class="font-bold text-slate-200 group-hover:text-white">Candidato B</div>
-                            <div class="text-xs text-slate-400">Opção Simulação 02</div>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-slate-600 group-hover:text-emerald-400 transition-colors"></i>
-                </button>
-
-                <button onclick="castVote('Nulo / Branco')" class="w-full p-4 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/80 hover:border-slate-700 transition-all flex items-center justify-between group">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-slate-700/30 text-slate-400 flex items-center justify-center font-bold">N</div>
-                        <div class="text-left">
-                            <div class="font-bold text-slate-300 group-hover:text-white">Nulo / Em Branco</div>
-                            <div class="text-xs text-slate-500">Abstenção / Indeciso</div>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-slate-600 group-hover:text-slate-400 transition-colors"></i>
-                </button>
-            </div>
-        </section>
-
-        <!-- STEP 3: RESULTS & COMPROVANTE (HIDDEN BY DEFAULT) -->
-        <section id="step-results" class="hidden space-y-6">
-            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-7 shadow-xl backdrop-blur-sm">
-                <div class="text-center mb-6">
-                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mb-3">
-                        <i class="fa-solid fa-circle-check text-xl"></i>
-                    </div>
-                    <h2 class="text-xl font-bold text-slate-100">Participação Registada!</h2>
-                    <p class="text-xs text-slate-400 mt-1">O seu voto foi contabilizado com sucesso de forma anónima.</p>
+          <!-- MODAL COMPROVANTE SIMPLES / OFICIAL -->
+          <div id="receipt-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 overflow-y-auto">
+            <div class="w-full max-w-xs my-auto space-y-3">
+              
+              <div id="receipt-card" class="w-full aspect-[9/16] rounded-3xl shadow-2xl relative overflow-hidden border-2 border-slate-800 flex flex-col justify-between p-4 text-white bg-[#090d16]" style="background-size: cover; background-position: center;">
+                
+                <div id="receipt-top-header" class="space-y-1 text-center pt-2 relative z-10">
+                  <p id="receipt-top-badge" class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">⚡ COMPROVANTE AUDITADO ⚡</p>
+                  <p class="text-[11px] font-bold text-slate-300">PAINEL BRASIL • ELEIÇÕES 2026</p>
                 </div>
 
-                <!-- Comprovante Card -->
-                <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs space-y-2 mb-6">
-                    <div class="text-slate-500 text-center border-b border-slate-800 pb-2 uppercase tracking-wider font-sans font-bold">Comprovante de Votação</div>
-                    <div class="flex justify-between"><span class="text-slate-400">PARTICIPANTE:</span><span id="receipt-name" class="text-slate-200 font-bold"></span></div>
-                    <div class="flex justify-between"><span class="text-slate-400">APELIDO:</span><span id="receipt-user" class="text-blue-400 font-bold"></span></div>
-                    <div class="flex justify-between"><span class="text-slate-400">MUNICÍPIO / UF:</span><span id="receipt-location" class="text-slate-200"></span></div>
-                    <div class="flex justify-between"><span class="text-slate-400">DATA / HORA:</span><span id="receipt-date" class="text-slate-400"></span></div>
-                    <div class="flex justify-between pt-1 border-t border-slate-800/80"><span class="text-slate-400">STATUS:</span><span class="text-emerald-400 font-bold">VOTO COMPUTADO</span></div>
+                <div id="receipt-center-box" class="my-auto text-center space-y-4 relative z-10">
+                  <div class="w-14 h-14 bg-slate-900 border border-slate-700 rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-inner">
+                    🏛️
+                  </div>
+                  <div class="space-y-0.5">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">PRESIDENTE</p>
+                    <p id="receipt-option-text" class="text-lg font-black text-emerald-400">---</p>
+                  </div>
                 </div>
 
-                <!-- Live Results -->
-                <h3 class="font-bold text-slate-200 text-sm mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-square-poll-vertical text-blue-400"></i> Resultados em Tempo Real
-                </h3>
-                <div id="results-bars" class="space-y-3">
-                    <!-- Dynamic Bars injected by JS -->
-                </div>
-            </div>
-
-            <!-- CHAT INTERATIVO MODERADO -->
-            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl backdrop-blur-sm space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-comments text-blue-400"></i>
-                        <h3 class="font-bold text-slate-200 text-sm">Debate ao Vivo</h3>
-                    </div>
-                    <span class="text-[11px] text-slate-400"><i class="fa-solid fa-circle text-emerald-500 text-[8px] mr-1"></i>Moderado</span>
-                </div>
-
-                <!-- Chat Messages Box -->
-                <div id="chat-box" class="bg-slate-950 border border-slate-800/80 rounded-xl p-3 h-64 overflow-y-auto space-y-3 text-xs">
-                    <!-- Messages Injected Here -->
-                </div>
-
-                <!-- Send Message Form -->
-                <form id="chat-form" onsubmit="handleSendMessage(event)" class="flex gap-2">
-                    <input type="text" id="chat-input" maxlength="280" placeholder="Escreva um comentário público..." required class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500 transition-colors">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2.5 rounded-xl text-xs transition-colors flex items-center gap-1.5">
-                        <i class="fa-solid fa-paper-plane"></i>
+                <div id="receipt-seal-box" class="w-[170px] bg-slate-950/90 border-2 border-emerald-400 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 transition-all duration-100 mx-auto">
+                  <p id="seal-header" class="text-[10px] font-black text-emerald-400 tracking-wider flex items-center justify-center gap-1">
+                    <span>✓</span> <span>VERIFICADO</span>
+                  </p>
+                  <p id="seal-subtitle" class="text-[8px] font-bold text-slate-400 uppercase">PARTICIPANTE</p>
+                  <div id="seal-divider" class="my-1.5 border-b border-white/20"></div>
+                  
+                  <div class="flex items-center justify-center gap-1">
+                    <p class="text-[14px] font-black uppercase text-white truncate max-w-[150px]" id="receipt-voter-name">---</p>
+                    <button onclick="togglePrivacy('name')" class="opacity-80 hover:opacity-100 p-0.5" title="Ocultar/Mostrar Nome">
+                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
                     </button>
-                </form>
-            </div>
-        </section>
+                  </div>
 
-        <!-- ADMIN MODERATION PANEL (HIDDEN UNLESS STRICT ADMIN LOGGED IN) -->
-        <section id="step-admin-panel" class="hidden mt-8 bg-amber-950/20 border border-amber-500/30 rounded-2xl p-5 sm:p-6 shadow-xl backdrop-blur-sm">
-            <div class="flex items-center justify-between border-b border-amber-500/20 pb-4 mb-4">
-                <div class="flex items-center gap-2 text-amber-400">
-                    <i class="fa-solid fa-user-shield text-lg"></i>
-                    <h3 class="font-bold text-base">Painel de Moderação Exclusivo (Admin_Rud)</h3>
+                  <div class="flex items-center justify-center gap-1 mt-0.5">
+                    <p id="receipt-voter-location" class="text-[10px] font-bold text-emerald-400 truncate max-w-[120px]">---</p>
+                    <button onclick="togglePrivacy('location')" class="opacity-80 hover:opacity-100 p-0.5" title="Ocultar/Mostrar Local">
+                      <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <p id="seal-footer-tag" class="text-[7px] text-slate-500 font-bold mt-1">PAINEL BRASIL</p>
                 </div>
-                <span class="bg-amber-500/20 text-amber-300 text-[10px] font-mono px-2 py-0.5 rounded">MODERADOR ATIVO</span>
-            </div>
 
-            <div class="space-y-3">
-                <p class="text-xs text-slate-300">Como <strong>Admin_Rud</strong>, você pode moderar ou apagar mensagens inapropriadas do debate.</p>
-                <button onclick="loadAdminChatList()" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs px-3 py-2 rounded-xl font-medium transition-colors flex items-center gap-2">
-                    <i class="fa-solid fa-rotate text-xs"></i> Atualizar Lista de Moderação
+              </div>
+
+              <div id="receipt-pos-controls" class="hidden bg-slate-900 border border-slate-800 p-2.5 rounded-2xl space-y-2 text-center">
+                <p class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 flex items-center justify-center gap-1">
+                  <span>🎯</span> Ajustar Posição do Nome/Selo no Card
+                </p>
+                <div class="flex items-center justify-center gap-2">
+                  <button onclick="adjustSealPos(0, -5)" class="bg-slate-800 hover:bg-slate-700 text-white font-black px-3 py-1.5 rounded-lg text-xs transition active:scale-95">⬆️ Cima</button>
+                  <button onclick="adjustSealPos(0, 5)" class="bg-slate-800 hover:bg-slate-700 text-white font-black px-3 py-1.5 rounded-lg text-xs transition active:scale-95">⬇️ Baixo</button>
+                  <button onclick="adjustSealPos(-5, 0)" class="bg-slate-800 hover:bg-slate-700 text-white font-black px-3 py-1.5 rounded-lg text-xs transition active:scale-95">⬅️ Esquerda</button>
+                  <button onclick="adjustSealPos(5, 0)" class="bg-slate-800 hover:bg-slate-700 text-white font-black px-3 py-1.5 rounded-lg text-xs transition active:scale-95">➡️ Direita</button>
+                </div>
+                <button onclick="resetSealPos()" class="text-[10px] text-slate-400 hover:text-white underline font-semibold transition">Restaurar Posição Padrão</button>
+              </div>
+
+              <button id="btn-buy-card-receipt" onclick="openApoiadorModalFromReceipt()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+                <span>🎨</span>
+                <span>Adquirir Card com Foto e Apoiar a Causa</span>
+              </button>
+
+              <div class="space-y-2">
+                <div class="bg-blue-950/40 border border-blue-500/30 p-2.5 rounded-xl text-center">
+                  <p class="text-[11px] text-blue-300 font-medium leading-tight">
+                    📸 <b>Dica:</b> Tire um print (captura de tela) deste card para compartilhar facilmente nas suas redes sociais!
+                  </p>
+                </div>
+
+                <button onclick="shareReceipt()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-2xl shadow-lg shadow-blue-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
+                  <span>📲</span>
+                  <span>Compartilhar nas Redes Sociais</span>
                 </button>
-                <div id="admin-chat-list" class="space-y-2 mt-3 max-h-60 overflow-y-auto">
-                    <!-- Admin Messages Control Injected Here -->
+                
+                <div class="grid grid-cols-2 gap-2">
+                  <button onclick="copyReceiptText()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition">
+                    Copiar Texto 📋
+                  </button>
+                  <button onclick="closeReceiptModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition">
+                    Ir para o Debate 💬
+                  </button>
                 </div>
+              </div>
+
             </div>
-        </section>
+          </div>
+
+          <!-- TECLADO NUMÉRICO -->
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2">
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="pressKey('1')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">1</button>
+              <button onclick="pressKey('2')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">2</button>
+              <button onclick="pressKey('3')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">3</button>
+              <button onclick="pressKey('4')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">4</button>
+              <button onclick="pressKey('5')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">5</button>
+              <button onclick="pressKey('6')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">6</button>
+              <button onclick="pressKey('7')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">7</button>
+              <button onclick="pressKey('8')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">8</button>
+              <button onclick="pressKey('9')" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">9</button>
+            </div>
+
+            <div class="flex justify-center">
+              <button onclick="pressKey('0')" class="w-1/3 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-extrabold text-lg py-2 rounded-lg border-b-2 border-slate-900 transition">0</button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 pt-1">
+              <button onclick="pressBranco()" class="bg-slate-100 hover:bg-white text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-slate-300 transition uppercase">BRANCO</button>
+              <button onclick="pressCorrige()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs py-2.5 rounded-lg border-b-2 border-amber-700 transition uppercase">CORRIGE</button>
+              <button onclick="pressConfirma()" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs py-2.5 rounded-lg border-b-2 border-blue-800 transition uppercase">CONFIRMA</button>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- BOTÃO DE VER COMPROVANTE -->
+      <div id="post-vote-receipt-container" class="hidden w-full">
+        <button onclick="openReceiptModal()" class="w-full bg-slate-900 hover:bg-slate-800 border border-blue-500/40 p-3 rounded-2xl flex items-center justify-between shadow-lg transition group">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 text-base">
+              📄
+            </div>
+            <div class="text-left">
+              <p class="text-xs font-extrabold text-white group-hover:text-blue-400 transition">Ver Comprovante de Participação</p>
+              <p class="text-[10px] text-slate-400">Acesse sua comprovação auditada e card exclusivo</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-blue-400">&rarr;</span>
+        </button>
+      </div>
+
+      <!-- STEP 3: PAINEL DE PLACAR / DADOS -->
+      <section id="sec-dados" class="hidden w-full space-y-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
+          
+          <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+            <div>
+              <h2 class="text-base font-extrabold text-white">Placar da Pesquisa Independente</h2>
+              <p class="text-[11px] text-slate-400">Resultados consolidados em tempo real</p>
+            </div>
+            <button id="btn-refresh-stats" onclick="loadCloudStats()" class="text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg hover:bg-blue-500/20 transition flex items-center gap-1.5 disabled:opacity-50">
+              <span id="refresh-icon">🔄</span>
+              <span id="refresh-spinner" class="hidden w-3.5 h-3.5 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin"></span>
+              <span>Atualizar Dados</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+              <p class="text-[10px] font-bold text-slate-500 uppercase">TOTAL DE VOTOS</p>
+              <p id="stat-total" class="text-2xl font-black text-white">0</p>
+            </div>
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+              <p class="text-[10px] font-bold text-blue-500 uppercase">VOTOS VÁLIDOS</p>
+              <p id="stat-validos" class="text-2xl font-black text-blue-400">0</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+              <p class="text-[10px] font-bold text-slate-400 uppercase">VOTOS BRANCOS</p>
+              <p id="stat-branco" class="text-xl font-black text-slate-200">0</p>
+            </div>
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+              <p class="text-[10px] font-bold text-rose-500 uppercase">VOTOS NULOS</p>
+              <p id="stat-nulo" class="text-xl font-black text-rose-400">0</p>
+            </div>
+          </div>
+
+          <div class="space-y-3 pt-2">
+            <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-bold text-white flex items-center gap-1.5">
+                  🏛️ Flávio Bolsonaro (22)
+                </span>
+                <span id="pct-22" class="font-black text-amber-400 text-sm">0.0%</span>
+              </div>
+              <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                <div id="bar-22" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+              <p id="count-22" class="text-[10px] text-slate-400 text-right font-mono">0 votos</p>
+            </div>
+
+            <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-bold text-white flex items-center gap-1.5">
+                  🚩 Lula (13)
+                </span>
+                <span id="pct-13" class="font-black text-rose-400 text-sm">0.0%</span>
+              </div>
+              <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                <div id="bar-13" class="bg-rose-500 h-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+              <p id="count-13" class="text-[10px] text-slate-400 text-right font-mono">0 votos</p>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-2">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              🗺️ Desempenho por Região
+            </h3>
+            <div id="regional-stats-container" class="space-y-2">
+            </div>
+          </div>
+
+          <div class="space-y-2.5 pt-2 border-t border-slate-800">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              🏙️ Apuração por Município
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <select id="query-uf-select" onchange="renderCityResults()" class="bg-slate-950 border border-slate-800 text-xs text-white rounded-xl p-2.5 outline-none">
+                <option value="">Todas as UFs</option>
+              </select>
+              <input type="text" id="query-city-filter" placeholder="Filtrar município..." oninput="renderCityResults()" class="bg-slate-950 border border-slate-800 text-xs text-white rounded-xl p-2.5 placeholder-slate-600 outline-none">
+            </div>
+            <div id="city-results-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- STEP 4: DEBATE / CHAT -->
+      <section id="sec-chat" class="hidden w-full space-y-3">
+        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-sm">💬</div>
+            <div>
+              <h3 class="text-xs font-bold text-white">Debate Público ao Vivo</h3>
+              <p class="text-[10px] text-emerald-400 font-medium">● Exclusivo para Apoiadores VIP</p>
+            </div>
+          </div>
+          <span id="chat-user-badge" class="text-[10px] font-mono bg-slate-950 border border-slate-800 px-2 py-1 rounded-lg text-slate-300"></span>
+        </div>
+
+        <div id="chat-messages" class="bg-slate-900 border border-slate-800 p-3 rounded-2xl h-64 overflow-y-auto custom-scrollbar space-y-3 text-xs flex flex-col">
+        </div>
+
+        <div id="chat-locked-warning" class="hidden bg-emerald-950/40 border border-emerald-500/40 p-4 rounded-xl text-center space-y-2.5">
+          <p class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
+            🔒 Chat VIP Restrito aos Apoiadores
+          </p>
+          <p class="text-[11px] text-slate-300 leading-relaxed">
+            O acesso ao chat de debate é <b>exclusivo para quem ajudou a causa</b> adquirindo o comprovante de apoiador com imagem.
+          </p>
+          <button onclick="openApoiadorModalFromReceipt()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2">
+            <span>🎨</span>
+            <span>Adquirir Card com Foto e Desbloquear Chat</span>
+          </button>
+        </div>
+
+        <div id="nickname-error" class="hidden bg-rose-500/10 border border-rose-500/30 p-2.5 rounded-xl text-center text-rose-400 text-xs font-medium"></div>
+
+        <div id="nickname-setup-box" class="hidden bg-slate-900 border border-blue-500/40 p-3 rounded-xl space-y-2">
+          <p class="text-xs font-bold text-blue-400">Escolha seu Apelido para o Chat VIP:</p>
+          <div class="flex gap-2">
+            <input type="text" id="chat-nickname-input" placeholder="Digite seu apelido..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-blue-500">
+            <button onclick="saveNickname()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-2 rounded-xl text-xs transition">Salvar</button>
+          </div>
+        </div>
+
+        <!-- PAINEL DE RESPOSTA ATIVA (REPLY CONTEXT) -->
+        <div id="replying-banner" class="hidden bg-slate-900 border border-blue-500/40 p-2.5 rounded-xl flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2 truncate">
+            <span class="text-blue-400 font-bold">↩️ Respondendo a:</span>
+            <span id="replying-target-text" class="text-slate-300 truncate font-medium">---</span>
+          </div>
+          <button onclick="cancelReply()" class="text-slate-400 hover:text-white font-bold px-1.5 py-0.5 rounded">✕</button>
+        </div>
+
+        <!-- GAVETA FLUTUANTE DE FIGURINHAS (ESTILO TIKTOK) -->
+        <div id="sticker-drawer" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-3 shadow-2xl">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="text-xs font-bold text-white uppercase tracking-wider">🗂️ Minhas Figurinhas & Salvos</span>
+            <button onclick="toggleStickerDrawer()" class="text-slate-400 hover:text-white text-xs font-bold px-2 py-0.5 rounded">✕</button>
+          </div>
+          <div id="stickers-grid" class="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto custom-scrollbar p-1">
+            <!-- BOTÃO "+" PARA ADICIONAR NOVA FIGURINHA -->
+            <label class="aspect-square bg-slate-950 hover:bg-slate-800 border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl flex flex-col items-center justify-center cursor-pointer transition group">
+              <span id="sticker-btn-icon" class="text-xl text-slate-400 group-hover:text-blue-400 font-bold">+</span>
+              <span id="sticker-btn-text" class="text-[9px] text-slate-500 mt-1 uppercase font-semibold">Adicionar</span>
+              <input type="file" id="sticker-file-input" accept="image/*" class="hidden" onchange="handleNewStickerUpload(event)">
+            </label>
+            <!-- FIGURINHAS PADRÃO PRÉ-CARREGADAS -->
+            <div onclick="sendStickerMessage('🔥')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">🔥</div>
+            <div onclick="sendStickerMessage('🇧🇷')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">🇧🇷</div>
+            <div onclick="sendStickerMessage('⭐')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">⭐</div>
+          </div>
+        </div>
+
+        <!-- CAIXA DE COMENTÁRIO COM BARRA DE ÍCONES DO TIKTOK -->
+        <div id="chat-input-container" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-2.5 space-y-2">
+          <div class="flex items-center gap-2">
+            <input type="text" id="chat-input" placeholder="Adicionar comentário..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-transparent text-xs text-white placeholder-slate-500 outline-none px-2 py-1">
+            <button onclick="sendChatMessage()" class="bg-rose-400 hover:bg-rose-500 text-slate-950 font-bold w-8 h-8 rounded-full flex items-center justify-center transition shadow">
+              ↑
+            </button>
+          </div>
+          
+          <div class="flex items-center justify-between border-t border-slate-800 pt-2 px-1 text-slate-400">
+            <div class="flex items-center gap-4 text-lg">
+              <button onclick="toggleStickerDrawer()" class="hover:text-white transition" title="Figurinhas">🤡</button>
+              <button onclick="insertAtSymbol()" class="hover:text-white transition font-bold text-sm" title="Menção">@</button>
+            </div>
+            <span class="text-[10px] text-slate-500">Painel Brasil Chat</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section id="sec-faq" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center gap-2 border-b border-slate-800 pb-2">
+          <span class="text-lg">❓</span>
+          <div>
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Dúvidas Frequentes</h3>
+            <p class="text-[10px] text-slate-400">Sobre a segurança e regras da pesquisa</p>
+          </div>
+        </div>
+
+        <div class="space-y-2.5 text-xs">
+          <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
+            <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+              <span>🛡️ Como o sistema protege a votação?</span>
+              <span class="text-blue-400 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+              O sistema utiliza uma assinatura única gerada pelo seu navegador e um PIN de 4 dígitos para garantir que cada dispositivo vote apenas uma vez, sem a necessidade de recolher dados sensíveis.
+            </div>
+          </details>
+          <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
+            <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+              <span>📊 Os votos são sincronizados em tempo real?</span>
+              <span class="text-blue-400 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+              Sim! Todos os votos confirmados passam por validação e são agregados de forma anônima no placar público a cada 10 segundos.
+            </div>
+          </details>
+        </div>
+      </section>
 
     </main>
 
-    <!-- FAQ Section -->
-    <footer class="max-w-2xl mx-auto px-4 mt-8">
-        <div class="border-t border-slate-800/80 pt-6 text-xs text-slate-500 space-y-2">
-            <p class="font-semibold text-slate-400"><i class="fa-solid fa-circle-question mr-1"></i>Dúvidas Frequentes:</p>
-            <p>• <strong>Segurança do Voto:</strong> O sistema vincula um PIN e uma assinatura do dispositivo para garantir 1 voto por pessoa por rodada.</p>
-            <p>• <strong>Privacidade:</strong> As senhas e dados dos participantes são mantidos sob estrito anonimato.</p>
-        </div>
+    <footer class="text-center py-3 text-[10px] text-slate-500 border-t border-slate-900">
+      © Painel Brasil — Pesquisa Independente de Opinião Pública
     </footer>
 
-    <!-- JavaScript Logic -->
-    <script>
-        // Configuração do Supabase
-        const SUPABASE_URL = 'https://YOUR_SUPABASE_URL.supabase.co';
-        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  </div>
 
-        // Estado Global do App
-        let deviceVisitorId = null;
-        let currentUser = null;
-        let isAdmin = false;
+  <script>
+  const SUPABASE_URL = "https://eisnibawuzcgdpkrrzrr.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_8Uxo8QibKqSN-9fA9gt5Pw_1Urbvhpt";
+  const isSupabaseConfigured = window.supabase && SUPABASE_URL !== "https://SEU_PROJETO.supabase.co" && !SUPABASE_URL.includes("SEU_PROJETO");
+  const supabaseClient = isSupabaseConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+  
+  if (supabaseClient) {
+    supabaseClient
+      .channel('mudancas-votos')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votos' }, payload => {
+        loadCloudStats();
+      })
+      .subscribe();
 
-        // Inicialização do FingerprintJS para identificar o dispositivo
-        const fpPromise = FingerprintJS.load();
-        fpPromise.then(fp => fp.get()).then(result => {
-            deviceVisitorId = result.visitorId;
-            checkExistingSession();
-        });
+    supabaseClient
+      .channel('mudancas-mensagens')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
+        loadCloudMessages();
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'mensagens' }, payload => {
+        loadCloudMessages();
+      })
+      .subscribe();
+  }
 
-        // Verificar sessão ou voto prévio neste dispositivo
-        async function checkExistingSession() {
-            const savedUser = localStorage.getItem('vota_ae_user');
-            if (savedUser) {
-                const parsed = JSON.parse(savedUser);
-                document.getElementById('input-fullname').value = parsed.fullname || '';
-                document.getElementById('input-username').value = parsed.username || '';
-                document.getElementById('select-uf').value = parsed.uf || '';
-                document.getElementById('input-municipio').value = parsed.municipio || '';
+    let pixPollInterval = null;
+    let pendingVoteObj = null;
+    let confirmedVoteData = null;
+
+    let hideName = false;
+    let hideLocation = false;
+
+    let sealPosLeft = 48;
+    let sealPosTop = 95;
+    let replyingToMsgId = null;
+
+    let deviceSessionToken = localStorage.getItem('simulador_device_token');
+    if (!deviceSessionToken) {
+      deviceSessionToken = 'tok_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+      localStorage.setItem('simulador_device_token', deviceSessionToken);
+    }
+
+    const deviceFingerprint = deviceSessionToken;
+
+    const stateCities = {
+      "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal", "Parauapebas", "Abaetetuba", "Marituba", "Cametá", "Bragança", "Paragominas"],
+      "AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira", "Tarauacá"],
+      "AL": ["Maceió", "Arapiraca", "Rio Largo", "Palmeira dos Índios"],
+      "AP": ["Macapá", "Santana", "Laranjal do Jari"],
+      "AM": ["Manaus", "Parintins", "Itacoatiara", "Manacapuru"],
+      "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Itabuna"],
+      "CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral"],
+      "DF": ["Brasília", "Ceilândia", "Taguatinga", "Samambaia"],
+      "ES": ["Vitória", "Vila Velha", "Serra", "Cariacica", "Guarapari"],
+      "GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde"],
+      "MA": ["São Luís", "Imperatriz", "São José de Ribamar", "Timon", "Caxias"],
+      "MT": ["Cuiabá", "Várzea Grande", "Rondonópolis", "Sinop", "Tangará da Serra"],
+      "MS": ["Campo Grande", "Dourados", "Três Lagoas", "Corumbá"],
+      "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros"],
+      "PB": ["João Pessoa", "Campina Grande", "Santa Rita", "Patos"],
+      "PR": ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "Foz do Iguaçu"],
+      "PE": ["Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina"],
+      "PI": ["Teresina", "Parnaíba", "Picos", "Floriano"],
+      "RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Petropolis"],
+      "RN": ["Natal", "Mossoró", "Parnamirim", "São Gonçalo do Amarante"],
+      "RS": ["Porto Alegre", "Caxias do Sul", "Canoas", "Pelotas", "Santa Maria", "Gravataí"],
+      "RO": ["Porto Velho", "Ji-Paraná", "Ariquemes", "Vilhena"],
+      "RR": ["Boa Vista", "Rorainópolis", "Caracaraí"],
+      "SC": ["Florianópolis", "Joinville", "Blumenau", "São José", "Criciúma"],
+      "SP": ["São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo", "Santo André", "Osasco", "Ribeirão Preto", "Sorocaba"],
+      "SE": ["Aracaju", "Nossa Senhora do Socorro", "Lagarto", "Itabaiana"],
+      "TO": ["Palmas", "Araguaína", "Gurupi", "Porto Nacional"],
+      "ZZ": ["Exterior / Voto no Exterior"]
+    };
+
+    let verifiedVoter = null;
+    let currentInput = "";
+    let isBranco = false;
+
+    let votedDevices = JSON.parse(localStorage.getItem('simulador_voted_devices') || "{}");
+    let voterChoices = JSON.parse(localStorage.getItem('simulador_voter_choices') || "{}");
+    let voterNicknames = JSON.parse(localStorage.getItem('simulador_voter_nicknames') || "{}");
+    let voterNames = JSON.parse(localStorage.getItem('simulador_voter_names') || "{}");
+    let voterDevicePins = JSON.parse(localStorage.getItem('simulador_voter_pins') || "{}");
+    let voterLocations = JSON.parse(localStorage.getItem('simulador_voter_locations') || "{}");
+    let paidSupporters = JSON.parse(localStorage.getItem('simulador_paid_supporters') || "{}");
+    let customStickers = JSON.parse(localStorage.getItem('simulador_custom_stickers') || "[]");
+
+    let votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+    let regionalVotes = {
+      'Norte': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+      'Nordeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+      'Sudeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+      'Sul': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+      'Centro-Oeste': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 },
+      'Exterior': { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 }
+    };
+    let cityVotes = {};
+
+    let chatMessages = [];
+
+    async function loadCloudMessages() {
+      if (!supabaseClient) return;
+      const { data, error } = await supabaseClient
+        .from('mensagens')
+        .select('*')
+        .order('id', { ascending: true });
+      
+      if (!error && data) {
+        chatMessages = data;
+        if (typeof renderChat === 'function') {
+          renderChat();
+        }
+      }
+    }
+
+    loadCloudMessages();
+
+    const palavrasProibidas = [
+      "navegador anônimo", "aba anônima", "janela anônima", "modo anônimo", 
+      "votar várias vezes", "votar mais de uma vez", "burlar o voto", "fraudar o voto",
+      "múltiplos votos", "voto duplo", "voto falso",
+      "lixo", "imbecil", "idiota", "vagabundo"
+    ];
+
+    function verificarConteudoChat(texto) {
+      const textoMinusculo = texto.toLowerCase();
+      return !palavrasProibidas.some(termo => textoMinusculo.includes(termo));
+    }
+
+    function toggleStickerDrawer() {
+      const drawer = document.getElementById('sticker-drawer');
+      drawer.classList.toggle('hidden');
+      if (!drawer.classList.contains('hidden')) {
+        renderCustomStickers();
+      }
+    }
+
+    function insertAtSymbol() {
+      const input = document.getElementById('chat-input');
+      input.value += "@";
+      input.focus();
+    }
+
+    async function handleNewStickerUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        alert("⚠️ Por favor, selecione apenas arquivos de imagem válidos.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const imgDataUrl = e.target.result;
+
+        const btnIcon = document.getElementById('sticker-btn-icon');
+        const btnText = document.getElementById('sticker-btn-text');
+        if (btnIcon) btnIcon.textContent = "⏳";
+        if (btnText) btnText.textContent = "Analisando...";
+
+        const img = new Image();
+        img.src = imgDataUrl;
+
+        img.onload = async function() {
+          try {
+            const model = await nsfw.load();
+            const predictions = await model.classify(img);
+            
+            const isAdult = predictions.some(p => (p.className === 'Porn' || p.className === 'Sexy') && p.probability > 0.6);
+
+            if (isAdult) {
+              alert("🚫 Conteúdo impróprio detectado! Esta imagem foi blocked pelas regras de moderação.");
+              return;
             }
+
+            customStickers.push(imgDataUrl);
+            localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
+            renderCustomStickers();
+
+          } catch (err) {
+            console.error("Erro na verificação da imagem:", err);
+            alert("⚠️ Erro na moderação da imagem no dispositivo: " + err.message);
+          } finally {
+            if (btnIcon) btnIcon.textContent = "+";
+            if (btnText) btnText.textContent = "Adicionar";
+          }
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function deleteCustomSticker(event, index) {
+      event.stopPropagation();
+      
+      if (confirm("Deseja realmente apagar esta figurinha?")) {
+        customStickers.splice(index, 1);
+        localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
+        renderCustomStickers();
+      }
+    }
+
+    function renderCustomStickers() {
+      const grid = document.getElementById('stickers-grid');
+      
+      let customHtml = customStickers.map((imgBase64, index) => `
+        <div class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl overflow-hidden cursor-pointer transition relative group">
+          <img src="${imgBase64}" class="w-full h-full object-cover" onclick="sendStickerMessage('${imgBase64}', true)">
+          <button onclick="deleteCustomSticker(event, ${index})" class="absolute top-1 right-1 bg-rose-600/90 hover:bg-rose-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow transition" title="Apagar figurinha">
+            ✕
+          </button>
+        </div>
+      `).join('');
+
+      grid.innerHTML = `
+        <label class="aspect-square bg-slate-950 hover:bg-slate-800 border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl flex flex-col items-center justify-center cursor-pointer transition group">
+          <span id="sticker-btn-icon" class="text-xl text-slate-400 group-hover:text-blue-400 font-bold">+</span>
+          <span id="sticker-btn-text" class="text-[9px] text-slate-500 mt-1 uppercase font-semibold">Adicionar</span>
+          <input type="file" id="sticker-file-input" accept="image/*" class="hidden" onchange="handleNewStickerUpload(event)">
+        </label>
+        <div onclick="sendStickerMessage('🔥')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">🔥</div>
+        <div onclick="sendStickerMessage('🇧🇷')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">🇧🇷</div>
+        <div onclick="sendStickerMessage('⭐')" class="aspect-square bg-slate-950 border border-slate-800 hover:border-blue-500 rounded-xl flex items-center justify-center text-2xl cursor-pointer transition">⭐</div>
+        ${customHtml}
+      `;
+    }
+
+    async function sendStickerMessage(content, isImage = false) {
+      if (!verifiedVoter || !paidSupporters[deviceFingerprint]) return;
+
+      const nickname = voterNicknames[deviceFingerprint] || verifiedVoter.nickname || verifiedVoter.name.split(' ')[0];
+      const userVote = voterChoices[deviceFingerprint] || confirmedVoteData?.opcao || 'NULO';
+
+      const newMsg = {
+        device_token: deviceSessionToken,
+        reply_to_id: replyingToMsgId ? parseInt(replyingToMsgId) : null,
+        sender: nickname,
+        uf: verifiedVoter.uf,
+        vote: userVote,
+        text: isImage ? `<img src="${content}" class="w-24 h-24 rounded-lg object-cover mt-1">` : content,
+        is_html: isImage,
+        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      cancelReply();
+      toggleStickerDrawer();
+
+      if (supabaseClient) {
+        const { error } = await supabaseClient.from('mensagens').insert([newMsg]);
+        if (error) {
+          console.error("Erro ao enviar figurinha para o Supabase:", error);
+          alert("⚠️ Erro Supabase: " + (error.message || JSON.stringify(error)));
+        } else {
+          loadCloudMessages();
+        }
+      }
+    }
+
+    async function deleteChatMessage(msgId) {
+      if (confirm("Deseja realmente apagar esta mensagem?")) {
+        if (supabaseClient) {
+          const { error } = await supabaseClient
+            .from('mensagens')
+            .delete()
+            .eq('id', msgId);
+
+          if (error) {
+            alert("⚠️ Erro ao apagar mensagem: " + error.message);
+          } else {
+            loadCloudMessages();
+          }
+        } else {
+          chatMessages = chatMessages.filter(msg => msg.id !== msgId);
+          renderChat();
+        }
+      }
+    }
+
+    async function onTurnstileSuccess(token) {
+      document.getElementById('sec-turnstile-gate').classList.add('hidden');
+      document.getElementById('main-site-content').classList.remove('hidden');
+
+      populateQueryUFs();
+      await loadCloudStats();
+      await loadCloudMessages();
+
+      if (voterLocations[deviceFingerprint]) {
+        const loc = voterLocations[deviceFingerprint];
+        document.getElementById('voter-uf-select').value = loc.uf;
+        document.getElementById('voter-city-search').value = loc.city;
+        document.getElementById('selected-city-val').value = loc.city;
+      }
+
+      if (voterNames[deviceFingerprint]) {
+        document.getElementById('voter-name').value = voterNames[deviceFingerprint];
+      }
+
+      if (voterNicknames[deviceFingerprint]) {
+        document.getElementById('voter-nickname').value = voterNicknames[deviceFingerprint];
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setInterval(() => {
+        if (!document.getElementById('main-site-content').classList.contains('hidden')) {
+          loadCloudStats();
+        }
+      }, 10000);
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#voter-city-search') && !e.target.closest('#city-suggestions-container')) {
+          document.getElementById('city-suggestions-container').classList.add('hidden');
+        }
+      });
+    });
+
+    async function checkVoterInDatabase(fingerprintKey) {
+      if (!supabaseClient) return null;
+      try {
+        const { data, error } = await supabaseClient
+          .from('votos')
+          .select('device_token, opcao, cidade, uf, created_at')
+          .eq('device_token', fingerprintKey)
+          .maybeSingle();
+
+        if (error || !data) return null;
+        return data;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    async function loadCloudStats() {
+      const btnRefresh = document.getElementById('btn-refresh-stats');
+      const iconEl = document.getElementById('refresh-icon');
+      const spinnerEl = document.getElementById('refresh-spinner');
+
+      if (btnRefresh && iconEl && spinnerEl) {
+        btnRefresh.disabled = true;
+        iconEl.classList.add('hidden');
+        spinnerEl.classList.remove('hidden');
+      }
+
+      let allVotesData = [];
+
+      try {
+        if (supabaseClient) {
+          try {
+            const { data, error } = await supabaseClient.from('votos').select('*');
+            if (!error && data) allVotesData = data;
+            else allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+          } catch (err) {
+            allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+          }
+        } else {
+          allVotesData = JSON.parse(localStorage.getItem('simulador_all_votes') || "[]");
+        }
+      } finally {
+        if (btnRefresh && iconEl && spinnerEl) {
+          setTimeout(() => {
+            btnRefresh.disabled = false;
+            iconEl.classList.remove('hidden');
+            spinnerEl.classList.add('hidden');
+          }, 300);
+        }
+      }
+
+      votes = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+      cityVotes = {};
+      Object.keys(regionalVotes).forEach(r => {
+        regionalVotes[r] = { '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
+      });
+
+      allVotesData.forEach(item => {
+        const op = item.opcao;
+        if (votes[op] !== undefined) votes[op]++;
+        else votes['NULO']++;
+
+        const reg = item.regiao || 'Norte';
+        if (regionalVotes[reg]) {
+          if (regionalVotes[reg][op] !== undefined) regionalVotes[reg][op]++;
+          else regionalVotes[reg]['NULO']++;
         }
 
-        // Processar Autenticação / Entrada
-        async function handleAuth(event) {
-            event.preventDefault();
-
-            const fullname = document.getElementById('input-fullname').value.trim();
-            const username = document.getElementById('input-username').value.trim();
-            const pin = document.getElementById('input-pin').value.trim();
-            const uf = document.getElementById('select-uf').value;
-            const municipio = document.getElementById('input-municipio').value.trim();
-            const alertBox = document.getElementById('auth-alert');
-
-            alertBox.classList.add('hidden');
-
-            // REGRA ESTRITA E DISCRETA DE ADMIN:
-            // Requer rigorosamente a combinação exata de Usuário e PIN sem dar pistas
-            if (username === 'Admin_Rud' && pin === '2825') {
-                isAdmin = true;
-                document.getElementById('admin-badge-header').classList.remove('hidden');
-                document.getElementById('step-admin-panel').classList.remove('hidden');
-            } else {
-                isAdmin = false;
-            }
-
-            // Verificar no Supabase se este dispositivo já tem outro PIN cadastrado
-            try {
-                const { data: existingVotes, error } = await supabase
-                    .from('votes')
-                    .select('*')
-                    .eq('device_id', deviceVisitorId);
-
-                if (existingVotes && existingVotes.length > 0) {
-                    const record = existingVotes[0];
-                    if (record.pin && record.pin !== pin) {
-                        alertBox.className = "mb-6 p-4 rounded-xl text-xs sm:text-sm border bg-red-500/10 border-red-500/30 text-red-400";
-                        alertBox.innerHTML = "<i class='fa-solid fa-xmark mr-1'></i> <strong>Acesso Negado!</strong> O PIN informado não coincide com a credencial cadastrada para este dispositivo.";
-                        alertBox.classList.remove('hidden');
-                        return;
-                    }
-
-                    // Se já votou e o PIN bateu, carrega direto a página de resultados
-                    currentUser = { fullname, username, pin, uf, municipio };
-                    saveLocalUser(currentUser);
-                    showResultsStep(record);
-                    return;
-                }
-            } catch (e) {
-                console.log("Validação Supabase:", e);
-            }
-
-            // Guardar os dados e ir para a cabine de voto
-            currentUser = { fullname, username, pin, uf, municipio };
-            saveLocalUser(currentUser);
-
-            document.getElementById('step-auth').classList.add('hidden');
-            document.getElementById('step-vote').classList.remove('hidden');
+        const cityKey = `${item.cidade || 'Capital'} - ${item.uf || 'PA'}`;
+        if (!cityVotes[cityKey]) {
+          cityVotes[cityKey] = { uf: item.uf || 'PA', city: item.cidade || 'Capital', '22': 0, '13': 0, 'BRANCO': 0, 'NULO': 0 };
         }
+        if (cityVotes[cityKey][op] !== undefined) cityVotes[cityKey][op]++;
+        else cityVotes[cityKey]['NULO']++;
 
-        function saveLocalUser(user) {
-            localStorage.setItem('vota_ae_user', JSON.stringify(user));
+        if (item.device_token) votedDevices[item.device_token] = true;
+      });
+
+      localStorage.setItem('simulador_voted_devices', JSON.stringify(votedDevices));
+      renderStats();
+      renderCityResults();
+    }
+
+    function renderStats() {
+      const total = votes['22'] + votes['13'] + votes['BRANCO'] + votes['NULO'];
+      const validos = votes['22'] + votes['13'];
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-validos').textContent = validos;
+      document.getElementById('stat-branco').textContent = votes['BRANCO'];
+      document.getElementById('stat-nulo').textContent = votes['NULO'];
+
+      const pct22 = validos > 0 ? ((votes['22'] / validos) * 100).toFixed(1) : "0.0";
+      const pct13 = validos > 0 ? ((votes['13'] / validos) * 100).toFixed(1) : "0.0";
+
+      document.getElementById('pct-22').textContent = `${pct22}%`;
+      document.getElementById('bar-22').style.width = `${pct22}%`;
+      document.getElementById('count-22').textContent = `${votes['22']} votos`;
+
+      document.getElementById('pct-13').textContent = `${pct13}%`;
+      document.getElementById('bar-13').style.width = `${pct13}%`;
+      document.getElementById('count-13').textContent = `${votes['13']} votos`;
+
+      const regContainer = document.getElementById('regional-stats-container');
+      regContainer.innerHTML = "";
+
+      Object.entries(regionalVotes).forEach(([regionName, regData]) => {
+        const regValidos = regData['22'] + regData['13'];
+        const rPct22 = regValidos > 0 ? ((regData['22'] / regValidos) * 100).toFixed(1) : "0.0";
+        const rPct13 = regValidos > 0 ? ((regData['13'] / regValidos) * 100).toFixed(1) : "0.0";
+
+        regContainer.innerHTML += `
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5 text-xs">
+            <div class="flex justify-between font-bold text-slate-300">
+              <span>${regionName}</span>
+              <span class="text-[10px] text-slate-500 font-mono">${regValidos} votos válidos</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-[11px]">
+              <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded">
+                <span class="text-amber-400 font-extrabold">22: ${rPct22}%</span>
+                <span class="text-slate-500 font-mono">(${regData['22']})</span>
+              </div>
+              <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded">
+                <span class="text-rose-400 font-extrabold">13: ${rPct13}%</span>
+                <span class="text-slate-500 font-mono">(${regData['13']})</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function populateQueryUFs() {
+      const select = document.getElementById('query-uf-select');
+      select.innerHTML = '<option value="">Todas as UFs</option>';
+      Object.keys(stateCities).forEach(uf => {
+        select.innerHTML += `<option value="${uf}">${uf}</option>`;
+      });
+    }
+
+    function renderCityResults() {
+      const selectedUf = document.getElementById('query-uf-select').value;
+      const query = document.getElementById('query-city-filter').value.toLowerCase().trim();
+      const listEl = document.getElementById('city-results-list');
+
+      const entries = Object.values(cityVotes);
+      const filtered = entries.filter(item => {
+        const matchUf = selectedUf === "" || item.uf === selectedUf;
+        const matchCity = query === "" || item.city.toLowerCase().includes(query);
+        return matchUf && matchCity;
+      });
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-3">Nenhum município encontrado com voto registrado.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(item => {
+        const validos = item['22'] + item['13'];
+        const p22 = validos > 0 ? ((item['22'] / validos) * 100).toFixed(1) : "0.0";
+        const p13 = validos > 0 ? ((item['13'] / validos) * 100).toFixed(1) : "0.0";
+
+        return `
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1 text-xs">
+            <div class="flex justify-between font-bold text-slate-200">
+              <span class="truncate">${item.city} (${item.uf})</span>
+              <span class="text-[10px] text-slate-500 font-mono">${validos} válidos</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-[10px]">
+              <div class="text-amber-400 font-extrabold">22: ${p22}% <span class="text-slate-500">(${item['22']})</span></div>
+              <div class="text-rose-400 font-extrabold">13: ${p13}% <span class="text-slate-500">(${item['13']})</span></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function onUFChange() {
+      const ufSelect = document.getElementById('voter-uf-select');
+      const selectedUf = ufSelect.value;
+      const cities = stateCities[selectedUf] || ["Capital"];
+      
+      const cityInput = document.getElementById('voter-city-search');
+      cityInput.value = cities[0];
+      cityInput.dataset.touched = ""; 
+      
+      document.getElementById('selected-city-val').value = cities[0];
+    }
+
+    function filterCityOptions() {
+      const uf = document.getElementById('voter-uf-select').value;
+      const cities = stateCities[uf] || [];
+      const query = document.getElementById('voter-city-search').value.toLowerCase().trim();
+      const container = document.getElementById('city-suggestions-container');
+
+      const filtered = query === "" ? cities : cities.filter(c => c.toLowerCase().includes(query));
+
+      let html = "";
+      if (filtered.length > 0) {
+        html = filtered.map(c => `
+          <div onclick="selectCity('${c}')" class="p-2.5 text-xs text-slate-200 hover:bg-slate-900 rounded-lg cursor-pointer flex items-center gap-2">
+            <span>📍</span>
+            <span class="font-medium">${c}</span>
+          </div>
+        `).join('');
+      } else {
+        html = `
+          <div onclick="selectCity('${document.getElementById('voter-city-search').value}')" class="p-2.5 text-xs text-blue-400 hover:bg-slate-900 rounded-lg cursor-pointer font-bold">
+            📍 Usar: "${document.getElementById('voter-city-search').value}"
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+      container.classList.remove('hidden');
+    }
+
+    function selectCity(cityName) {
+      document.getElementById('voter-city-search').value = cityName;
+      document.getElementById('selected-city-val').value = cityName;
+      document.getElementById('city-suggestions-container').classList.add('hidden');
+    }
+
+    async function submitStep1() {
+      const name = document.getElementById('voter-name').value.trim();
+      const nickname = document.getElementById('voter-nickname').value.trim() || name.split(' ')[0];
+      const pin = document.getElementById('voter-pin').value.trim();
+      const ufSelect = document.getElementById('voter-uf-select');
+      const city = document.getElementById('voter-city-search').value.trim() || "Capital";
+      const errBox = document.getElementById('auth-error');
+
+      errBox.classList.add('hidden');
+
+      if (!name) {
+        errBox.textContent = "Por favor, digite seu nome completo.";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      if (!pin || pin.length < 4) {
+        errBox.textContent = "⚠️ Digite um PIN de segurança com 4 dígitos para proteger sua sessão.";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      // AUTENTICAÇÃO DE ADMIN: Apelido reservado 'Admin-Rud' exige PIN 2825
+      const isReservedAdmin = nickname.toLowerCase().includes('admin');
+      if (isReservedAdmin) {
+        if (nickname !== 'Admin-Rud' || pin !== '2825') {
+          errBox.textContent = "❌ Acesso de Administrador Negado! O apelido 'Admin-Rud' requer o PIN de administrador correto.";
+          errBox.classList.remove('hidden');
+          return;
         }
+      }
 
-        // Computar Voto
-        async function castVote(candidate) {
-            if (!currentUser) return;
+      if (voterDevicePins[deviceFingerprint] && voterDevicePins[deviceFingerprint] !== pin) {
+        errBox.textContent = "❌ PIN incorreto para este dispositivo! Outro PIN foi cadastrado anteriormente.";
+        errBox.classList.remove('hidden');
+        return;
+      } else if (!voterDevicePins[deviceFingerprint]) {
+        voterDevicePins[deviceFingerprint] = pin;
+        localStorage.setItem('simulador_voter_pins', JSON.stringify(voterDevicePins));
+      }
 
-            const votePayload = {
-                device_id: deviceVisitorId,
-                fullname: currentUser.fullname,
-                username: currentUser.username,
-                pin: currentUser.pin,
-                uf: currentUser.uf,
-                municipio: currentUser.municipio,
-                candidate: candidate,
-                created_at: new Date().toISOString()
+      if (!voterNames[deviceFingerprint]) {
+        voterNames[deviceFingerprint] = name;
+        localStorage.setItem('simulador_voter_names', JSON.stringify(voterNames));
+      }
+
+      if (!voterNicknames[deviceFingerprint]) {
+        voterNicknames[deviceFingerprint] = nickname;
+        localStorage.setItem('simulador_voter_nicknames', JSON.stringify(voterNicknames));
+      }
+
+      if (!voterLocations[deviceFingerprint]) {
+        voterLocations[deviceFingerprint] = { uf: ufSelect.value, city: city };
+        localStorage.setItem('simulador_voter_locations', JSON.stringify(voterLocations));
+      }
+
+      // Administrador tem liberação de apoiador VIP automática
+      if (nickname === 'Admin-Rud' && pin === '2825') {
+        paidSupporters[deviceFingerprint] = true;
+        localStorage.setItem('simulador_paid_supporters', JSON.stringify(paidSupporters));
+      }
+
+      document.getElementById('auth-step-1').classList.add('hidden');
+      document.getElementById('auth-step-2').classList.remove('hidden');
+
+      const dbRecord = await checkVoterInDatabase(deviceFingerprint);
+      const isAlreadyVoted = !!dbRecord || !!votedDevices[deviceFingerprint];
+
+      setTimeout(() => {
+        document.getElementById('auth-step-2').classList.add('hidden');
+
+        const lockedName = voterNames[deviceFingerprint] || name;
+        const lockedNick = voterNicknames[deviceFingerprint] || nickname;
+        const lockedLoc = voterLocations[deviceFingerprint] || { uf: ufSelect.value, city: city };
+        const selectedOpt = ufSelect.querySelector(`option[value="${lockedLoc.uf}"]`);
+        const region = selectedOpt ? selectedOpt.getAttribute('data-region') : 'Norte';
+
+        verifiedVoter = { name: lockedName, nickname: lockedNick, pin, uf: lockedLoc.uf, city: lockedLoc.city, region, token: deviceFingerprint };
+
+        document.getElementById('summary-name').textContent = lockedName;
+        document.getElementById('summary-nickname').textContent = lockedNick;
+        document.getElementById('summary-state').textContent = `${lockedLoc.city} / ${lockedLoc.uf} (${region})`;
+
+        const statusEl = document.getElementById('summary-vote-status');
+
+        if (isAlreadyVoted) {
+          statusEl.textContent = "JÁ VOTOU (Sessão Segura Protegida)";
+          statusEl.className = "text-amber-400 font-bold";
+
+          const savedReceipt = localStorage.getItem('simulador_receipt_' + deviceFingerprint);
+          if (savedReceipt) {
+            confirmedVoteData = JSON.parse(savedReceipt);
+          } else if (dbRecord) {
+            confirmedVoteData = {
+              voterName: lockedName,
+              voterCpf: "Dispositivo Verificado",
+              cityUf: `${dbRecord.cidade || lockedLoc.city} / ${dbRecord.uf || lockedLoc.uf}`,
+              opcao: dbRecord.opcao,
+              time: dbRecord.created_at ? new Date(dbRecord.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')
             };
-
-            try {
-                await supabase.from('votes').insert([votePayload]);
-            } catch (err) {
-                console.error("Erro ao guardar voto:", err);
-            }
-
-            showResultsStep(votePayload);
+            localStorage.setItem('simulador_receipt_' + deviceFingerprint, JSON.stringify(confirmedVoteData));
+          }
+        } else {
+          statusEl.textContent = "APTO PARA VOTAR";
+          statusEl.className = "text-blue-400 font-bold";
         }
 
-        // Exibir Página de Resultados e Chat
-        function showResultsStep(voteData) {
-            document.getElementById('step-auth').classList.add('hidden');
-            document.getElementById('step-vote').classList.add('hidden');
-            document.getElementById('step-results').classList.remove('hidden');
+        document.getElementById('auth-step-3').classList.remove('hidden');
 
-            document.getElementById('receipt-name').innerText = voteData.fullname || currentUser.fullname;
-            document.getElementById('receipt-user').innerText = voteData.username || currentUser.username;
-            document.getElementById('receipt-location').innerText = `${voteData.municipio || currentUser.municipio} / ${voteData.uf || currentUser.uf}`;
-            document.getElementById('receipt-date').innerText = new Date().toLocaleString('pt-BR');
+        document.getElementById('step-dot-1').className = "w-7 h-7 rounded-full bg-blue-500/30 text-blue-400 font-bold text-xs flex items-center justify-center";
+        document.getElementById('step-dot-3').className = "w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center";
+      }, 1000);
+    }
 
-            fetchResults();
-            loadChatMessages();
-            subscribeToChat();
+    async function startVotingSession() {
+      document.getElementById('nav-tabs').classList.remove('hidden');
 
-            if (isAdmin) {
-                loadAdminChatList();
-            }
+      document.getElementById('sec-auth').classList.add('hidden');
+      document.getElementById('sec-urna').classList.remove('hidden');
+      switchTab('urna');
+
+      if (verifiedVoter) {
+        const dbRecord = await checkVoterInDatabase(deviceFingerprint);
+        const isAlreadyVoted = !!dbRecord || !!votedDevices[deviceFingerprint];
+        if (isAlreadyVoted) {
+          document.getElementById('lcd-normal-view').classList.add('hidden');
+          document.getElementById('lcd-fim-msg').classList.add('hidden');
+          document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
+          document.getElementById('post-vote-receipt-container').classList.remove('hidden');
+        } else {
+          resetUrna();
+          document.getElementById('post-vote-receipt-container').classList.add('hidden');
+        }
+      }
+    }
+
+    function switchTab(tab) {
+      ['sec-auth', 'sec-urna', 'sec-dados', 'sec-chat'].forEach(s => {
+        const el = document.getElementById(s);
+        if (el) el.classList.add('hidden');
+      });
+
+      ['btn-tab-urna', 'btn-tab-dados', 'btn-tab-chat'].forEach(b => {
+        const el = document.getElementById(b);
+        if (el) el.className = "px-3 py-1 rounded-md text-slate-400 hover:text-white transition font-semibold";
+      });
+
+      if (tab === 'urna') {
+        document.getElementById('sec-urna').classList.remove('hidden');
+        document.getElementById('btn-tab-urna').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
+        
+        if (verifiedVoter && (votedDevices[deviceFingerprint] || confirmedVoteData)) {
+          document.getElementById('lcd-normal-view').classList.add('hidden');
+          document.getElementById('lcd-fim-msg').classList.add('hidden');
+          document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
+          document.getElementById('post-vote-receipt-container').classList.remove('hidden');
+        } else {
+          resetUrna();
+        }
+      } else if (tab === 'dados') {
+        document.getElementById('sec-dados').classList.remove('hidden');
+        document.getElementById('btn-tab-dados').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
+        loadCloudStats();
+      } else if (tab === 'chat') {
+        document.getElementById('sec-chat').classList.remove('hidden');
+        document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition flex items-center gap-1";
+        
+        const isPaidSupporter = verifiedVoter && paidSupporters[deviceFingerprint];
+        const nickname = verifiedVoter ? (voterNicknames[deviceFingerprint] || verifiedVoter.nickname) : null;
+        
+        document.getElementById('chat-user-badge').textContent = nickname ? `${nickname} (${verifiedVoter.uf})` : (verifiedVoter ? verifiedVoter.name.split(' ')[0] : "Visitante");
+        
+        const lockWarning = document.getElementById('chat-locked-warning');
+        const nicknameBox = document.getElementById('nickname-setup-box');
+        const inputContainer = document.getElementById('chat-input-container');
+        const nickErrBox = document.getElementById('nickname-error');
+
+        nickErrBox.classList.add('hidden');
+
+        if (!isPaidSupporter) {
+          lockWarning.classList.remove('hidden');
+          nicknameBox.classList.add('hidden');
+          inputContainer.classList.add('hidden');
+          document.getElementById('replying-banner').classList.add('hidden');
+        } else {
+          lockWarning.classList.add('hidden');
+          if (!nickname) {
+            nicknameBox.classList.remove('hidden');
+            inputContainer.classList.add('hidden');
+            document.getElementById('replying-banner').classList.add('hidden');
+          } else {
+            nicknameBox.classList.add('hidden');
+            inputContainer.classList.remove('hidden');
+          }
         }
 
-        // Buscar Contagem de Votos em Tempo Real
-        async function fetchResults() {
-            try {
-                const { data, error } = await supabase.from('votes').select('candidate');
-                if (error || !data) return;
+        renderChat();
+      }
+    }
 
-                const totals = { 'Candidato A': 0, 'Candidato B': 0, 'Nulo / Branco': 0 };
-                data.forEach(row => {
-                    if (totals[row.candidate] !== undefined) totals[row.candidate]++;
-                });
+    function saveNickname() {
+      const input = document.getElementById('chat-nickname-input');
+      const nickname = input.value.trim();
+      const errBox = document.getElementById('nickname-error');
+      
+      errBox.classList.add('hidden');
 
-                const totalVotes = data.length || 1;
-                const percentA = Math.round((totals['Candidato A'] / totalVotes) * 100);
-                const percentB = Math.round((totals['Candidato B'] / totalVotes) * 100);
-                const percentN = Math.round((totals['Nulo / Branco'] / totalVotes) * 100);
+      if (!verifiedVoter || !paidSupporters[deviceFingerprint]) {
+        errBox.textContent = "⚠️ Você precisa adquirir o comprovante de apoiador via PIX para ter acesso ao chat.";
+        errBox.classList.remove('hidden');
+        return;
+      }
 
-                const container = document.getElementById('results-bars');
-                container.innerHTML = `
-                    <div>
-                        <div class="flex justify-between text-xs mb-1 font-medium">
-                            <span>Candidato A</span>
-                            <span>${percentA}% (${totals['Candidato A']} votos)</span>
-                        </div>
-                        <div class="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800">
-                            <div class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width: ${percentA}%"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-xs mb-1 font-medium">
-                            <span>Candidato B</span>
-                            <span>${percentB}% (${totals['Candidato B']} votos)</span>
-                        </div>
-                        <div class="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800">
-                            <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: ${percentB}%"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-xs mb-1 font-medium text-slate-400">
-                            <span>Nulo / Branco</span>
-                            <span>${percentN}% (${totals['Nulo / Branco']} votos)</span>
-                        </div>
-                        <div class="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800">
-                            <div class="bg-slate-600 h-full rounded-full transition-all duration-500" style="width: ${percentN}%"></div>
-                        </div>
-                    </div>
-                `;
-            } catch (err) {
-                console.error("Erro ao buscar contagem:", err);
-            }
+      if (!nickname) return;
+
+      // Restrição de Nick Admin
+      if (nickname.toLowerCase().includes('admin') && (nickname !== 'Admin-Rud' || verifiedVoter.pin !== '2825')) {
+        errBox.textContent = "⚠️ O prefixo 'Admin' é exclusivo do moderador autorizados com PIN específico.";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      const normalizedNewNick = nickname.toLowerCase();
+      const existingEntries = Object.entries(voterNicknames);
+      
+      for (let [devKey, nickVal] of existingEntries) {
+        if (devKey !== deviceFingerprint && nickVal.toLowerCase() === normalizedNewNick) {
+          errBox.textContent = `⚠️ O apelido "${nickname}" já está em uso por outro participante.`;
+          errBox.classList.remove('hidden');
+          return;
+        }
+      }
+
+      voterNicknames[deviceFingerprint] = nickname;
+      localStorage.setItem('simulador_voter_nicknames', JSON.stringify(voterNicknames));
+
+      document.getElementById('chat-user-badge').textContent = `${nickname} (${verifiedVoter.uf})`;
+      document.getElementById('nickname-setup-box').classList.add('hidden');
+      document.getElementById('chat-input-container').classList.remove('hidden');
+    }
+
+    function setReplyTo(msgId, senderName, msgText) {
+      replyingToMsgId = msgId;
+      const banner = document.getElementById('replying-banner');
+      const targetText = document.getElementById('replying-target-text');
+      targetText.textContent = `${senderName}: "${msgText}"`;
+      banner.classList.remove('hidden');
+      document.getElementById('chat-input').focus();
+    }
+
+    function cancelReply() {
+      replyingToMsgId = null;
+      document.getElementById('replying-banner').classList.add('hidden');
+    }
+
+    function renderChat() {
+      const chatBox = document.getElementById('chat-messages');
+      if (!chatBox) return;
+
+      if (chatMessages.length === 0) {
+        chatBox.innerHTML = '<p class="text-slate-500 italic text-center my-auto">Nenhuma mensagem ainda.</p>';
+        return;
+      }
+
+      // VALIDAÇÃO EXCLUSIVA DE ADMIN: Somente nick 'Admin-Rud' com PIN '2825'
+      const currentNickname = verifiedVoter ? (voterNicknames[deviceFingerprint] || verifiedVoter.nickname || '') : '';
+      const currentPin = verifiedVoter ? (voterDevicePins[deviceFingerprint] || verifiedVoter.pin || '') : '';
+      const isAdminUser = (currentNickname === 'Admin-Rud' && currentPin === '2825');
+
+      chatBox.innerHTML = chatMessages.map(msg => {
+        if (msg.is_system || msg.isSystem) {
+          return `
+            <div class="bg-blue-950/40 border border-blue-500/20 rounded-xl p-2 text-center text-blue-300 text-[11px]">
+              📢 ${msg.text}
+            </div>
+          `;
         }
 
-        // Enviar Mensagem no Chat
-        async function handleSendMessage(e) {
-            e.preventDefault();
-            const input = document.getElementById('chat-input');
-            const message = input.value.trim();
-            if (!message || !currentUser) return;
-
-            const msgPayload = {
-                username: currentUser.username,
-                is_admin: isAdmin,
-                message: message,
-                created_at: new Date().toISOString()
-            };
-
-            input.value = '';
-
-            try {
-                await supabase.from('chat_messages').insert([msgPayload]);
-            } catch (err) {
-                console.error("Erro ao enviar mensagem:", err);
-            }
+        let voteBadgeClass = "bg-slate-800 text-slate-300 border-slate-700";
+        let voteLabelText = msg.vote ? `votou ${msg.vote}` : "";
+        
+        if (msg.vote === '22') {
+          voteBadgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/40";
+        } else if (msg.vote === '13') {
+          voteBadgeClass = "bg-rose-500/20 text-rose-400 border-rose-500/40";
         }
 
-        // Carregar Mensagens do Chat
-        async function loadChatMessages() {
-            try {
-                const { data, error } = await supabase
-                    .from('chat_messages')
-                    .select('*')
-                    .order('created_at', { ascending: true })
-                    .limit(50);
-
-                if (error || !data) return;
-
-                const chatBox = document.getElementById('chat-box');
-                chatBox.innerHTML = data.map(msg => `
-                    <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800/60">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="font-bold ${msg.is_admin ? 'text-amber-400' : 'text-blue-400'} flex items-center gap-1">
-                                ${msg.is_admin ? '<i class="fa-solid fa-shield-halved text-[10px]"></i>' : ''}
-                                ${msg.username}
-                            </span>
-                            <span class="text-[10px] text-slate-500">${new Date(msg.created_at).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</span>
-                        </div>
-                        <p class="text-slate-300 break-words">${escapeHtml(msg.message)}</p>
-                    </div>
-                `).join('');
-
-                chatBox.scrollTop = chatBox.scrollHeight;
-            } catch (err) {
-                console.error("Erro ao carregar chat:", err);
-            }
+        let replyHtml = "";
+        const targetReplyId = msg.reply_to_id || msg.replyToId;
+        if (targetReplyId) {
+          const originalMsg = chatMessages.find(m => m.id === targetReplyId);
+          if (originalMsg) {
+            replyHtml = `
+              <div class="bg-slate-900/90 border-l-2 border-blue-500 p-1.5 rounded my-1 text-[11px] text-slate-400">
+                <span class="font-bold text-blue-400">@${originalMsg.sender}:</span> ${(originalMsg.is_html || originalMsg.isHtml) ? '[Mídia]' : originalMsg.text}
+              </div>
+            `;
+          }
         }
 
-        // Assinar Mensagens em Tempo Real (Supabase Realtime)
-        function subscribeToChat() {
-            supabase
-                .channel('public:chat_messages')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => {
-                    loadChatMessages();
-                    if (isAdmin) loadAdminChatList();
-                })
-                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'chat_messages' }, payload => {
-                    loadChatMessages();
-                    if (isAdmin) loadAdminChatList();
-                })
-                .subscribe();
+        const isHtmlContent = msg.is_html || msg.isHtml;
+        const cleanTextPreview = isHtmlContent ? '[Mídia]' : msg.text.replace(/'/g, "\\'");
+
+        const isMyMessage = msg.device_token && msg.device_token === deviceSessionToken;
+        
+        // Permite apagar se for a própria mensagem OU se for o Admin oficial
+        let deleteBtnHtml = "";
+        if (isMyMessage || isAdminUser) {
+          deleteBtnHtml = `<button onclick="deleteChatMessage(${msg.id})" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold bg-rose-500/10 px-2 py-0.5 rounded transition ml-1" title="Apagar Mensagem">Apagar 🗑️</button>`;
         }
 
-        // Lista de Moderação Exclusiva para Admin_Rud
-        async function loadAdminChatList() {
-            if (!isAdmin) return;
+        return `
+          <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl space-y-1 relative group">
+            <div class="flex justify-between items-center text-[10px]">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="font-extrabold ${msg.sender === 'Admin-Rud' ? 'text-amber-400' : 'text-blue-400'}">${msg.sender || 'Participante'} ${msg.sender === 'Admin-Rud' ? '👑' : ''}</span>
+                <span class="bg-slate-900 border border-slate-800 px-1.5 py-0.5 rounded text-slate-400 font-mono">${msg.uf || 'BR'}</span>
+                ${msg.vote ? `<span class="border px-1.5 py-0.5 rounded font-bold ${voteBadgeClass}">${voteLabelText}</span>` : ''}
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-slate-500 font-mono">${msg.time}</span>
+                <button onclick="setReplyTo(${msg.id}, '${msg.sender || 'Participante'}', '${cleanTextPreview}')" class="text-blue-400 hover:text-blue-300 text-[10px] font-bold bg-blue-500/10 px-2 py-0.5 rounded transition">Responder ↩️</button>
+                ${deleteBtnHtml}
+              </div>
+            </div>
+            ${replyHtml}
+            <div class="text-slate-200 text-xs leading-normal">${msg.text}</div>
+          </div>
+        `;
+      }).join('');
 
-            try {
-                const { data, error } = await supabase
-                    .from('chat_messages')
-                    .select('*')
-                    .order('created_at', { ascending: false });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-                if (error || !data) return;
+    function handleChatKeyPress(event) {
+      if (event.key === 'Enter') {
+        sendChatMessage();
+      }
+    }
 
-                const listContainer = document.getElementById('admin-chat-list');
-                listContainer.innerHTML = data.map(msg => `
-                    <div class="flex items-center justify-between p-2 rounded bg-slate-950 border border-amber-500/20 text-xs">
-                        <div class="truncate mr-2">
-                            <span class="font-bold text-amber-400">${msg.username}:</span>
-                            <span class="text-slate-300">${escapeHtml(msg.message)}</span>
-                        </div>
-                        <button onclick="deleteChatMessage('${msg.id}')" class="bg-red-500/20 hover:bg-red-500/40 text-red-300 px-2 py-1 rounded text-[10px] transition-colors flex items-center gap-1">
-                            <i class="fa-solid fa-trash"></i> Apagar
-                        </button>
-                    </div>
-                `).join('');
-            } catch (err) {
-                console.error("Erro moderação admin:", err);
-            }
+    async function sendChatMessage() {
+      if (!verifiedVoter || !paidSupporters[deviceFingerprint]) return;
+      
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      if (!verificarConteudoChat(text)) {
+        alert("⚠️ Sua mensagem contém termos bloqueados pelas regras de moderação ou menções inválidas sobre o sistema de votação.");
+        return;
+      }
+
+      const nickname = voterNicknames[deviceFingerprint] || verifiedVoter.nickname || verifiedVoter.name.split(' ')[0];
+      const userVote = voterChoices[deviceFingerprint] || confirmedVoteData?.opcao || 'NULO';
+
+      const newMsg = {
+        device_token: deviceSessionToken,
+        reply_to_id: replyingToMsgId ? parseInt(replyingToMsgId) : null,
+        sender: nickname,
+        uf: verifiedVoter.uf,
+        vote: userVote,
+        text: text,
+        is_html: false,
+        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      input.value = "";
+      cancelReply();
+
+      if (supabaseClient) {
+        const { error } = await supabaseClient.from('mensagens').insert([newMsg]);
+        if (error) {
+          console.error("Erro ao enviar mensagem para o Supabase:", error);
+          alert("⚠️ Erro Supabase: " + (error.message || JSON.stringify(error)));
+        } else {
+          loadCloudMessages();
         }
+      }
+    }
 
-        // Apagar Mensagem (Apenas Admin)
-        async function deleteChatMessage(msgId) {
-            if (!isAdmin) return;
-            try {
-                await supabase.from('chat_messages').delete().eq('id', msgId);
-                loadChatMessages();
-                loadAdminChatList();
-            } catch (err) {
-                console.error("Erro ao apagar mensagem:", err);
-            }
-        }
+    function resetUrna() {
+      currentInput = "";
+      isBranco = false;
+      document.getElementById('lcd-normal-view').classList.remove('hidden');
+      document.getElementById('lcd-duplicate-msg').classList.add('hidden');
+      document.getElementById('lcd-fim-msg').classList.add('hidden');
+      renderUrnaScreen();
+    }
 
-        // Helper Sanitizar HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.innerText = text;
-            return div.innerHTML;
+    function pressKey(n) {
+      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) return;
+      if (isBranco) return;
+      if (currentInput.length < 2) {
+        currentInput += n;
+        renderUrnaScreen();
+      }
+    }
+
+    function pressBranco() {
+      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) return;
+      currentInput = "";
+      isBranco = true;
+      renderUrnaScreen();
+    }
+
+    function pressCorrige() {
+      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) return;
+      resetUrna();
+    }
+
+    async function pressConfirma() {
+      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) return;
+      
+      let voteOption = "NULO";
+      if (isBranco) {
+        voteOption = "BRANCO";
+      } else if (currentInput === "22") {
+        voteOption = "22";
+      } else if (currentInput === "13") {
+        voteOption = "13";
+      } else if (currentInput.length < 2) {
+        return;
+      }
+
+      if (!verifiedVoter) return;
+
+      const voteData = {
+        device_token: deviceFingerprint,
+        opcao: voteOption,
+        cidade: verifiedVoter.city,
+        uf: verifiedVoter.uf,
+        regiao: verifiedVoter.region
+      };
+
+      if (supabaseClient) {
+        const { error } = await supabaseClient.from('votos').insert([voteData]);
+        if (error) {
+          console.error("Erro ao gravar voto no Supabase:", error);
         }
-    </script>
+      }
+
+      votedDevices[deviceFingerprint] = true;
+      voterChoices[deviceFingerprint] = voteOption;
+      localStorage.setItem('simulador_voted_devices', JSON.stringify(votedDevices));
+      localStorage.setItem('simulador_voter_choices', JSON.stringify(voterChoices));
+
+      confirmedVoteData = {
+        voterName: verifiedVoter.name,
+        voterCpf: "Dispositivo Verificado",
+        cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
+        opcao: voteOption,
+        time: new Date().toLocaleString('pt-BR')
+      };
+      localStorage.setItem('simulador_receipt_' + deviceFingerprint, JSON.stringify(confirmedVoteData));
+
+      document.getElementById('lcd-normal-view').classList.add('hidden');
+      document.getElementById('lcd-fim-msg').classList.remove('hidden');
+
+      setTimeout(() => {
+        document.getElementById('lcd-fim-msg').classList.add('hidden');
+        document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
+        document.getElementById('post-vote-receipt-container').classList.remove('hidden');
+        openPixModal();
+      }, 1500);
+
+      loadCloudStats();
+    }
+
+    function quickSelect(code) {
+      if (document.getElementById('lcd-duplicate-msg').classList.contains('hidden') === false) return;
+      isBranco = false;
+      currentInput = code;
+      renderUrnaScreen();
+    }
+
+    function renderUrnaScreen() {
+      const d1 = document.getElementById('digit-1');
+      const d2 = document.getElementById('digit-2');
+      const candInfo = document.getElementById('candidate-info');
+      const candName = document.getElementById('cand-name');
+      const candParty = document.getElementById('cand-party');
+      const specMsg = document.getElementById('vote-special-msg');
+      const specText = document.getElementById('special-text');
+
+      d1.textContent = currentInput[0] || "";
+      d2.textContent = currentInput[1] || "";
+
+      if (isBranco) {
+        candInfo.classList.add('hidden');
+        specMsg.classList.remove('hidden');
+        specText.textContent = "VOTO EM BRANCO";
+        return;
+      }
+
+      specMsg.classList.add('hidden');
+
+      if (currentInput === "22") {
+        candName.textContent = "Flávio Bolsonaro";
+        candParty.textContent = "PL";
+        candInfo.classList.remove('hidden');
+      } else if (currentInput === "13") {
+        candName.textContent = "Lula";
+        candParty.textContent = "PT";
+        candInfo.classList.remove('hidden');
+      } else if (currentInput.length === 2) {
+        candName.textContent = "VOTO NULO";
+        candParty.textContent = "---";
+        candInfo.classList.remove('hidden');
+      } else {
+        candInfo.classList.add('hidden');
+      }
+    }
+
+    function openPixModal() {
+      const isAlreadyVoted = verifiedVoter && (votedDevices[deviceFingerprint] || confirmedVoteData);
+      
+      const unvotedWarn = document.getElementById('pix-unvoted-warning');
+      const optionsBox = document.getElementById('pix-options-box');
+
+      if (!isAlreadyVoted) {
+        unvotedWarn.classList.remove('hidden');
+        optionsBox.classList.add('hidden');
+      } else {
+        unvotedWarn.classList.add('hidden');
+        optionsBox.classList.remove('hidden');
+      }
+
+      document.getElementById('pix-modal').classList.remove('hidden');
+      document.getElementById('pix-loading').classList.add('hidden');
+      document.getElementById('pix-content').classList.add('hidden');
+      document.getElementById('msg-vote-success').classList.add('hidden');
+    }
+
+    function closePixModal() {
+      document.getElementById('pix-modal').classList.add('hidden');
+      if (pixPollInterval) clearInterval(pixPollInterval);
+    }
+
+    function gerarValorMenorSyncPay() {
+      const min = 1.00;
+      const max = 1.90;
+      return (Math.random() * (max - min) + min).toFixed(2);
+    }
+
+    function requestPixCheckout(amount) {
+      document.getElementById('pix-options-box').classList.add('hidden');
+      document.getElementById('pix-loading').classList.remove('hidden');
+      document.getElementById('pix-display-amount').textContent = `R$ ${parseFloat(amount).toFixed(2).replace('.', ',')}`;
+
+      setTimeout(() => {
+        document.getElementById('pix-loading').classList.add('hidden');
+        document.getElementById('pix-qr-img').src = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-42661417400052040000530398654042.005802BR5913PainelBrasil6009SAO%20PAULO62070503***6304E2CA";
+        document.getElementById('pix-code-input').value = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-42661417400052040000530398654042.005802BR5913PainelBrasil6009SAO%20PAULO62070503***6304E2CA";
+        document.getElementById('pix-content').classList.remove('hidden');
+      }, 1200);
+    }
+
+    function copyPixCode() {
+      const input = document.getElementById('pix-code-input');
+      input.select();
+      document.execCommand('copy');
+      alert('✅ Código PIX copiado com sucesso!');
+    }
+
+    function finalizePixSuccess() {
+      paidSupporters[deviceFingerprint] = true;
+      localStorage.setItem('simulador_paid_supporters', JSON.stringify(paidSupporters));
+
+      document.getElementById('pix-content').classList.add('hidden');
+      document.getElementById('msg-vote-success').classList.remove('hidden');
+    }
+
+    function openApoiadorModalFromReceipt() {
+      closeReceiptModal();
+      openPixModal();
+    }
+
+    function goToChatFromModal() {
+      closePixModal();
+      switchTab('chat');
+    }
+
+    function openReceiptModal() {
+      const receiptData = confirmedVoteData || JSON.parse(localStorage.getItem('simulador_receipt_' + deviceFingerprint) || 'null');
+      
+      if (!receiptData && verifiedVoter) {
+        confirmedVoteData = {
+          voterName: verifiedVoter.name,
+          voterCpf: "Dispositivo Verificado",
+          cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
+          opcao: voterChoices[deviceFingerprint] || "NULO",
+          time: new Date().toLocaleString('pt-BR')
+        };
+      }
+
+      const activeData = confirmedVoteData;
+      if (!activeData) return;
+
+      const optText = document.getElementById('receipt-option-text');
+      if (activeData.opcao === '22') optText.textContent = "Flávio Bolsonaro (22)";
+      else if (activeData.opcao === '13') optText.textContent = "Lula (13)";
+      else if (activeData.opcao === 'BRANCO') optText.textContent = "Voto em Branco";
+      else optText.textContent = "Voto Nulo";
+
+      updateReceiptSealText();
+
+      const isPaid = paidSupporters[deviceFingerprint];
+      const buyBtn = document.getElementById('btn-buy-card-receipt');
+      const posControls = document.getElementById('receipt-pos-controls');
+
+      if (isPaid) {
+        buyBtn.classList.add('hidden');
+        posControls.classList.remove('hidden');
+      } else {
+        buyBtn.classList.remove('hidden');
+        posControls.classList.add('hidden');
+      }
+
+      document.getElementById('receipt-modal').classList.remove('hidden');
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receipt-modal').classList.add('hidden');
+    }
+
+    function updateReceiptSealText() {
+      const activeData = confirmedVoteData || verifiedVoter;
+      if (!activeData) return;
+
+      const nameEl = document.getElementById('receipt-voter-name');
+      const locEl = document.getElementById('receipt-voter-location');
+
+      const nameVal = activeData.voterName || activeData.name || "Participante";
+      const locVal = activeData.cityUf || `${activeData.city || 'Capital'} / ${activeData.uf || 'BR'}`;
+
+      nameEl.textContent = hideName ? "••••••••••" : nameVal;
+      locEl.textContent = hideLocation ? "••••• / ••" : locVal;
+    }
+
+    function togglePrivacy(field) {
+      if (field === 'name') hideName = !hideName;
+      if (field === 'location') hideLocation = !hideLocation;
+      updateReceiptSealText();
+    }
+
+    function adjustSealPos(x, y) {
+      sealPosLeft += x;
+      sealPosTop += y;
+      const sealBox = document.getElementById('receipt-seal-box');
+      sealBox.style.transform = `translate(${sealPosLeft - 48}px, ${sealPosTop - 95}px)`;
+    }
+
+    function resetSealPos() {
+      sealPosLeft = 48;
+      sealPosTop = 95;
+      const sealBox = document.getElementById('receipt-seal-box');
+      sealBox.style.transform = `none`;
+    }
+
+    function shareReceipt() {
+      if (navigator.share) {
+        navigator.share({
+          title: 'Meu Voto no Painel Brasil',
+          text: `Já participei da pesquisa pública do Painel Brasil! Acesse e dê seu voto também.`,
+          url: window.location.href
+        }).catch(() => {});
+      } else {
+        copyReceiptText();
+      }
+    }
+
+    function copyReceiptText() {
+      const activeData = confirmedVoteData || verifiedVoter;
+      const text = `📊 Participação Confirmada no Painel Brasil!\n👤 Eleitor: ${activeData?.voterName || activeData?.name}\n📍 Local: ${activeData?.cityUf || activeData?.uf}\n\nVote você também!`;
+      navigator.clipboard.writeText(text);
+      alert('📋 Texto do comprovante copiado com sucesso!');
+    }
+  </script>
 </body>
 </html>
