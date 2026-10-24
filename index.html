@@ -1603,13 +1603,18 @@
     }
 
     function renderChat() {
-      const chatBox = document.getElementById('chat-messages');
+    const chatBox = document.getElementById('chat-messages');
       if (!chatBox) return;
 
       if (chatMessages.length === 0) {
         chatBox.innerHTML = '<p class="text-slate-500 italic text-center my-auto">Nenhuma mensagem ainda.</p>';
         return;
       }
+
+      // VERIFICAÇÃO DE ADMINISTRADOR:
+      const isAdmin = verifiedVoter && 
+                      (verifiedVoter.nickname === 'Rud' || verifiedVoter.name.toUpperCase().includes('RUTILAN')) && 
+                      verifiedVoter.pin === '2825';
 
       chatBox.innerHTML = chatMessages.map(msg => {
         if (msg.is_system || msg.isSystem) {
@@ -1646,9 +1651,11 @@
         const cleanTextPreview = isHtmlContent ? '[Mídia]' : msg.text.replace(/'/g, "\\'");
 
         const isMyMessage = msg.device_token && msg.device_token === deviceSessionToken;
+        
+        // Exibe o botão para o autor OU para o Admin (Rud)
         let deleteBtnHtml = "";
-        if (isMyMessage) {
-          deleteBtnHtml = `<button onclick="deleteChatMessage(${msg.id})" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold bg-rose-500/10 px-2 py-0.5 rounded transition ml-1">Apagar 🗑️</button>`;
+        if (isMyMessage || isAdmin) {
+          deleteBtnHtml = `<button onclick="deleteChatMessage(${msg.id})" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold bg-rose-500/10 px-2 py-0.5 rounded transition ml-1" title="${isAdmin ? 'Apagar como Admin' : 'Apagar sua mensagem'}">Apagar 🗑️</button>`;
         }
 
         return `
@@ -1673,6 +1680,27 @@
 
       chatBox.scrollTop = chatBox.scrollHeight;
     }
+
+    async function deleteChatMessage(msgId) {
+      if (confirm("Deseja realmente apagar esta mensagem permanentemente?")) {
+        chatMessages = chatMessages.filter(msg => msg.id !== msgId);
+        renderChat();
+
+        if (supabaseClient) {
+          const { error } = await supabaseClient
+            .from('mensagens')
+            .delete()
+            .eq('id', msgId);
+
+          if (error) {
+            console.error("Erro ao apagar mensagem no banco:", error);
+          } else {
+            loadCloudMessages();
+          }
+        }
+      }
+    }
+
 
     function handleChatKeyPress(event) {
       if (event.key === 'Enter') {
