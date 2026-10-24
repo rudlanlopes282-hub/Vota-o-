@@ -114,9 +114,12 @@ module.exports = async (req, res) => {
         });
       }
 
+      // Devolvemos todas as variações de ID para o frontend nunca perder a referência
       return res.status(200).json({
         pix_code: pixCode,
-        identifier: identifier
+        identifier: identifier,
+        id: identifier,
+        data: data
       });
     } catch (error) {
       const errorData = error.response?.data || error.message;
