@@ -554,7 +554,7 @@
 
       </section>
 
-      <!-- BOTÃO DE VER COMPROVANTE -->
+      <!-- BOTÃO DE VER COMPROVANTE (EXIBIDO APENAS NA ABA URNA QUANDO JÁ VOTOU) -->
       <div id="post-vote-receipt-container" class="hidden w-full">
         <button onclick="openReceiptModal()" class="w-full bg-slate-900 hover:bg-slate-800 border border-blue-500/40 p-3 rounded-2xl flex items-center justify-between shadow-lg transition group">
           <div class="flex items-center gap-2.5">
@@ -748,36 +748,66 @@
         </div>
       </section>
 
-      <!-- FAQ -->
-      <section id="sec-faq" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
-        <div class="flex items-center gap-2 border-b border-slate-800 pb-2">
-          <span class="text-lg">❓</span>
-          <div>
-            <h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Dúvidas Frequentes</h3>
-            <p class="text-[10px] text-slate-400">Sobre a segurança e regras da pesquisa</p>
-          </div>
-        </div>
+      <!-- FAQ RETRÁTIL E EXPANDIDO -->
+      <section id="sec-faq" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 transition-all">
+        <details class="group cursor-pointer">
+          <!-- CABEÇALHO CLICÁVEL -->
+          <summary class="flex items-center justify-between list-none select-none">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">❓</span>
+              <div>
+                <h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Dúvidas Frequentes</h3>
+                <p class="text-[10px] text-slate-400">Clique aqui para ver as regras e tirar dúvidas da pesquisa</p>
+              </div>
+            </div>
+            <span class="text-blue-400 font-bold transition-transform group-open:rotate-180">▼</span>
+          </summary>
 
-        <div class="space-y-2.5 text-xs">
-          <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
-            <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-              <span>🛡️ Como o sistema protege a votação?</span>
-              <span class="text-blue-400 group-open:rotate-180 transition-transform">▼</span>
-            </summary>
-            <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-              O sistema utiliza uma assinatura única gerada pelo seu navegador e um PIN de 4 dígitos para garantir que cada dispositivo vote apenas uma vez, sem a necessidade de recolher dados sensíveis.
-            </div>
-          </details>
-          <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
-            <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-              <span>📊 Os votos são sincronizados em tempo real?</span>
-              <span class="text-blue-400 group-open:rotate-180 transition-transform">▼</span>
-            </summary>
-            <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-              Sim! Todos os votos confirmados passam por validação e são agregados de forma anônima no placar público a cada 10 segundos.
-            </div>
-          </details>
-        </div>
+          <!-- LISTA DE DÚVIDAS (OCULTAS ATÉ O CLIQUE) -->
+          <div class="mt-4 space-y-2.5 text-xs border-t border-slate-800 pt-3">
+            
+            <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group/sub cursor-pointer">
+              <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+                <span>🛡️ Como o sistema protege a votação?</span>
+                <span class="text-blue-400 group-open/sub:rotate-180 transition-transform">▼</span>
+              </summary>
+              <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+                O sistema utiliza uma assinatura única gerada pelo seu navegador e um PIN de 4 dígitos para garantir que cada dispositivo vote apenas uma vez, sem a necessidade de recolher dados sensíveis.
+              </div>
+            </details>
+
+            <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group/sub cursor-pointer">
+              <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+                <span>📊 Os votos são sincronizados em tempo real?</span>
+                <span class="text-blue-400 group-open/sub:rotate-180 transition-transform">▼</span>
+              </summary>
+              <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+                Sim! Todos os votos confirmados passam por validação e são agregados de forma anônima no placar público instantaneamente.
+              </div>
+            </details>
+
+            <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group/sub cursor-pointer">
+              <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+                <span>🔒 Meus dados e voto são confidenciais?</span>
+                <span class="text-blue-400 group-open/sub:rotate-180 transition-transform">▼</span>
+              </summary>
+              <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+                Sim, a plataforma não coleta número de documento, e-mail ou dados pessoais sensíveis. Apenas registramos o município e o candidato escolhido para consolidação estatística.
+              </div>
+            </details>
+
+            <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group/sub cursor-pointer">
+              <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+                <span>💬 Como funciona o Chat VIP de Debate?</span>
+                <span class="text-blue-400 group-open/sub:rotate-180 transition-transform">▼</span>
+              </summary>
+              <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+                O Chat de Debate é restrito a apoiadores para evitar spammers e robôs. Toda a contribuição arrecadada é direcionada exclusivamente para o tráfego pago da pesquisa.
+              </div>
+            </details>
+
+          </div>
+        </details>
       </section>
 
     </main>
@@ -787,7 +817,6 @@
     </footer>
 
   </div>
-
   <script>
   const SUPABASE_URL = "https://eisnibawuzcgdpkrrzrr.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpc25pYmF3dXpjZ2Rwa3JyenJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyOTU0MDIsImV4cCI6MjEwNzg3MTQwMn0.w0GWzZ124HE-gM4zkP8AarfNVbK9HIfzG-hBlsVXpp0";
@@ -795,24 +824,20 @@
   const supabaseClient = isSupabaseConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   
   if (supabaseClient) {
-    // Ouvinte em tempo real para os VOTOS
     supabaseClient
       .channel('mudancas-votos')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votos' }, payload => {
-        loadCloudStats(); // Atualiza o placar automaticamente assim que alguém vota
+        loadCloudStats();
       })
       .subscribe();
 
-    // Ouvinte em tempo real para as MENSAGENS
     supabaseClient
       .channel('mudancas-mensagens')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
-        loadCloudMessages(); // Atualiza o chat automaticamente
+        loadCloudMessages();
       })
       .subscribe();
   }
-  
-
 
     let pixPollInterval = null;
     let pendingVoteObj = null;
@@ -1447,6 +1472,8 @@
         if (el) el.className = "px-3 py-1 rounded-md text-slate-400 hover:text-white transition font-semibold";
       });
 
+      const receiptBtnContainer = document.getElementById('post-vote-receipt-container');
+
       if (tab === 'urna') {
         document.getElementById('sec-urna').classList.remove('hidden');
         document.getElementById('btn-tab-urna').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
@@ -1455,17 +1482,20 @@
           document.getElementById('lcd-normal-view').classList.add('hidden');
           document.getElementById('lcd-fim-msg').classList.add('hidden');
           document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
-          document.getElementById('post-vote-receipt-container').classList.remove('hidden');
+          if (receiptBtnContainer) receiptBtnContainer.classList.remove('hidden');
         } else {
           resetUrna();
+          if (receiptBtnContainer) receiptBtnContainer.classList.add('hidden');
         }
       } else if (tab === 'dados') {
         document.getElementById('sec-dados').classList.remove('hidden');
         document.getElementById('btn-tab-dados').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
+        if (receiptBtnContainer) receiptBtnContainer.classList.add('hidden');
         loadCloudStats();
       } else if (tab === 'chat') {
         document.getElementById('sec-chat').classList.remove('hidden');
         document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition flex items-center gap-1";
+        if (receiptBtnContainer) receiptBtnContainer.classList.add('hidden');
         
         const isPaidSupporter = verifiedVoter && paidSupporters[deviceFingerprint];
         const nickname = verifiedVoter ? (voterNicknames[deviceFingerprint] || verifiedVoter.nickname) : null;
@@ -2043,7 +2073,6 @@
         topHeader.classList.add('hidden');
         if (posControls) posControls.classList.remove('hidden');
 
-        // LÓGICA DE DEFINIÇÃO DO IMAGEM DE BACKGROUND CONFORME VOTO
         if (userOption === '22') {
           receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
         } else if (userOption === '13') {
@@ -2133,6 +2162,6 @@
         copyReceiptText();
       }
     }
-  </script>
-</body>
-</html>
+       </script>
+       </body>
+       </html>
