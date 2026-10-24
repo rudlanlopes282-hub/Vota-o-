@@ -795,20 +795,24 @@
   const supabaseClient = isSupabaseConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   
   if (supabaseClient) {
+    // Ouvinte em tempo real para os VOTOS
     supabaseClient
       .channel('mudancas-votos')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votos' }, payload => {
-        loadCloudStats();
+        loadCloudStats(); // Atualiza o placar automaticamente assim que alguém vota
       })
       .subscribe();
 
+    // Ouvinte em tempo real para as MENSAGENS
     supabaseClient
       .channel('mudancas-mensagens')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
-        loadCloudMessages();
+        loadCloudMessages(); // Atualiza o chat automaticamente
       })
       .subscribe();
   }
+  
+
 
     let pixPollInterval = null;
     let pendingVoteObj = null;
