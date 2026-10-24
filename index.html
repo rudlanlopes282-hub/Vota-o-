@@ -790,7 +790,7 @@
 
   <script>
   const SUPABASE_URL = "https://eisnibawuzcgdpkrrzrr.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpc25pYmF3dXpjZ2Rwa3JyenJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyOTU0MDIsImV4cCI6MjEwNzg3MTQwMn0.w0GWzZ124HE-gM4zkP8AarfNVbK9HIfzG-hBlsVXpp0";
+  const SUPABASE_ANON_KEY = "sb_publishable_8Uxo8QibKqSN-9fA9gt5Pw_1Urbvhpt";
   const isSupabaseConfigured = window.supabase && SUPABASE_URL !== "https://SEU_PROJETO.supabase.co" && !SUPABASE_URL.includes("SEU_PROJETO");
   const supabaseClient = isSupabaseConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   
@@ -805,6 +805,9 @@
     supabaseClient
       .channel('mudancas-mensagens')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
+        loadCloudMessages();
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'mensagens' }, payload => {
         loadCloudMessages();
       })
       .subscribe();
@@ -1044,10 +1047,23 @@
       }
     }
 
-    function deleteChatMessage(msgId) {
+    async function deleteChatMessage(msgId) {
       if (confirm("Deseja realmente apagar esta mensagem?")) {
-        chatMessages = chatMessages.filter(msg => msg.id !== msgId);
-        renderChat();
+        if (supabaseClient) {
+          const { error } = await supabaseClient
+            .from('mensagens')
+            .delete()
+            .eq('id', msgId);
+
+          if (error) {
+            alert("⚠️ Erro ao apagar mensagem: " + error.message);
+          } else {
+            loadCloudMessages();
+          }
+        } else {
+          chatMessages = chatMessages.filter(msg => msg.id !== msgId);
+          renderChat();
+        }
       }
     }
 
@@ -1553,6 +1569,10 @@
         return;
       }
 
+      // MODERAÇÃO / ADMIN: Verifica se o usuário atual é Moderador/Admin
+      const currentNickname = (verifiedVoter && (voterNicknames[deviceFingerprint] || verifiedVoter.nickname || '')).toLowerCase();
+      const isAdminUser = currentNickname.includes('admin') || currentNickname.includes('modera') || (verifiedVoter && verifiedVoter.pin === '9999');
+
       chatBox.innerHTML = chatMessages.map(msg => {
         if (msg.is_system || msg.isSystem) {
           return `
@@ -1588,9 +1608,11 @@
         const cleanTextPreview = isHtmlContent ? '[Mídia]' : msg.text.replace(/'/g, "\\'");
 
         const isMyMessage = msg.device_token && msg.device_token === deviceSessionToken;
+        
+        // Permite apagar se for a própria mensagem OU se for Moderador/Admin
         let deleteBtnHtml = "";
-        if (isMyMessage) {
-          deleteBtnHtml = `<button onclick="deleteChatMessage(${msg.id})" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold bg-rose-500/10 px-2 py-0.5 rounded transition ml-1">Apagar 🗑️</button>`;
+        if (isMyMessage || isAdminUser) {
+          deleteBtnHtml = `<button onclick="deleteChatMessage(${msg.id})" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold bg-rose-500/10 px-2 py-0.5 rounded transition ml-1" title="Apagar Mensagem">Apagar 🗑️</button>`;
         }
 
         return `
@@ -2039,7 +2061,6 @@
         topHeader.classList.add('hidden');
         if (posControls) posControls.classList.remove('hidden');
 
-        // LÓGICA DE DEFINIÇÃO DO IMAGEM DE BACKGROUND CONFORME VOTO
         if (userOption === '22') {
           receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
         } else if (userOption === '13') {
