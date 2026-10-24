@@ -967,53 +967,63 @@
         return;
       }
 
+      const btnIcon = document.getElementById('sticker-btn-icon');
+      const btnText = document.getElementById('sticker-btn-text');
+      if (btnIcon) btnIcon.textContent = "⏳";
+      if (btnText) btnText.textContent = "Analisando...";
+
       const reader = new FileReader();
       reader.onload = async function(e) {
         const imgDataUrl = e.target.result;
 
-        const btnIcon = document.getElementById('sticker-btn-icon');
-        const btnText = document.getElementById('sticker-btn-text');
-        if (btnIcon) btnIcon.textContent = "⏳";
-        if (btnText) btnText.textContent = "Analisando...";
-
         const img = new Image();
+        img.crossOrigin = "anonymous";
         img.src = imgDataUrl;
 
         img.onload = async function() {
           try {
-            // Inicializa a biblioteca NSFWJS corretamente usando nsfwjs
-            const model = typeof nsfwjs !== 'undefined' ? await nsfwjs.load() : (typeof nsfw !== 'undefined' ? await nsfw.load() : null);
-            
-            if (model) {
-              const predictions = await model.classify(img);
-              // Bloqueia apenas se Porn ou Hentai tiver probabilidade maior que 60%
-              const isAdult = predictions.some(p => (p.className === 'Porn' || p.className === 'Hentai') && p.probability > 0.6);
-
-              if (isAdult) {
-                alert("🚫 Conteúdo impróprio detectado! Esta imagem foi bloqueada pelas regras de moderação.");
-                return;
-              }
+            // Tenta carregar a biblioteca nsfwjs
+            let model = null;
+            if (typeof nsfwjs !== 'undefined') {
+              model = await nsfwjs.load();
+            } else if (typeof nsfw !== 'undefined') {
+              model = await nsfw.load();
             }
 
-            // Adiciona a figurinha liberada
+            if (!model) {
+              alert("⚠️ O sistema de verificação de segurança não pôde ser carregado. A foto não foi adicionada por precaução.");
+              return;
+            }
+
+            const predictions = await model.classify(img);
+            
+            // Verifica todas as categorias adultas/sensíveis
+            const adultTypes = ['Porn', 'Sexy', 'Hentai'];
+            const isAdult = predictions.some(p => adultTypes.includes(p.className) && p.probability > 0.25);
+
+            if (isAdult) {
+              alert("🚫 Conteúdo impróprio ou nudez detectado! Esta imagem foi bloqueada pelas regras de moderação.");
+              return;
+            }
+
+            // Se passou na moderação, adiciona a figurinha
             customStickers.push(imgDataUrl);
             localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
             renderCustomStickers();
 
           } catch (err) {
-            console.error("Aviso na verificação da imagem:", err);
-            // Em caso de falha no modelo de IA do dispositivo, aceita a foto normalmente para não travar o usuário
-            customStickers.push(imgDataUrl);
-            localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
-            renderCustomStickers();
+            console.error("Erro na verificação da imagem:", err);
+            alert("🚫 Não foi possível validar a segurança da imagem. Upload cancelado.");
           } finally {
             if (btnIcon) btnIcon.textContent = "+";
             if (btnText) btnText.textContent = "Adicionar";
+            event.target.value = ""; // Reseta o input de arquivo
           }
         };
       };
       reader.readAsDataURL(file);
     }
+
 
 
     function deleteCustomSticker(event, index) {
