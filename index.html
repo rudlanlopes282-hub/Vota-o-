@@ -1981,14 +1981,19 @@
 
         const data = await response.json();
 
-        if (data && data.pix_code) {
-          document.getElementById('pix-code-input').value = data.pix_code;
-          document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.pix_code)}`;
+        // 🔍 AQUI ESTÁ O SEGREDO: Captura o ID de qualquer formato que a SyncPay mande
+        const pixCode = data.pix_code || data.qrcode || data.emv;
+        const transactionId = data.identifier || data.id || (data.data && (data.data.identifier || data.data.id));
+
+        if (pixCode && transactionId) {
+          document.getElementById('pix-code-input').value = pixCode;
+          document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixCode)}`;
           
           document.getElementById('pix-loading').classList.add('hidden');
           document.getElementById('pix-content').classList.remove('hidden');
 
-          startPixStatusPolling(data.identifier);
+          // Passa o ID correto para a função de checagem funcionar com qualquer valor
+          startPixStatusPolling(transactionId);
         } else {
           fallbackPixSimulated(amountValue);
         }
@@ -1996,6 +2001,7 @@
         fallbackPixSimulated(amountValue);
       }
     }
+
 
     function fallbackPixSimulated(amount) {
       const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865402BR5920PAINEL BRASIL MEDIA6009SAO PAULO62070503***6304E2CA";
