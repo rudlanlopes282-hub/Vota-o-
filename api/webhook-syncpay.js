@@ -16,19 +16,19 @@ module.exports = async (req, res) => {
   if (req.method === 'POST') {
     try {
       const notification = req.body || {};
+      console.log("Webhook recebido da SyncPay:", JSON.stringify(notification));
       
-      // Captura o status e o ID/identificador enviados pela Sync Pay
-      const status = notification.status || notification.data?.status;
-      const transactionId = notification.identifier || notification.id || notification.data?.identifier || notification.data?.id;
+      // Procura o ID e o status em todas as variações possíveis que os gateways costumam usar
+      const status = notification.status || notification.data?.status || notification.paymentStatus;
+      const transactionId = notification.id || notification.identifier || notification.transactionId || notification.data?.id || notification.data?.identifier || notification.data?.transactionId;
 
-      const isPaid = ['PAID', 'APPROVED', 'COMPLETED', 'CONFIRMED'].includes((status || '').toUpperCase());
+      const isPaid = ['PAID', 'APPROVED', 'COMPLETED', 'CONFIRMED', 'PAGO', 'APROVADO'].includes((status || '').toUpperCase());
 
       if (transactionId) {
-        // Grava ou atualiza automaticamente o status no Supabase na tabela 'pagamentos'
         const { error: dbError } = await supabaseClient
           .from('pagamentos')
           .upsert({
-            transaction_id: transactionId,
+            transaction_id: String(transactionId),
             status: status || 'PENDING',
             paid: isPaid,
             updated_at: new Date().toISOString()
@@ -37,13 +37,15 @@ module.exports = async (req, res) => {
         if (dbError) {
           console.error("Erro ao salvar no Supabase via Webhook:", dbError);
         } else {
-          console.log(`Transação ${transactionId} atualizada para '${status}' (Pago: ${isPaid}) no Supabase.`);
+          console.log(`Sucesso! Transação ${transactionId} atualizada para '${status}' (Pago: ${isPaid}) no Supabase.`);
         }
+      } else {
+        console.warn("Aviso: ID da transação não encontrado no corpo do webhook:", notification);
       }
 
       return res.status(200).json({ received: true });
     } catch (error) {
-      console.error("Erro no Webhook SyncPay:", error);
+      console.error("Erro crítico no Webhook SyncPay:", error);
       return res.status(500).json({ error: error.message });
     }
   }
