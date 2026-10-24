@@ -2017,15 +2017,21 @@
 
       pixPollInterval = setInterval(async () => {
         try {
-          const res = await fetch(`/api/checar-pix?id=${identifier}`);
+          // Corrigido para chamar o arquivo correto na pasta api
+          const res = await fetch(`/api/gerar-pix?id=${identifier}`);
           const data = await res.json();
-          if (data && data.status === 'PAID') {
+          
+          // Compatível com os status retornados pela SyncPay (paid === true ou status === 'PAID')
+          if (data && (data.paid === true || data.status === 'PAID' || data.status === 'APPROVED')) {
             clearInterval(pixPollInterval);
             finalizePixSuccess();
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error("Erro no polling do PIX:", e);
+        }
       }, 3000);
     }
+
 
     function finalizePixSuccess() {
       if (verifiedVoter) {
