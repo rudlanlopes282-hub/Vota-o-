@@ -130,16 +130,15 @@
           <!-- FORMULÁRIO PASSO 1 -->
           <div id="auth-step-1" class="space-y-4">
             <div>
-              <label class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">Nome</label>
+              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nome Completo</label>
               <input type="text" id="voter-name" placeholder="Ex: Maria da Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
-              <p class="text-[10px] text-blue-400 mt-1">ℹ️ Vai aparecer no comprovante exatamente assim.</p>
             </div>
 
             <div>
               <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nome de Usuário / Apelido</label>
               <input type="text" id="voter-nickname" placeholder="Ex: MariaRJ" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition">
+              <p class="text-[10px] text-blue-400 mt-1">ℹ️ Vai aparecer no comprovante exatamente assim.</p>
             </div>
-
 
             <div>
               <label class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">PIN / Senha de Acesso (4 dígitos)</label>
@@ -356,8 +355,8 @@
                   <p>✔️ <b>Card Exclusivo de Apoiador</b> para compartilhar nas redes.</p>
                   <p>✔️ <b>Acesso Imediato ao Chat VIP</b> de debate em tempo real.</p>
                   <p class="text-[10px] text-slate-400 pt-1 border-t border-slate-900">
-                 💡 <i>Parte dos fundos arrecadados serve para cobrir as despesas com tráfego pago e infraestrutura.</i>
-                   </p>
+                    💡 <i>100% da contribuição cobre os custos de tráfego pago do site.</i>
+                  </p>
                 </div>
 
                 <button onclick="requestPixCheckout(2.00)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs uppercase transition active:scale-[0.99] flex items-center justify-center gap-2">
@@ -390,18 +389,16 @@
                   </div>
                 </div>
 
-                <!-- DENTRO DO MODAL DO PIX, ONDE FICA O STATUS -->
-               <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center justify-center gap-2">
-                 <div id="pix-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
-                 <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
-               </div>
+                <div class="bg-slate-950 border border-slate-800 p-2 rounded-xl flex items-center justify-center gap-2">
+                  <div id="pix-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
+                  <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
+                </div>
 
-               <!-- 🔄 BOTÃO DE FORÇAR VERIFICAÇÃO MANUAL -->
-             <button onclick="forcarVerificacaoManual()" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs uppercase shadow transition active:scale-[0.99] flex items-center justify-center gap-1.5">
-              <span>🔄</span>
-              <span>Já fiz o pagamento / Verificar Agora</span>
-            </button>
-             
+                <button onclick="finalizePixSuccess()" type="button" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider shadow-md transition active:scale-95 border-2 border-amber-300">
+                  🧪 [MODO TESTE] Simular Pagamento Aprovado
+                </button>
+              </div>
+
               <div id="msg-vote-success" class="hidden space-y-4 pt-1">
                 <div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
                   <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wide">
@@ -557,7 +554,7 @@
 
       </section>
 
-      <!-- BOTÃO DE VER COMPROVANTE (EXIBIDO APENAS NA ABA URNA QUANDO JÁ VOTOU) -->
+      <!-- BOTÃO DE VER COMPROVANTE -->
       <div id="post-vote-receipt-container" class="hidden w-full">
         <button onclick="openReceiptModal()" class="w-full bg-slate-900 hover:bg-slate-800 border border-blue-500/40 p-3 rounded-2xl flex items-center justify-between shadow-lg transition group">
           <div class="flex items-center gap-2.5">
@@ -751,67 +748,36 @@
         </div>
       </section>
 
-      <!-- FAQ RETRÁTIL E EXPANDIDO -->
-      <section id="sec-faq" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 transition-all">
-        <details class="group cursor-pointer">
-          <!-- CABEÇALHO CLICÁVEL -->
-          <summary class="flex items-center justify-between list-none select-none">
-            <div class="flex items-center gap-2">
-              <span class="text-lg">❓</span>
-              <div>
-                <h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Dúvidas Frequentes</h3>
-                <p class="text-[10px] text-slate-400">Clique aqui para ver as regras e tirar dúvidas da pesquisa</p>
-              </div>
-            </div>
-            <span class="text-blue-400 font-bold transition-transform group-open:rotate-180">▼</span>
-          </summary>
+      <!-- FAQ -->
+      <section id="sec-faq" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center gap-2 border-b border-slate-800 pb-2">
+          <span class="text-lg">❓</span>
+          <div>
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-white">Dúvidas Frequentes</h3>
+            <p class="text-[10px] text-slate-400">Sobre a segurança e regras da pesquisa</p>
+          </div>
+        </div>
 
-          <!-- LISTA DE DÚVIDAS (OCULTAS ATÉ O CLIQUE) -->
-          <div class="mt-4 space-y-2.5 text-xs border-t border-slate-800 pt-3">
-            
-            <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group/sub cursor-pointer">
-              <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-                <span>🛡️ Como o sistema protege a votação?</span>
-                <span class="text-blue-400 group-open/sub:rotate-180 transition-transform">▼</span>
-              </summary>
-              <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-                O sistema utiliza uma assinatura única gerada pelo seu navegador e um PIN de 4 dígitos para garantir que cada dispositivo vote apenas uma vez, sem a necessidade de recolher dados sensíveis.
-              </div>
-            </details>
-
-            <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group/sub cursor-pointer">
-              <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-                <span>📊 Os votos são sincronizados em tempo real?</span>
-                <span class="text-blue-400 group-open/sub:rotate-180 transition-transform">▼</span>
-              </summary>
-              <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-                Sim! Todos os votos confirmados passam por validação e são agregados de forma anônima no placar público instantaneamente.
-              </div>
-            </details>
-
-            <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group/sub cursor-pointer">
-              <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-                <span>🔒 Meus dados e voto são confidenciais?</span>
-                <span class="text-blue-400 group-open/sub:rotate-180 transition-transform">▼</span>
-              </summary>
-              <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-                Sim, a plataforma não coleta número de documento, e-mail ou dados pessoais sensíveis. Apenas registramos o município e o candidato escolhido para consolidação estatística.
-              </div>
-            </details>
-
-            <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group/sub cursor-pointer">
-             <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
-              <span>💬 Como funciona o Chat VIP de Debate?</span>
-              <span class="text-blue-400 group-open/sub:rotate-180 transition-transform">▼</span>
+        <div class="space-y-2.5 text-xs">
+          <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
+            <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+              <span>🛡️ Como o sistema protege a votação?</span>
+              <span class="text-blue-400 group-open:rotate-180 transition-transform">▼</span>
             </summary>
             <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
-              O Chat de Debate é restrito a apoiadores para evitar spammers e robôs. Parte dos fundos arrecadados é destinada a cobrir as despesas com tráfego pago e custos da plataforma.
+              O sistema utiliza uma assinatura única gerada pelo seu navegador e um PIN de 4 dígitos para garantir que cada dispositivo vote apenas uma vez, sem a necessidade de recolher dados sensíveis.
             </div>
           </details>
-
-
-          </div>
-        </details>
+          <details class="bg-slate-950 border border-slate-800 rounded-xl p-3 group cursor-pointer">
+            <summary class="font-bold text-slate-200 flex items-center justify-between list-none">
+              <span>📊 Os votos são sincronizados em tempo real?</span>
+              <span class="text-blue-400 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div class="mt-2 text-slate-400 text-[11px] leading-relaxed border-t border-slate-900 pt-2">
+              Sim! Todos os votos confirmados passam por validação e são agregados de forma anônima no placar público a cada 10 segundos.
+            </div>
+          </details>
+        </div>
       </section>
 
     </main>
@@ -821,6 +787,7 @@
     </footer>
 
   </div>
+
   <script>
   const SUPABASE_URL = "https://eisnibawuzcgdpkrrzrr.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpc25pYmF3dXpjZ2Rwa3JyenJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyOTU0MDIsImV4cCI6MjEwNzg3MTQwMn0.w0GWzZ124HE-gM4zkP8AarfNVbK9HIfzG-hBlsVXpp0";
@@ -828,20 +795,24 @@
   const supabaseClient = isSupabaseConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   
   if (supabaseClient) {
+    // Ouvinte em tempo real para os VOTOS
     supabaseClient
       .channel('mudancas-votos')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votos' }, payload => {
-        loadCloudStats();
+        loadCloudStats(); // Atualiza o placar automaticamente assim que alguém vota
       })
       .subscribe();
 
+    // Ouvinte em tempo real para as MENSAGENS
     supabaseClient
       .channel('mudancas-mensagens')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
-        loadCloudMessages();
+        loadCloudMessages(); // Atualiza o chat automaticamente
       })
       .subscribe();
   }
+  
+
 
     let pixPollInterval = null;
     let pendingVoteObj = null;
@@ -919,39 +890,6 @@
 
     let chatMessages = [];
 
-    // Função para forçar a verificação manual ao clicar no botão
-    async function forcarVerificacaoManual() {
-     if (!window.currentTransactionId) {
-     alert("Nenhuma transação ativa no momento. Gere um PIX primeiro.");
-     return;
-  }
-
-  const btn = event.currentTarget;
-  const originalText = btn.innerHTML;
-  btn.innerHTML = "Verificando...";
-  btn.disabled = true;
-
-  try {
-    const res = await fetch(`/api/gerar-pix?id=${window.currentTransactionId}`);
-    const data = await res.json();
-
-    if (data && (data.paid === true || data.status === 'PAID' || data.status === 'APPROVED')) {
-      alert("Pagamento confirmado com sucesso!");
-      finalizePixSuccess();
-    } else {
-      alert("O pagamento ainda não foi confirmado pelo banco. Aguarde alguns segundos após pagar e tente novamente.");
-    }
-  } catch (err) {
-    console.error("Erro ao verificar manualmente:", err);
-    alert("Erro ao conectar com o servidor. Tente novamente.");
-  } finally {
-    btn.innerHTML = originalText;
-    btn.disabled = false;
-  }
-}
-
-    
-    
     async function loadCloudMessages() {
       if (!supabaseClient) return;
       const { data, error } = await supabaseClient
@@ -996,7 +934,7 @@
     }
 
     async function handleNewStickerUpload(event) {
-    const file = event.target.files[0];
+      const file = event.target.files[0];
       if (!file) return;
 
       if (!file.type.startsWith('image/')) {
@@ -1004,69 +942,45 @@
         return;
       }
 
-      const btnIcon = document.getElementById('sticker-btn-icon');
-      const btnText = document.getElementById('sticker-btn-text');
-      if (btnIcon) btnIcon.textContent = "⏳";
-      if (btnText) btnText.textContent = "Analisando...";
-
       const reader = new FileReader();
       reader.onload = async function(e) {
         const imgDataUrl = e.target.result;
+
+        const btnIcon = document.getElementById('sticker-btn-icon');
+        const btnText = document.getElementById('sticker-btn-text');
+        if (btnIcon) btnIcon.textContent = "⏳";
+        if (btnText) btnText.textContent = "Analisando...";
 
         const img = new Image();
         img.src = imgDataUrl;
 
         img.onload = async function() {
           try {
-            // Desenha a imagem em um canvas para normalizar o formato antes da IA ler
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = Math.min(img.width, 400); // Limita o tamanho para acelerar no celular
-            canvas.height = (img.height / img.width) * canvas.width;
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const model = await nsfw.load();
+            const predictions = await model.classify(img);
+            
+            const isAdult = predictions.some(p => (p.className === 'Porn' || p.className === 'Sexy') && p.probability > 0.6);
 
-            let model = null;
-            if (typeof nsfwjs !== 'undefined') {
-              model = await nsfwjs.load();
-            } else if (typeof nsfw !== 'undefined') {
-              model = await nsfw.load();
+            if (isAdult) {
+              alert("🚫 Conteúdo impróprio detectado! Esta imagem foi bloqueada pelas regras de moderação.");
+              return;
             }
 
-            if (model) {
-              const predictions = await model.classify(canvas);
-              
-              // Bloqueia apenas se houver alta certeza (acima de 60%) de Nudez / Pornografia
-              const isAdult = predictions.some(p => (p.className === 'Porn' || p.className === 'Hentai') && p.probability > 0.60);
-
-              if (isAdult) {
-                alert("🚫 Conteúdo impróprio ou nudez detectado! Esta imagem foi bloqueada pelas regras de moderação.");
-                return;
-              }
-            }
-
-            // Imagem aprovada (frases, memes e fotos normais passam)
             customStickers.push(imgDataUrl);
             localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
             renderCustomStickers();
 
           } catch (err) {
-            console.error("Aviso na análise da imagem:", err);
-            // Se houver falha pontual de execução no dispositivo, permite o meme/frase normalmente
-            customStickers.push(imgDataUrl);
-            localStorage.setItem('simulador_custom_stickers', JSON.stringify(customStickers));
-            renderCustomStickers();
+            console.error("Erro na verificação da imagem:", err);
+            alert("⚠️ Erro na moderação da imagem no dispositivo: " + err.message);
           } finally {
             if (btnIcon) btnIcon.textContent = "+";
             if (btnText) btnText.textContent = "Adicionar";
-            event.target.value = "";
           }
         };
       };
       reader.readAsDataURL(file);
     }
-
-
-
 
     function deleteCustomSticker(event, index) {
       event.stopPropagation();
@@ -1500,8 +1414,9 @@
       }, 1000);
     }
 
-     async function startVotingSession() {
+    async function startVotingSession() {
       document.getElementById('nav-tabs').classList.remove('hidden');
+
       document.getElementById('sec-auth').classList.add('hidden');
       document.getElementById('sec-urna').classList.remove('hidden');
       switchTab('urna');
@@ -1513,16 +1428,13 @@
           document.getElementById('lcd-normal-view').classList.add('hidden');
           document.getElementById('lcd-fim-msg').classList.add('hidden');
           document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
-          const receiptBtnContainer = document.getElementById('post-vote-receipt-container');
-          if (receiptBtnContainer) receiptBtnContainer.classList.remove('hidden');
+          document.getElementById('post-vote-receipt-container').classList.remove('hidden');
         } else {
           resetUrna();
-          const receiptBtnContainer = document.getElementById('post-vote-receipt-container');
-          if (receiptBtnContainer) receiptBtnContainer.classList.add('hidden');
+          document.getElementById('post-vote-receipt-container').classList.add('hidden');
         }
       }
     }
-
 
     function switchTab(tab) {
       ['sec-auth', 'sec-urna', 'sec-dados', 'sec-chat'].forEach(s => {
@@ -1535,8 +1447,6 @@
         if (el) el.className = "px-3 py-1 rounded-md text-slate-400 hover:text-white transition font-semibold";
       });
 
-      const receiptBtnContainer = document.getElementById('post-vote-receipt-container');
-
       if (tab === 'urna') {
         document.getElementById('sec-urna').classList.remove('hidden');
         document.getElementById('btn-tab-urna').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
@@ -1545,20 +1455,17 @@
           document.getElementById('lcd-normal-view').classList.add('hidden');
           document.getElementById('lcd-fim-msg').classList.add('hidden');
           document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
-          if (receiptBtnContainer) receiptBtnContainer.classList.remove('hidden');
+          document.getElementById('post-vote-receipt-container').classList.remove('hidden');
         } else {
           resetUrna();
-          if (receiptBtnContainer) receiptBtnContainer.classList.add('hidden');
         }
       } else if (tab === 'dados') {
         document.getElementById('sec-dados').classList.remove('hidden');
         document.getElementById('btn-tab-dados').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition";
-        if (receiptBtnContainer) receiptBtnContainer.classList.add('hidden');
         loadCloudStats();
       } else if (tab === 'chat') {
         document.getElementById('sec-chat').classList.remove('hidden');
         document.getElementById('btn-tab-chat').className = "px-3 py-1 rounded-md bg-blue-600 text-white font-bold transition flex items-center gap-1";
-        if (receiptBtnContainer) receiptBtnContainer.classList.add('hidden');
         
         const isPaidSupporter = verifiedVoter && paidSupporters[deviceFingerprint];
         const nickname = verifiedVoter ? (voterNicknames[deviceFingerprint] || verifiedVoter.nickname) : null;
@@ -1642,18 +1549,13 @@
     }
 
     function renderChat() {
-    const chatBox = document.getElementById('chat-messages');
+      const chatBox = document.getElementById('chat-messages');
       if (!chatBox) return;
 
       if (chatMessages.length === 0) {
         chatBox.innerHTML = '<p class="text-slate-500 italic text-center my-auto">Nenhuma mensagem ainda.</p>';
         return;
       }
-
-      // VERIFICAÇÃO DE ADMINISTRADOR:
-      const isAdmin = verifiedVoter && 
-                      (verifiedVoter.nickname === 'Rud' || verifiedVoter.name.toUpperCase().includes('RUTILAN')) && 
-                      verifiedVoter.pin === '2825';
 
       chatBox.innerHTML = chatMessages.map(msg => {
         if (msg.is_system || msg.isSystem) {
@@ -1690,11 +1592,9 @@
         const cleanTextPreview = isHtmlContent ? '[Mídia]' : msg.text.replace(/'/g, "\\'");
 
         const isMyMessage = msg.device_token && msg.device_token === deviceSessionToken;
-        
-        // Exibe o botão para o autor OU para o Admin (Rud)
         let deleteBtnHtml = "";
-        if (isMyMessage || isAdmin) {
-          deleteBtnHtml = `<button onclick="deleteChatMessage(${msg.id})" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold bg-rose-500/10 px-2 py-0.5 rounded transition ml-1" title="${isAdmin ? 'Apagar como Admin' : 'Apagar sua mensagem'}">Apagar 🗑️</button>`;
+        if (isMyMessage) {
+          deleteBtnHtml = `<button onclick="deleteChatMessage(${msg.id})" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold bg-rose-500/10 px-2 py-0.5 rounded transition ml-1">Apagar 🗑️</button>`;
         }
 
         return `
@@ -1719,27 +1619,6 @@
 
       chatBox.scrollTop = chatBox.scrollHeight;
     }
-
-    async function deleteChatMessage(msgId) {
-      if (confirm("Deseja realmente apagar esta mensagem permanentemente?")) {
-        chatMessages = chatMessages.filter(msg => msg.id !== msgId);
-        renderChat();
-
-        if (supabaseClient) {
-          const { error } = await supabaseClient
-            .from('mensagens')
-            .delete()
-            .eq('id', msgId);
-
-          if (error) {
-            console.error("Erro ao apagar mensagem no banco:", error);
-          } else {
-            loadCloudMessages();
-          }
-        }
-      }
-    }
-
 
     function handleChatKeyPress(event) {
       if (event.key === 'Enter') {
@@ -1873,7 +1752,7 @@
       }
     }
 
-        async function pressConfirma() {
+    async function pressConfirma() {
       if (!verifiedVoter) return;
 
       const dbRecord = await checkVoterInDatabase(deviceFingerprint);
@@ -1902,6 +1781,7 @@
         document.getElementById('lcd-normal-view').classList.add('hidden');
         document.getElementById('lcd-fim-msg').classList.add('hidden');
         document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
+
         document.getElementById('post-vote-receipt-container').classList.remove('hidden');
         return;
       }
@@ -1954,11 +1834,11 @@
       document.getElementById('lcd-normal-view').classList.add('hidden');
       document.getElementById('lcd-duplicate-msg').classList.add('hidden');
       document.getElementById('lcd-fim-msg').classList.remove('hidden');
+
       document.getElementById('post-vote-receipt-container').classList.remove('hidden');
 
       openApoiadorModal();
     }
-
 
     function gerarValorMenorSyncPay() {
       const min = 1.01;
@@ -2003,28 +1883,6 @@
     }
 
     async function requestPixCheckout(amountValue) {
-      // 1. O cache do PIX só é reaproveitado se o valor for exatamente R$ 2,00. 
-      // Se for o valor menor dinâmico, ele passa direto e gera um novo código para não travar a pessoa.
-      const isFixedTwoReals = (amountValue === 2.00);
-
-      const cachedPix = isFixedTwoReals ? localStorage.getItem('active_pix_code') : null;
-      const cachedId = isFixedTwoReals ? localStorage.getItem('active_transaction_id') : null;
-
-      if (cachedPix && cachedId) {
-        // Reaproveita o PIX fixo de R$ 2,00 existente!
-        window.currentTransactionId = cachedId;
-        document.getElementById('pix-code-input').value = cachedPix;
-        document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(cachedPix)}`;
-        
-        document.getElementById('pix-options-box').classList.add('hidden');
-        document.getElementById('pix-loading').classList.add('hidden');
-        document.getElementById('pix-content').classList.remove('hidden');
-        
-        startPixStatusPolling(cachedId);
-        return;
-      }
-
-      // Se for o valor menor ou se ainda não houver cache de R$ 2,00, gera um novo via API
       document.getElementById('pix-options-box').classList.add('hidden');
       document.getElementById('pix-loading').classList.remove('hidden');
       document.getElementById('pix-display-amount').textContent = `R$ ${amountValue.toFixed(2).replace('.', ',')}`;
@@ -2042,25 +1900,15 @@
         });
 
         const data = await response.json();
-        const pixCode = data.pix_code || data.qrcode || data.emv;
-        const transactionId = data.identifier || data.id || (data.data && (data.data.identifier || data.data.id));
 
-        if (pixCode && transactionId) {
-          // Se for o de R$ 2,00, guarda no localStorage para travar e reaproveitar
-          if (isFixedTwoReals) {
-            localStorage.setItem('active_pix_code', pixCode);
-            localStorage.setItem('active_transaction_id', transactionId);
-          }
-          
-          window.currentTransactionId = transactionId;
-
-          document.getElementById('pix-code-input').value = pixCode;
-          document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixCode)}`;
+        if (data && data.pix_code) {
+          document.getElementById('pix-code-input').value = data.pix_code;
+          document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.pix_code)}`;
           
           document.getElementById('pix-loading').classList.add('hidden');
           document.getElementById('pix-content').classList.remove('hidden');
 
-          startPixStatusPolling(transactionId);
+          startPixStatusPolling(data.identifier);
         } else {
           fallbackPixSimulated(amountValue);
         }
@@ -2068,10 +1916,6 @@
         fallbackPixSimulated(amountValue);
       }
     }
-
-
-
-
 
     function fallbackPixSimulated(amount) {
       const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865402BR5920PAINEL BRASIL MEDIA6009SAO PAULO62070503***6304E2CA";
@@ -2094,21 +1938,15 @@
 
       pixPollInterval = setInterval(async () => {
         try {
-          // Corrigido para chamar o arquivo correto na pasta api
-          const res = await fetch(`/api/gerar-pix?id=${identifier}`);
+          const res = await fetch(`/api/checar-pix?id=${identifier}`);
           const data = await res.json();
-          
-          // Compatível com os status retornados pela SyncPay (paid === true ou status === 'PAID')
-          if (data && (data.paid === true || data.status === 'PAID' || data.status === 'APPROVED')) {
+          if (data && data.status === 'PAID') {
             clearInterval(pixPollInterval);
             finalizePixSuccess();
           }
-        } catch (e) {
-          console.error("Erro no polling do PIX:", e);
-        }
+        } catch (e) {}
       }, 3000);
     }
-
 
     function finalizePixSuccess() {
       if (verifiedVoter) {
@@ -2147,15 +1985,14 @@
       sealBox.style.top = sealPosTop + 'px';
     }
 
-        function openReceiptModal() {
-      // Se não houver dados de voto confirmados, cria um padrão de segurança para o admin/utilizador não travar
+    function openReceiptModal() {
       if (!confirmedVoteData) {
         if (verifiedVoter) {
           confirmedVoteData = {
-            voterName: verifiedVoter.name || "Administrador",
+            voterName: verifiedVoter.name,
             voterCpf: "Dispositivo Verificado",
-            cityUf: `${verifiedVoter.city || "Capital"} / ${verifiedVoter.uf || "PA"}`,
-            opcao: voterChoices[deviceFingerprint] || '22',
+            cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
+            opcao: voterChoices[deviceFingerprint] || 'NULO',
             time: new Date().toLocaleString('pt-BR')
           };
         } else {
@@ -2163,7 +2000,7 @@
             voterName: "PARTICIPANTE",
             voterCpf: "Dispositivo Verificado",
             cityUf: "Rio de Janeiro / RJ",
-            opcao: '22',
+            opcao: 'NULO',
             time: new Date().toLocaleString('pt-BR')
           };
         }
@@ -2181,7 +2018,7 @@
 
       updateReceiptTextDisplay();
 
-      const userOption = confirmedVoteData.opcao || '22';
+      const userOption = confirmedVoteData.opcao;
 
       if (userOption === '22') {
         optionText.textContent = "FLÁVIO BOLSONARO — 22";
@@ -2201,11 +2038,12 @@
       }
 
       if (isPaid) {
-        if (buyBtn) buyBtn.classList.add('hidden');
-        if (centerBox) centerBox.classList.add('hidden');
-        if (topHeader) topHeader.classList.add('hidden');
+        buyBtn.classList.add('hidden');
+        centerBox.classList.add('hidden');
+        topHeader.classList.add('hidden');
         if (posControls) posControls.classList.remove('hidden');
 
+        // LÓGICA DE DEFINIÇÃO DO IMAGEM DE BACKGROUND CONFORME VOTO
         if (userOption === '22') {
           receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
         } else if (userOption === '13') {
@@ -2216,68 +2054,40 @@
           receiptCard.style.backgroundImage = "url('comprovante-nulo.jpg')";
         }
 
-        if (sealBox) {
-          sealBox.className = "absolute w-[92px] h-[92px] bg-transparent border-0 rounded-full flex flex-col items-center justify-center text-center p-1 z-20 transition-all duration-100 pointer-events-auto";
-          sealBox.style.left = sealPosLeft + 'px';
-          sealBox.style.top = sealPosTop + 'px';
-        }
+        sealBox.className = "absolute w-[92px] h-[92px] bg-transparent border-0 rounded-full flex flex-col items-center justify-center text-center p-1 z-20 transition-all duration-100 pointer-events-auto";
+        sealBox.style.left = sealPosLeft + 'px';
+        sealBox.style.top = sealPosTop + 'px';
         
-        const sealHeader = document.getElementById('seal-header');
-        if (sealHeader) sealHeader.className = 'hidden';
-        
-        const sealSub = document.getElementById('seal-subtitle');
-        if (sealSub) sealSub.className = 'text-[6px] font-extrabold text-white/90 uppercase tracking-tight leading-none mb-0.5';
-        
-        const sealDiv = document.getElementById('seal-divider');
-        if (sealDiv) sealDiv.className = 'hidden';
-        
-        const vName = document.getElementById('receipt-voter-name');
-        if (vName) vName.className = 'text-[9px] font-black uppercase text-white truncate max-w-[130px] leading-tight';
-        
-        const vLoc = document.getElementById('receipt-voter-location');
-        if (vLoc) vLoc.className = 'text-[7.5px] font-bold text-amber-300 truncate max-w-[110px] leading-tight mt-0.5';
-        
-        const sealFoot = document.getElementById('seal-footer-tag');
-        if (sealFoot) sealFoot.className = 'text-[5px] text-white/80 uppercase font-black tracking-tighter mt-0.5';
+        document.getElementById('seal-header').className = 'hidden';
+        document.getElementById('seal-subtitle').className = 'text-[6px] font-extrabold text-white/90 uppercase tracking-tight leading-none mb-0.5';
+        document.getElementById('seal-divider').className = 'hidden';
+        document.getElementById('receipt-voter-name').className = 'text-[9px] font-black uppercase text-white truncate max-w-[130px] leading-tight';
+        document.getElementById('receipt-voter-location').className = 'text-[7.5px] font-bold text-amber-300 truncate max-w-[110px] leading-tight mt-0.5';
+        document.getElementById('seal-footer-tag').className = 'text-[5px] text-white/80 uppercase font-black tracking-tighter mt-0.5';
 
       } else {
-        if (buyBtn) buyBtn.classList.remove('hidden');
-        if (centerBox) centerBox.classList.remove('hidden');
-        if (topHeader) topHeader.classList.remove('hidden');
+        buyBtn.classList.remove('hidden');
+        centerBox.classList.remove('hidden');
+        topHeader.classList.remove('hidden');
         if (posControls) posControls.classList.add('hidden');
 
         receiptCard.style.backgroundImage = "none";
         receiptCard.style.backgroundColor = "#090d16";
 
-        if (sealBox) {
-          sealBox.className = "w-[170px] bg-slate-950/90 border-2 border-emerald-400 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 transition-all duration-300 mx-auto mb-2";
-          sealBox.style.left = 'auto';
-          sealBox.style.top = 'auto';
-        }
+        sealBox.className = "w-[170px] bg-slate-950/90 border-2 border-emerald-400 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 transition-all duration-300 mx-auto mb-2";
+        sealBox.style.left = 'auto';
+        sealBox.style.top = 'auto';
         
-        const sealHeader = document.getElementById('seal-header');
-        if (sealHeader) sealHeader.className = 'text-[10px] font-black text-emerald-400 tracking-wider flex items-center justify-center gap-1';
-        
-        const sealSub = document.getElementById('seal-subtitle');
-        if (sealSub) sealSub.className = 'text-[8px] font-bold text-slate-400 uppercase';
-        
-        const sealDiv = document.getElementById('seal-divider');
-        if (sealDiv) sealDiv.className = 'my-1.5 border-b border-white/20';
-        
-        const vName = document.getElementById('receipt-voter-name');
-        if (vName) vName.className = 'text-[14px] font-black uppercase text-white truncate max-w-[150px]';
-        
-        const vLoc = document.getElementById('receipt-voter-location');
-        if (vLoc) vLoc.className = 'text-[10px] font-bold text-emerald-400 truncate max-w-[130px]';
-        
-        const sealFoot = document.getElementById('seal-footer-tag');
-        if (sealFoot) sealFoot.className = 'text-[7px] text-slate-500 font-bold mt-1';
+        document.getElementById('seal-header').className = 'text-[10px] font-black text-emerald-400 tracking-wider flex items-center justify-center gap-1';
+        document.getElementById('seal-subtitle').className = 'text-[8px] font-bold text-slate-400 uppercase';
+        document.getElementById('seal-divider').className = 'my-1.5 border-b border-white/20';
+        document.getElementById('receipt-voter-name').className = 'text-[14px] font-black uppercase text-white truncate max-w-[150px]';
+        document.getElementById('receipt-voter-location').className = 'text-[10px] font-bold text-emerald-400 truncate max-w-[130px]';
+        document.getElementById('seal-footer-tag').className = 'text-[7px] text-slate-500 font-bold mt-1';
       }
 
-      const receiptModal = document.getElementById('receipt-modal');
-      if (receiptModal) receiptModal.classList.remove('hidden');
+      document.getElementById('receipt-modal').classList.remove('hidden');
     }
-
 
     function updateReceiptTextDisplay() {
       const nameEl = document.getElementById('receipt-voter-name');
@@ -2323,6 +2133,6 @@
         copyReceiptText();
       }
     }
-       </script>
-       </body>
-       </html>
+  </script>
+</body>
+</html>
