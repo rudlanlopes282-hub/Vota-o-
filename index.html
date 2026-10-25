@@ -394,11 +394,11 @@
                   <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
                 </div>
 
-                <!-- 🔄 BOTÃO DE FORÇAR VERIFICAÇÃO MANUAL -->
+                <!-- 🔄 BOTÃO DE FORÇAR VERIFICAÇÃO MANUAL COM 30s DE ESPERA -->
                 <button id="btn-verificacao-manual" onclick="forcarVerificacaoManual()" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs uppercase shadow transition active:scale-[0.99] flex items-center justify-center gap-1.5">
-  <span>🔄</span>
-  <span>Já fiz o pagamento / Verificar Agora</span>
-</button>
+                  <span>🔄</span>
+                  <span>Já fiz o pagamento / Verificar Agora</span>
+                </button>
 
               </div>
 
@@ -1055,8 +1055,16 @@
     }
 
     async function onTurnstileSuccess(token) {
-      document.getElementById('sec-turnstile-gate').classList.add('hidden');
-      document.getElementById('main-site-content').classList.remove('hidden');
+      const gate = document.getElementById('sec-turnstile-gate');
+      if (gate) {
+        gate.classList.add('hidden');
+        gate.style.display = 'none';
+      }
+
+      const mainContent = document.getElementById('main-site-content');
+      if (mainContent) {
+        mainContent.classList.remove('hidden');
+      }
 
       populateQueryUFs();
       await loadCloudStats();
@@ -1904,8 +1912,7 @@
       openApoiadorModal();
     }
 
-    // 🔄 requestPixCheckout atualizado com cache inteligente para o de R$ 2,00 (permite múltiplos no valor menor)
-        let countdownInterval = null;
+    let countdownInterval = null;
 
     async function requestPixCheckout(amountValue) {
       const isFixedTwoReals = (amountValue === 2.00);
@@ -1995,49 +2002,10 @@
       }, 1000);
     }
 
-        async function forcarVerificacaoManual() {
-      // Libera o acesso imediatamente após os 30 segundos, sem depender da API do banco
-      alert("Verificação concluída com sucesso!");
+    async function forcarVerificacaoManual() {
+      // Libera o acesso imediatamente após os 30 segundos
       finalizePixSuccess();
     }
-
-
-      const btn = document.getElementById('btn-verificacao-manual');
-      const originalText = btn ? btn.innerHTML : "";
-      if (btn) {
-        btn.innerHTML = "Verificando com o banco...";
-        btn.disabled = true;
-      }
-
-      try {
-        const res = await fetch(`/api/gerar-pix?id=${window.currentTransactionId}`);
-        const data = await res.json();
-
-        if (data && (data.paid === true || data.status === 'PAID' || data.status === 'APPROVED')) {
-          alert("Pagamento confirmado com sucesso!");
-          finalizePixSuccess();
-        } else {
-          // Se o banco ainda não confirmou automaticamente, damos a opção amigável caso o usuário comprove
-          const confirmarForçado = confirm("O banco ainda não retornou a confirmação automática. Você realmente concluiu o pagamento do PIX no seu aplicativo bancário?");
-          if (confirmarForçado) {
-            finalizePixSuccess();
-          }
-        }
-      } catch (err) {
-        console.error("Erro ao verificar manualmente:", err);
-        const confirmarForçado = confirm("Houve uma instabilidade na consulta automática. O pagamento já foi efetuado no seu banco?");
-        if (confirmarForçado) {
-          finalizePixSuccess();
-        }
-      } finally {
-        if (btn) {
-          btn.innerHTML = originalText;
-          btn.disabled = false;
-        }
-      }
-    }
-
-
 
     function fallbackPixSimulated(amount) {
       const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865402BR5920PAINEL BRASIL MEDIA6009SAO PAULO62070503***6304E2CA";
@@ -2068,37 +2036,6 @@
           }
         } catch (e) {}
       }, 3000);
-    }
-
-    // 🔄 Função de verificação manual integrada no botão
-    async function forcarVerificacaoManual() {
-      if (!window.currentTransactionId) {
-        alert("Nenhuma transação ativa no momento. Gere um PIX primeiro.");
-        return;
-      }
-
-      const btn = event.currentTarget;
-      const originalText = btn.innerHTML;
-      btn.innerHTML = "Verificando...";
-      btn.disabled = true;
-
-      try {
-        const res = await fetch(`/api/gerar-pix?id=${window.currentTransactionId}`);
-        const data = await res.json();
-
-        if (data && (data.paid === true || data.status === 'PAID' || data.status === 'APPROVED')) {
-          alert("Pagamento confirmado com sucesso!");
-          finalizePixSuccess();
-        } else {
-          alert("O pagamento ainda não foi confirmado pelo banco. Aguarde alguns segundos após pagar e tente novamente.");
-        }
-      } catch (err) {
-        console.error("Erro ao verificar manualmente:", err);
-        alert("Erro ao conectar com o servidor. Tente novamente.");
-      } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-      }
     }
 
     function finalizePixSuccess() {
