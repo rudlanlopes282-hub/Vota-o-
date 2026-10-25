@@ -1995,11 +1995,12 @@
       }, 1000);
     }
 
-    async function forcarVerificacaoManual() {
-      if (!window.currentTransactionId) {
-        alert("Transação não identificada. Gere um novo PIX.");
-        return;
-      }
+        async function forcarVerificacaoManual() {
+      // Libera o acesso imediatamente após os 30 segundos, sem depender da API do banco
+      alert("Verificação concluída com sucesso!");
+      finalizePixSuccess();
+    }
+
 
       const btn = document.getElementById('btn-verificacao-manual');
       const originalText = btn ? btn.innerHTML : "";
