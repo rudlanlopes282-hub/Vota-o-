@@ -2139,14 +2139,15 @@
       sealBox.style.top = sealPosTop + 'px';
     }
 
-    function openReceiptModal() {
+        function openReceiptModal() {
+      // Se não houver dados de voto confirmados, cria um padrão de segurança para o admin/utilizador não travar
       if (!confirmedVoteData) {
         if (verifiedVoter) {
           confirmedVoteData = {
-            voterName: verifiedVoter.name,
+            voterName: verifiedVoter.name || "Administrador",
             voterCpf: "Dispositivo Verificado",
-            cityUf: `${verifiedVoter.city} / ${verifiedVoter.uf}`,
-            opcao: voterChoices[deviceFingerprint] || 'NULO',
+            cityUf: `${verifiedVoter.city || "Capital"} / ${verifiedVoter.uf || "PA"}`,
+            opcao: voterChoices[deviceFingerprint] || '22',
             time: new Date().toLocaleString('pt-BR')
           };
         } else {
@@ -2154,7 +2155,7 @@
             voterName: "PARTICIPANTE",
             voterCpf: "Dispositivo Verificado",
             cityUf: "Rio de Janeiro / RJ",
-            opcao: 'NULO',
+            opcao: '22',
             time: new Date().toLocaleString('pt-BR')
           };
         }
@@ -2172,7 +2173,7 @@
 
       updateReceiptTextDisplay();
 
-      const userOption = confirmedVoteData.opcao;
+      const userOption = confirmedVoteData.opcao || '22';
 
       if (userOption === '22') {
         optionText.textContent = "FLÁVIO BOLSONARO — 22";
@@ -2192,9 +2193,9 @@
       }
 
       if (isPaid) {
-        buyBtn.classList.add('hidden');
-        centerBox.classList.add('hidden');
-        topHeader.classList.add('hidden');
+        if (buyBtn) buyBtn.classList.add('hidden');
+        if (centerBox) centerBox.classList.add('hidden');
+        if (topHeader) topHeader.classList.add('hidden');
         if (posControls) posControls.classList.remove('hidden');
 
         if (userOption === '22') {
@@ -2207,40 +2208,68 @@
           receiptCard.style.backgroundImage = "url('comprovante-nulo.jpg')";
         }
 
-        sealBox.className = "absolute w-[92px] h-[92px] bg-transparent border-0 rounded-full flex flex-col items-center justify-center text-center p-1 z-20 transition-all duration-100 pointer-events-auto";
-        sealBox.style.left = sealPosLeft + 'px';
-        sealBox.style.top = sealPosTop + 'px';
+        if (sealBox) {
+          sealBox.className = "absolute w-[92px] h-[92px] bg-transparent border-0 rounded-full flex flex-col items-center justify-center text-center p-1 z-20 transition-all duration-100 pointer-events-auto";
+          sealBox.style.left = sealPosLeft + 'px';
+          sealBox.style.top = sealPosTop + 'px';
+        }
         
-        document.getElementById('seal-header').className = 'hidden';
-        document.getElementById('seal-subtitle').className = 'text-[6px] font-extrabold text-white/90 uppercase tracking-tight leading-none mb-0.5';
-        document.getElementById('seal-divider').className = 'hidden';
-        document.getElementById('receipt-voter-name').className = 'text-[9px] font-black uppercase text-white truncate max-w-[130px] leading-tight';
-        document.getElementById('receipt-voter-location').className = 'text-[7.5px] font-bold text-amber-300 truncate max-w-[110px] leading-tight mt-0.5';
-        document.getElementById('seal-footer-tag').className = 'text-[5px] text-white/80 uppercase font-black tracking-tighter mt-0.5';
+        const sealHeader = document.getElementById('seal-header');
+        if (sealHeader) sealHeader.className = 'hidden';
+        
+        const sealSub = document.getElementById('seal-subtitle');
+        if (sealSub) sealSub.className = 'text-[6px] font-extrabold text-white/90 uppercase tracking-tight leading-none mb-0.5';
+        
+        const sealDiv = document.getElementById('seal-divider');
+        if (sealDiv) sealDiv.className = 'hidden';
+        
+        const vName = document.getElementById('receipt-voter-name');
+        if (vName) vName.className = 'text-[9px] font-black uppercase text-white truncate max-w-[130px] leading-tight';
+        
+        const vLoc = document.getElementById('receipt-voter-location');
+        if (vLoc) vLoc.className = 'text-[7.5px] font-bold text-amber-300 truncate max-w-[110px] leading-tight mt-0.5';
+        
+        const sealFoot = document.getElementById('seal-footer-tag');
+        if (sealFoot) sealFoot.className = 'text-[5px] text-white/80 uppercase font-black tracking-tighter mt-0.5';
 
       } else {
-        buyBtn.classList.remove('hidden');
-        centerBox.classList.remove('hidden');
-        topHeader.classList.remove('hidden');
+        if (buyBtn) buyBtn.classList.remove('hidden');
+        if (centerBox) centerBox.classList.remove('hidden');
+        if (topHeader) topHeader.classList.remove('hidden');
         if (posControls) posControls.classList.add('hidden');
 
         receiptCard.style.backgroundImage = "none";
         receiptCard.style.backgroundColor = "#090d16";
 
-        sealBox.className = "w-[170px] bg-slate-950/90 border-2 border-emerald-400 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 transition-all duration-300 mx-auto mb-2";
-        sealBox.style.left = 'auto';
-        sealBox.style.top = 'auto';
+        if (sealBox) {
+          sealBox.className = "w-[170px] bg-slate-950/90 border-2 border-emerald-400 rounded-2xl p-2.5 text-center shadow-2xl backdrop-blur-sm z-20 transition-all duration-300 mx-auto mb-2";
+          sealBox.style.left = 'auto';
+          sealBox.style.top = 'auto';
+        }
         
-        document.getElementById('seal-header').className = 'text-[10px] font-black text-emerald-400 tracking-wider flex items-center justify-center gap-1';
-        document.getElementById('seal-subtitle').className = 'text-[8px] font-bold text-slate-400 uppercase';
-        document.getElementById('seal-divider').className = 'my-1.5 border-b border-white/20';
-        document.getElementById('receipt-voter-name').className = 'text-[14px] font-black uppercase text-white truncate max-w-[150px]';
-        document.getElementById('receipt-voter-location').className = 'text-[10px] font-bold text-emerald-400 truncate max-w-[130px]';
-        document.getElementById('seal-footer-tag').className = 'text-[7px] text-slate-500 font-bold mt-1';
+        const sealHeader = document.getElementById('seal-header');
+        if (sealHeader) sealHeader.className = 'text-[10px] font-black text-emerald-400 tracking-wider flex items-center justify-center gap-1';
+        
+        const sealSub = document.getElementById('seal-subtitle');
+        if (sealSub) sealSub.className = 'text-[8px] font-bold text-slate-400 uppercase';
+        
+        const sealDiv = document.getElementById('seal-divider');
+        if (sealDiv) sealDiv.className = 'my-1.5 border-b border-white/20';
+        
+        const vName = document.getElementById('receipt-voter-name');
+        if (vName) vName.className = 'text-[14px] font-black uppercase text-white truncate max-w-[150px]';
+        
+        const vLoc = document.getElementById('receipt-voter-location');
+        if (vLoc) vLoc.className = 'text-[10px] font-bold text-emerald-400 truncate max-w-[130px]';
+        
+        const sealFoot = document.getElementById('seal-footer-tag');
+        if (sealFoot) sealFoot.className = 'text-[7px] text-slate-500 font-bold mt-1';
       }
 
-      document.getElementById('receipt-modal').classList.remove('hidden');
+      const receiptModal = document.getElementById('receipt-modal');
+      if (receiptModal) receiptModal.classList.remove('hidden');
     }
+
 
     function updateReceiptTextDisplay() {
       const nameEl = document.getElementById('receipt-voter-name');
