@@ -1500,9 +1500,8 @@
       }, 1000);
     }
 
-    async function startVotingSession() {
+     async function startVotingSession() {
       document.getElementById('nav-tabs').classList.remove('hidden');
-
       document.getElementById('sec-auth').classList.add('hidden');
       document.getElementById('sec-urna').classList.remove('hidden');
       switchTab('urna');
@@ -1514,13 +1513,16 @@
           document.getElementById('lcd-normal-view').classList.add('hidden');
           document.getElementById('lcd-fim-msg').classList.add('hidden');
           document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
-          document.getElementById('post-vote-receipt-container').classList.remove('hidden');
+          const receiptBtnContainer = document.getElementById('post-vote-receipt-container');
+          if (receiptBtnContainer) receiptBtnContainer.classList.remove('hidden');
         } else {
           resetUrna();
-          document.getElementById('post-vote-receipt-container').classList.add('hidden');
+          const receiptBtnContainer = document.getElementById('post-vote-receipt-container');
+          if (receiptBtnContainer) receiptBtnContainer.classList.add('hidden');
         }
       }
     }
+
 
     function switchTab(tab) {
       ['sec-auth', 'sec-urna', 'sec-dados', 'sec-chat'].forEach(s => {
@@ -1871,7 +1873,7 @@
       }
     }
 
-    async function pressConfirma() {
+        async function pressConfirma() {
       if (!verifiedVoter) return;
 
       const dbRecord = await checkVoterInDatabase(deviceFingerprint);
@@ -1900,7 +1902,6 @@
         document.getElementById('lcd-normal-view').classList.add('hidden');
         document.getElementById('lcd-fim-msg').classList.add('hidden');
         document.getElementById('lcd-duplicate-msg').classList.remove('hidden');
-
         document.getElementById('post-vote-receipt-container').classList.remove('hidden');
         return;
       }
@@ -1953,11 +1954,11 @@
       document.getElementById('lcd-normal-view').classList.add('hidden');
       document.getElementById('lcd-duplicate-msg').classList.add('hidden');
       document.getElementById('lcd-fim-msg').classList.remove('hidden');
-
       document.getElementById('post-vote-receipt-container').classList.remove('hidden');
 
       openApoiadorModal();
     }
+
 
     function gerarValorMenorSyncPay() {
       const min = 1.01;
