@@ -16,13 +16,24 @@ module.exports = async (req, res) => {
   if (req.method === 'POST') {
     try {
       const notification = req.body || {};
-      console.log("Webhook recebido da SyncPay:", JSON.stringify(notification));
+      console.log("Webhook recebido da SyncPay (Completo):", JSON.stringify(notification));
       
-      // Procura o ID e o status em todas as variações possíveis que os gateways costumam usar
-      const status = notification.status || notification.data?.status || notification.paymentStatus;
-      const transactionId = notification.id || notification.identifier || notification.transactionId || notification.data?.id || notification.data?.identifier || notification.data?.transactionId;
+      // Extrai o status e o ID independentemente de onde venham no JSON
+      const status = notification.status || notification.paymentStatus || notification.data?.status || notification.event;
+      
+      const transactionId = 
+        notification.id || 
+        notification.identifier || 
+        notification.transactionId || 
+        notification.uuid ||
+        notification.data?.id || 
+        notification.data?.identifier || 
+        notification.data?.transactionId ||
+        notification.data?.uuid;
 
-      const isPaid = ['PAID', 'APPROVED', 'COMPLETED', 'CONFIRMED', 'PAGO', 'APROVADO'].includes((status || '').toUpperCase());
+      // Verifica se o pagamento foi aprovado em qualquer variação de texto
+      const statusStr = String(status || '').toUpperCase();
+      const isPaid = ['PAID', 'APPROVED', 'COMPLETED', 'CONFIRMED', 'PAGO', 'APROVADO', 'SUCCESS'].some(s => statusStr.includes(s));
 
       if (transactionId) {
         const { error: dbError } = await supabaseClient
@@ -37,7 +48,7 @@ module.exports = async (req, res) => {
         if (dbError) {
           console.error("Erro ao salvar no Supabase via Webhook:", dbError);
         } else {
-          console.log(`Sucesso! Transação ${transactionId} atualizada para '${status}' (Pago: ${isPaid}) no Supabase.`);
+          console.log(`Sucesso! Transação ${transactionId} gravada/atualizada no Supabase como Pago: ${isPaid}`);
         }
       } else {
         console.warn("Aviso: ID da transação não encontrado no corpo do webhook:", notification);
