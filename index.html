@@ -390,12 +390,18 @@
                   </div>
                 </div>
 
-                <div class="bg-slate-950 border border-slate-800 p-2 rounded-xl flex items-center justify-center gap-2">
-                  <div id="pix-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
-                  <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
-                </div>
-              </div>
+                <!-- DENTRO DO MODAL DO PIX, ONDE FICA O STATUS -->
+               <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center justify-center gap-2">
+                 <div id="pix-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
+                 <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
+               </div>
 
+               <!-- 🔄 BOTÃO DE FORÇAR VERIFICAÇÃO MANUAL -->
+             <button onclick="forcarVerificacaoManual()" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs uppercase shadow transition active:scale-[0.99] flex items-center justify-center gap-1.5">
+              <span>🔄</span>
+              <span>Já fiz o pagamento / Verificar Agora</span>
+            </button>
+             
               <div id="msg-vote-success" class="hidden space-y-4 pt-1">
                 <div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
                   <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wide">
@@ -913,6 +919,39 @@
 
     let chatMessages = [];
 
+    // Função para forçar a verificação manual ao clicar no botão
+    async function forcarVerificacaoManual() {
+     if (!window.currentTransactionId) {
+     alert("Nenhuma transação ativa no momento. Gere um PIX primeiro.");
+     return;
+  }
+
+  const btn = event.currentTarget;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = "Verificando...";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`/api/gerar-pix?id=${window.currentTransactionId}`);
+    const data = await res.json();
+
+    if (data && (data.paid === true || data.status === 'PAID' || data.status === 'APPROVED')) {
+      alert("Pagamento confirmado com sucesso!");
+      finalizePixSuccess();
+    } else {
+      alert("O pagamento ainda não foi confirmado pelo banco. Aguarde alguns segundos após pagar e tente novamente.");
+    }
+  } catch (err) {
+    console.error("Erro ao verificar manualmente:", err);
+    alert("Erro ao conectar com o servidor. Tente novamente.");
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
+
+    
+    
     async function loadCloudMessages() {
       if (!supabaseClient) return;
       const { data, error } = await supabaseClient
@@ -1962,7 +2001,26 @@
       openApoiadorModal();
     }
 
-    async function requestPixCheckout(amountValue) {
+     async function requestPixCheckout(amountValue) {
+      // 1. Verifica se já existe um PIX gerado anteriormente para este usuário neste aparelho
+      const cachedPix = localStorage.getItem('active_pix_code');
+      const cachedId = localStorage.getItem('active_transaction_id');
+
+      if (cachedPix && cachedId) {
+        // Reaproveita o PIX existente!
+        window.currentTransactionId = cachedId;
+        document.getElementById('pix-code-input').value = cachedPix;
+        document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(cachedPix)}`;
+        
+        document.getElementById('pix-options-box').classList.add('hidden');
+        document.getElementById('pix-loading').classList.add('hidden');
+        document.getElementById('pix-content').classList.remove('hidden');
+        
+        startPixStatusPolling(cachedId);
+        return;
+      }
+
+      // Se não existir, gera um novo normalmente via API
       document.getElementById('pix-options-box').classList.add('hidden');
       document.getElementById('pix-loading').classList.remove('hidden');
       document.getElementById('pix-display-amount').textContent = `R$ ${amountValue.toFixed(2).replace('.', ',')}`;
@@ -1980,19 +2038,21 @@
         });
 
         const data = await response.json();
-
-        // 🔍 AQUI ESTÁ O SEGREDO: Captura o ID de qualquer formato que a SyncPay mande
         const pixCode = data.pix_code || data.qrcode || data.emv;
         const transactionId = data.identifier || data.id || (data.data && (data.data.identifier || data.data.id));
 
         if (pixCode && transactionId) {
+          // Guarda no localStorage para reaproveitar se ele reabrir a tela
+          localStorage.setItem('active_pix_code', pixCode);
+          localStorage.setItem('active_transaction_id', transactionId);
+          window.currentTransactionId = transactionId;
+
           document.getElementById('pix-code-input').value = pixCode;
           document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixCode)}`;
           
           document.getElementById('pix-loading').classList.add('hidden');
           document.getElementById('pix-content').classList.remove('hidden');
 
-          // Passa o ID correto para a função de checagem funcionar com qualquer valor
           startPixStatusPolling(transactionId);
         } else {
           fallbackPixSimulated(amountValue);
@@ -2001,6 +2061,8 @@
         fallbackPixSimulated(amountValue);
       }
     }
+
+
 
 
     function fallbackPixSimulated(amount) {
