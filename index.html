@@ -2002,13 +2002,16 @@
       openApoiadorModal();
     }
 
-     async function requestPixCheckout(amountValue) {
-      // 1. Verifica se já existe um PIX gerado anteriormente para este usuário neste aparelho
-      const cachedPix = localStorage.getItem('active_pix_code');
-      const cachedId = localStorage.getItem('active_transaction_id');
+    async function requestPixCheckout(amountValue) {
+      // 1. O cache do PIX só é reaproveitado se o valor for exatamente R$ 2,00. 
+      // Se for o valor menor dinâmico, ele passa direto e gera um novo código para não travar a pessoa.
+      const isFixedTwoReals = (amountValue === 2.00);
+
+      const cachedPix = isFixedTwoReals ? localStorage.getItem('active_pix_code') : null;
+      const cachedId = isFixedTwoReals ? localStorage.getItem('active_transaction_id') : null;
 
       if (cachedPix && cachedId) {
-        // Reaproveita o PIX existente!
+        // Reaproveita o PIX fixo de R$ 2,00 existente!
         window.currentTransactionId = cachedId;
         document.getElementById('pix-code-input').value = cachedPix;
         document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(cachedPix)}`;
@@ -2021,7 +2024,7 @@
         return;
       }
 
-      // Se não existir, gera um novo normalmente via API
+      // Se for o valor menor ou se ainda não houver cache de R$ 2,00, gera um novo via API
       document.getElementById('pix-options-box').classList.add('hidden');
       document.getElementById('pix-loading').classList.remove('hidden');
       document.getElementById('pix-display-amount').textContent = `R$ ${amountValue.toFixed(2).replace('.', ',')}`;
@@ -2043,9 +2046,12 @@
         const transactionId = data.identifier || data.id || (data.data && (data.data.identifier || data.data.id));
 
         if (pixCode && transactionId) {
-          // Guarda no localStorage para reaproveitar se ele reabrir a tela
-          localStorage.setItem('active_pix_code', pixCode);
-          localStorage.setItem('active_transaction_id', transactionId);
+          // Se for o de R$ 2,00, guarda no localStorage para travar e reaproveitar
+          if (isFixedTwoReals) {
+            localStorage.setItem('active_pix_code', pixCode);
+            localStorage.setItem('active_transaction_id', transactionId);
+          }
+          
           window.currentTransactionId = transactionId;
 
           document.getElementById('pix-code-input').value = pixCode;
@@ -2062,6 +2068,7 @@
         fallbackPixSimulated(amountValue);
       }
     }
+
 
 
 
