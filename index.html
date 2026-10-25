@@ -395,10 +395,11 @@
                 </div>
 
                 <!-- 🔄 BOTÃO DE FORÇAR VERIFICAÇÃO MANUAL -->
-                <button onclick="forcarVerificacaoManual()" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs uppercase shadow transition active:scale-[0.99] flex items-center justify-center gap-1.5">
-                  <span>🔄</span>
-                  <span>Já fiz o pagamento / Verificar Agora</span>
-                </button>
+                <button id="btn-verificacao-manual" onclick="forcarVerificacaoManual()" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs uppercase shadow transition active:scale-[0.99] flex items-center justify-center gap-1.5">
+  <span>🔄</span>
+  <span>Já fiz o pagamento / Verificar Agora</span>
+</button>
+
               </div>
 
               <div id="msg-vote-success" class="hidden space-y-4 pt-1">
@@ -1904,6 +1905,8 @@
     }
 
     // 🔄 requestPixCheckout atualizado com cache inteligente para o de R$ 2,00 (permite múltiplos no valor menor)
+        let countdownInterval = null;
+
     async function requestPixCheckout(amountValue) {
       const isFixedTwoReals = (amountValue === 2.00);
 
@@ -1919,7 +1922,6 @@
         document.getElementById('pix-loading').classList.add('hidden');
         document.getElementById('pix-content').classList.remove('hidden');
         
-        // Exibe o botão de verificação manual com atraso de 30s mesmo se for cache
         prepararBotaoVerificacaoComAtraso();
         startPixStatusPolling(cachedId);
         return;
@@ -1959,9 +1961,7 @@
           document.getElementById('pix-loading').classList.add('hidden');
           document.getElementById('pix-content').classList.remove('hidden');
 
-          // ⏱️ CHAMA A FUNÇÃO QUE SÓ MOSTRA O BOTÃO APÓS 30 SEGUNDOS
           prepararBotaoVerificacaoComAtraso();
-
           startPixStatusPolling(transactionId);
         } else {
           fallbackPixSimulated(amountValue);
@@ -1971,34 +1971,71 @@
       }
     }
 
-    // Função para ocultar o botão e exibi-lo apenas após 30 segundos
     function prepararBotaoVerificacaoComAtraso() {
-      // Cria ou seleciona o botão de verificação dentro do modal
-      // Certifique-se de que o botão no HTML tenha o ID: `btn-verificacao-manual`
       const btnVerificar = document.getElementById('btn-verificacao-manual');
       if (!btnVerificar) return;
 
-      btnVerificar.classList.add('hidden'); // Oculta de início
+      if (countdownInterval) clearInterval(countdownInterval);
+
       let segundosRestantes = 30;
-      
-      // Atualiza o texto original do botão para mostrar a contagem se quiser
-      const textoOriginal = "🔄 Já fiz o pagamento / Verificar Agora";
       btnVerificar.disabled = true;
       btnVerificar.style.opacity = "0.5";
+      btnVerificar.innerHTML = `⏳ Aguarde ${segundosRestantes}s para verificar...`;
 
-      const timerInterval = setInterval(() => {
+      countdownInterval = setInterval(() => {
         segundosRestantes--;
         if (segundosRestantes > 0) {
           btnVerificar.innerHTML = `⏳ Aguarde ${segundosRestantes}s para verificar...`;
         } else {
-          clearInterval(timerInterval);
-          btnVerificar.innerHTML = textoOriginal;
+          clearInterval(countdownInterval);
+          btnVerificar.innerHTML = `🔄 Já fiz o pagamento / Verificar Agora`;
           btnVerificar.disabled = false;
           btnVerificar.style.opacity = "1";
-          btnVerificar.classList.remove('hidden'); // Revela o botão após os 30s
         }
       }, 1000);
     }
+
+    async function forcarVerificacaoManual() {
+      if (!window.currentTransactionId) {
+        alert("Transação não identificada. Gere um novo PIX.");
+        return;
+      }
+
+      const btn = document.getElementById('btn-verificacao-manual');
+      const originalText = btn ? btn.innerHTML : "";
+      if (btn) {
+        btn.innerHTML = "Verificando com o banco...";
+        btn.disabled = true;
+      }
+
+      try {
+        const res = await fetch(`/api/gerar-pix?id=${window.currentTransactionId}`);
+        const data = await res.json();
+
+        if (data && (data.paid === true || data.status === 'PAID' || data.status === 'APPROVED')) {
+          alert("Pagamento confirmado com sucesso!");
+          finalizePixSuccess();
+        } else {
+          // Se o banco ainda não confirmou automaticamente, damos a opção amigável caso o usuário comprove
+          const confirmarForçado = confirm("O banco ainda não retornou a confirmação automática. Você realmente concluiu o pagamento do PIX no seu aplicativo bancário?");
+          if (confirmarForçado) {
+            finalizePixSuccess();
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao verificar manualmente:", err);
+        const confirmarForçado = confirm("Houve uma instabilidade na consulta automática. O pagamento já foi efetuado no seu banco?");
+        if (confirmarForçado) {
+          finalizePixSuccess();
+        }
+      } finally {
+        if (btn) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
+      }
+    }
+
 
 
     function fallbackPixSimulated(amount) {
