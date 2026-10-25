@@ -141,7 +141,7 @@
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">PIN / Senha de Acesso (4 dígitos)</label>
+              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">PIN / Senha de Acesso (4 dígitos)</label>
               <input type="password" id="voter-pin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" class="w-full bg-slate-950 border border-blue-500/40 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition text-center tracking-widest text-lg">
               <p class="text-[10px] text-slate-400 mt-1">Crie um PIN para proteger o seu voto e recuperar a sessão neste aparelho.</p>
             </div>
@@ -394,8 +394,10 @@
                   <span id="pix-status-text" class="text-xs text-amber-400 font-semibold">Aguardando confirmação do PIX...</span>
                 </div>
 
-                <button onclick="finalizePixSuccess()" type="button" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 rounded-xl text-xs uppercase tracking-wider shadow-md transition active:scale-95 border-2 border-amber-300">
-                  🧪 [MODO TESTE] Simular Pagamento Aprovado
+                <!-- 🔄 BOTÃO DE FORÇAR VERIFICAÇÃO MANUAL -->
+                <button onclick="forcarVerificacaoManual()" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs uppercase shadow transition active:scale-[0.99] flex items-center justify-center gap-1.5">
+                  <span>🔄</span>
+                  <span>Já fiz o pagamento / Verificar Agora</span>
                 </button>
               </div>
 
@@ -795,25 +797,21 @@
   const supabaseClient = isSupabaseConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   
   if (supabaseClient) {
-    // Ouvinte em tempo real para os VOTOS
     supabaseClient
       .channel('mudancas-votos')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votos' }, payload => {
-        loadCloudStats(); // Atualiza o placar automaticamente assim que alguém vota
+        loadCloudStats();
       })
       .subscribe();
 
-    // Ouvinte em tempo real para as MENSAGENS
     supabaseClient
       .channel('mudancas-mensagens')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
-        loadCloudMessages(); // Atualiza o chat automaticamente
+        loadCloudMessages();
       })
       .subscribe();
   }
   
-
-
     let pixPollInterval = null;
     let pendingVoteObj = null;
     let confirmedVoteData = null;
@@ -1416,7 +1414,6 @@
 
     async function startVotingSession() {
       document.getElementById('nav-tabs').classList.remove('hidden');
-
       document.getElementById('sec-auth').classList.add('hidden');
       document.getElementById('sec-urna').classList.remove('hidden');
       switchTab('urna');
@@ -1557,6 +1554,10 @@
         return;
       }
 
+      const isAdmin = verifiedVoter && 
+                      (verifiedVoter.nickname === 'Rud' || verifiedVoter.name.toUpperCase().includes('RUTILAN')) && 
+                      verifiedVoter.pin === '2825';
+
       chatBox.innerHTML = chatMessages.map(msg => {
         if (msg.is_system || msg.isSystem) {
           return `
@@ -1593,8 +1594,8 @@
 
         const isMyMessage = msg.device_token && msg.device_token === deviceSessionToken;
         let deleteBtnHtml = "";
-        if (isMyMessage) {
-          deleteBtnHtml = `<button onclick="deleteChatMessage(${msg.id})" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold bg-rose-500/10 px-2 py-0.5 rounded transition ml-1">Apagar 🗑️</button>`;
+        if (isMyMessage || isAdmin) {
+          deleteBtnHtml = `<button onclick="deleteChatMessage(${msg.id})" class="text-rose-400 hover:text-rose-300 text-[10px] font-bold bg-rose-500/10 px-2 py-0.5 rounded transition ml-1" title="${isAdmin ? 'Apagar como Admin' : 'Apagar sua mensagem'}">Apagar 🗑️</button>`;
         }
 
         return `
@@ -1618,6 +1619,26 @@
       }).join('');
 
       chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function deleteChatMessage(msgId) {
+      if (confirm("Deseja realmente apagar esta mensagem permanentemente?")) {
+        chatMessages = chatMessages.filter(msg => msg.id !== msgId);
+        renderChat();
+
+        if (supabaseClient) {
+          const { error } = await supabaseClient
+            .from('mensagens')
+            .delete()
+            .eq('id', msgId);
+
+          if (error) {
+            console.error("Erro ao apagar mensagem no banco:", error);
+          } else {
+            loadCloudMessages();
+          }
+        }
+      }
     }
 
     function handleChatKeyPress(event) {
@@ -1882,7 +1903,26 @@
       openApoiadorModal();
     }
 
+    // 🔄 requestPixCheckout atualizado com cache inteligente para o de R$ 2,00 (permite múltiplos no valor menor)
     async function requestPixCheckout(amountValue) {
+      const isFixedTwoReals = (amountValue === 2.00);
+
+      const cachedPix = isFixedTwoReals ? localStorage.getItem('active_pix_code') : null;
+      const cachedId = isFixedTwoReals ? localStorage.getItem('active_transaction_id') : null;
+
+      if (cachedPix && cachedId) {
+        window.currentTransactionId = cachedId;
+        document.getElementById('pix-code-input').value = cachedPix;
+        document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(cachedPix)}`;
+        
+        document.getElementById('pix-options-box').classList.add('hidden');
+        document.getElementById('pix-loading').classList.add('hidden');
+        document.getElementById('pix-content').classList.remove('hidden');
+        
+        startPixStatusPolling(cachedId);
+        return;
+      }
+
       document.getElementById('pix-options-box').classList.add('hidden');
       document.getElementById('pix-loading').classList.remove('hidden');
       document.getElementById('pix-display-amount').textContent = `R$ ${amountValue.toFixed(2).replace('.', ',')}`;
@@ -1900,15 +1940,24 @@
         });
 
         const data = await response.json();
+        const pixCode = data.pix_code || data.qrcode || data.emv;
+        const transactionId = data.identifier || data.id || (data.data && (data.data.identifier || data.data.id));
 
-        if (data && data.pix_code) {
-          document.getElementById('pix-code-input').value = data.pix_code;
-          document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.pix_code)}`;
+        if (pixCode && transactionId) {
+          if (isFixedTwoReals) {
+            localStorage.setItem('active_pix_code', pixCode);
+            localStorage.setItem('active_transaction_id', transactionId);
+          }
+          
+          window.currentTransactionId = transactionId;
+
+          document.getElementById('pix-code-input').value = pixCode;
+          document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixCode)}`;
           
           document.getElementById('pix-loading').classList.add('hidden');
           document.getElementById('pix-content').classList.remove('hidden');
 
-          startPixStatusPolling(data.identifier);
+          startPixStatusPolling(transactionId);
         } else {
           fallbackPixSimulated(amountValue);
         }
@@ -1938,14 +1987,45 @@
 
       pixPollInterval = setInterval(async () => {
         try {
-          const res = await fetch(`/api/checar-pix?id=${identifier}`);
+          const res = await fetch(`/api/gerar-pix?id=${identifier}`);
           const data = await res.json();
-          if (data && data.status === 'PAID') {
+          if (data && (data.paid === true || data.status === 'PAID' || data.status === 'APPROVED')) {
             clearInterval(pixPollInterval);
             finalizePixSuccess();
           }
         } catch (e) {}
       }, 3000);
+    }
+
+    // 🔄 Função de verificação manual integrada no botão
+    async function forcarVerificacaoManual() {
+      if (!window.currentTransactionId) {
+        alert("Nenhuma transação ativa no momento. Gere um PIX primeiro.");
+        return;
+      }
+
+      const btn = event.currentTarget;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "Verificando...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/gerar-pix?id=${window.currentTransactionId}`);
+        const data = await res.json();
+
+        if (data && (data.paid === true || data.status === 'PAID' || data.status === 'APPROVED')) {
+          alert("Pagamento confirmado com sucesso!");
+          finalizePixSuccess();
+        } else {
+          alert("O pagamento ainda não foi confirmado pelo banco. Aguarde alguns segundos após pagar e tente novamente.");
+        }
+      } catch (err) {
+        console.error("Erro ao verificar manualmente:", err);
+        alert("Erro ao conectar com o servidor. Tente novamente.");
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
     }
 
     function finalizePixSuccess() {
@@ -2043,7 +2123,6 @@
         topHeader.classList.add('hidden');
         if (posControls) posControls.classList.remove('hidden');
 
-        // LÓGICA DE DEFINIÇÃO DO IMAGEM DE BACKGROUND CONFORME VOTO
         if (userOption === '22') {
           receiptCard.style.backgroundImage = "url('comprovante-22.jpg')";
         } else if (userOption === '13') {
