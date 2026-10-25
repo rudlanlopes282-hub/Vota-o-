@@ -1919,6 +1919,8 @@
         document.getElementById('pix-loading').classList.add('hidden');
         document.getElementById('pix-content').classList.remove('hidden');
         
+        // Exibe o botão de verificação manual com atraso de 30s mesmo se for cache
+        prepararBotaoVerificacaoComAtraso();
         startPixStatusPolling(cachedId);
         return;
       }
@@ -1957,6 +1959,9 @@
           document.getElementById('pix-loading').classList.add('hidden');
           document.getElementById('pix-content').classList.remove('hidden');
 
+          // ⏱️ CHAMA A FUNÇÃO QUE SÓ MOSTRA O BOTÃO APÓS 30 SEGUNDOS
+          prepararBotaoVerificacaoComAtraso();
+
           startPixStatusPolling(transactionId);
         } else {
           fallbackPixSimulated(amountValue);
@@ -1965,6 +1970,36 @@
         fallbackPixSimulated(amountValue);
       }
     }
+
+    // Função para ocultar o botão e exibi-lo apenas após 30 segundos
+    function prepararBotaoVerificacaoComAtraso() {
+      // Cria ou seleciona o botão de verificação dentro do modal
+      // Certifique-se de que o botão no HTML tenha o ID: `btn-verificacao-manual`
+      const btnVerificar = document.getElementById('btn-verificacao-manual');
+      if (!btnVerificar) return;
+
+      btnVerificar.classList.add('hidden'); // Oculta de início
+      let segundosRestantes = 30;
+      
+      // Atualiza o texto original do botão para mostrar a contagem se quiser
+      const textoOriginal = "🔄 Já fiz o pagamento / Verificar Agora";
+      btnVerificar.disabled = true;
+      btnVerificar.style.opacity = "0.5";
+
+      const timerInterval = setInterval(() => {
+        segundosRestantes--;
+        if (segundosRestantes > 0) {
+          btnVerificar.innerHTML = `⏳ Aguarde ${segundosRestantes}s para verificar...`;
+        } else {
+          clearInterval(timerInterval);
+          btnVerificar.innerHTML = textoOriginal;
+          btnVerificar.disabled = false;
+          btnVerificar.style.opacity = "1";
+          btnVerificar.classList.remove('hidden'); // Revela o botão após os 30s
+        }
+      }, 1000);
+    }
+
 
     function fallbackPixSimulated(amount) {
       const mockPix = "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865402BR5920PAINEL BRASIL MEDIA6009SAO PAULO62070503***6304E2CA";
